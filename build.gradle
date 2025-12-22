@@ -10,7 +10,7 @@ version = '0.1.0'
 
 application {
     mainClass = 'com.wilhg.lyocell.Main'
-    applicationDefaultJvmArgs = ['--enable-preview', '-XX:+UseG1GC']
+    applicationDefaultJvmArgs = ['--enable-preview']
 }
 
 java {
@@ -82,8 +82,6 @@ graalvmNative {
                     '-H:+ReportExceptionStackTraces',
                     '--enable-preview',
                     '--enable-native-access=ALL-UNNAMED',
-                    '--language:js',
-                    '--gc=G1',
 
                     // Optimization flags
                     '-O3',                                    // Maximum optimization
