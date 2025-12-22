@@ -1,58 +1,42 @@
-# Project Context: Lyocell
+# Project Context: Lyocell (k6 Clone)
 
 ## Project Overview
 
-**Lyocell** is a high-performance, modern HTTP client CLI built with **Java 25**. It is designed for developers who need a powerful tool for making HTTP requests, load testing APIs, and executing batch requests with real-time feedback.
+**Lyocell** is a high-performance load testing tool rewritten to be a **Java-based clone of k6**. It allows users to run standard k6 JavaScript scripts using **Java 25 Virtual Threads** for concurrency and **GraalVM (GraalJS)** for script execution.
 
 **Key Technologies:**
-*   **Java 25:** Utilizes preview features, specifically **Virtual Threads** (Project Loom) for high-throughput concurrency and **Structured Concurrency**.
-*   **GraalVM (Mandrel):** Compiles to a **Native Image** for instant startup (~10ms) and low memory footprint (~50MB), eliminating the JVM warmup penalty.
-*   **JLine 3:** Powered the interactive **Terminal User Interface (TUI)** for real-time monitoring and color-coded status updates.
-*   **Jackson:** Handles JSON and YAML parsing for request bodies and batch configurations.
-*   **Testcontainers:** Ensures robust integration testing with real containerized HTTP services.
+*   **Java 25:** Uses **Virtual Threads** (Project Loom) for massive concurrency (1 Virtual User = 1 Virtual Thread).
+*   **GraalVM (GraalJS):** Embeds the Graal JavaScript engine to execute k6 scripts (`.js`) with high performance.
+*   **Structured Concurrency:** Manages the lifecycle of Virtual Users efficiently.
+*   **Native Image:** Compiles to a native binary for instant startup.
 
-**Core Features:**
-*   **Virtual Threads:** Uses a pool of virtual threads to handle high concurrency efficiently.
-*   **Real-time Monitoring:** Live dashboard showing request status (Success, Failed, Pending) and statistics.
-*   **Flexible Input:** Supports `httpie`-like syntax for CLI arguments and YAML files for batch processing.
-*   **Load Testing:** Built-in support for sending multiple concurrent requests (`-n`, `-c`) to benchmark API performance.
+## Core Documentation
+*   **`K6_REFERENCE.md`**: The user manual. Explains k6 concepts, CLI usage, and the JS API schema we are implementing.
+*   **`PLAN.md`**: The project roadmap. Defines the 5 phases of development (from MVP to advanced features).
+*   **`TECHNICAL_DESIGN.md`**: The engineering blueprint. Details the internal threading model, module loading strategy (`LyocellFileSystem`), and metrics architecture.
 
 ## Building and Running
 
-The project is managed with **Gradle**.
-
 ### Prerequisites
-*   **Java 25** (e.g., Mandrel distribution for Native Image support).
-*   **GraalVM/Mandrel** installed if building the native image.
+*   **Java 25** (with `--enable-preview`).
+*   **GraalVM/Mandrel** (optional, for native builds).
 
 ### Key Commands
 
 | Action | Command | Description |
 | :--- | :--- | :--- |
-| **Build Native Image** | `./gradlew nativeCompile` | Compiles the application to a standalone native binary in `build/native/nativeCompile/lyocell`. |
-| **Run (JVM)** | `./gradlew run` | Runs the application on the JVM (useful for development cycles). |
-| **Run (Native)** | `./build/native/nativeCompile/lyocell` | Executes the compiled native binary. |
-| **Test** | `./gradlew test` | Runs the unit and integration tests. |
-| **Coverage** | `./gradlew jacocoTestReport` | Generates a code coverage report (XML & HTML) in `build/reports/jacoco/test/`. |
+| **Run** | `./gradlew run --args="script.js"` | Runs the application with the specified script. |
+| **Build Native** | `./gradlew nativeCompile` | Builds the standalone native binary. |
+| **Test** | `./gradlew test` | Runs unit tests (JUnit 5). |
+
+## Architecture Summary
+
+*   **Engine:** `TestEngine` manages the `StructuredTaskScope` and `VuWorker` threads.
+*   **JS Runtime:** Uses a strict "Context-per-VU" model. `JsEngine` handles the Graal `Context` creation and script evaluation.
+*   **Modules:** Custom `k6` modules (like `k6/http`) are injected via a custom `FileSystem` and `HostAccess` bindings, mapping JS calls to Java `Bridge` interfaces.
+*   **Metrics:** A high-throughput, distributed metrics collection system (buffers -> central ingester) using `LongAdder` for lock-free counting.
 
 ## Development Conventions
-
-*   **Java Version:** The project strictly uses **Java 25** with `--enable-preview` features. Ensure your IDE and JDK are configured accordingly.
-*   **Code Style:** Follows standard Java conventions.
-*   **Testing:**
-    *   **JUnit 5** is used for the test framework.
-    *   **Testcontainers** are used for integration tests to spin up real HTTP servers (e.g., `httpbun`).
-    *   **Jacoco** enforces a minimum of **80% code coverage**.
-*   **Architecture:**
-    *   **Main:** `com.wilhg.lyocell.Main` is the entry point, handling argument parsing and mode selection.
-    *   **CLI Logic:** `LyocellCli` manages the core event loop, task submission, and UI rendering.
-    *   **Batch Processing:** `YamlBatchProcessor` handles parsing and execution of YAML-defined request batches.
-    *   **Concurrency:** Utilizes `ConcurrentHttpClient` and `RequestTask` to manage async operations via Virtual Threads.
-
-## Project Structure
-
-*   `src/main/java`: Application source code.
-*   `src/test/java`: Unit and integration tests.
-*   `sample-requests.yaml`: Example configuration for batch requests.
-*   `build.gradle`: Main build configuration script.
-*   `settings.gradle`: Project settings and name.
+*   **Strict Java 25:** Must use `--enable-preview`.
+*   **GraalJS Compatibility:** All JS features must align with ESM standards (`import`).
+*   **Tests:** Use `Testcontainers` for integration testing against real HTTP endpoints (e.g., `httpbun`).
