@@ -38,5 +38,7 @@
 
 ## Development Conventions
 *   **Strict Java 25:** Must use `--enable-preview`.
+*   **TDD & Quality:** The project strictly follows **Test-Driven Development (TDD)**. Every new feature or fix must include unit or integration tests.
+*   **Test Coverage:** Maintain high test coverage (minimum 80% as enforced by Jacoco).
 *   **GraalJS Compatibility:** All JS features must align with ESM standards (`import`).
 *   **Tests:** Use `Testcontainers` for integration testing against real HTTP endpoints (e.g., `httpbun`).

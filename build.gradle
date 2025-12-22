@@ -10,7 +10,7 @@ version = '0.1.0'
 
 application {
     mainClass = 'com.wilhg.lyocell.Main'
-    applicationDefaultJvmArgs = ['--enable-preview']
+    applicationDefaultJvmArgs = ['--enable-preview', '-XX:+UseG1GC']
 }
 
 java {
@@ -36,6 +36,10 @@ dependencies {
     implementation 'org.jline:jline-native:3.30.6'
     implementation 'tools.jackson.core:jackson-databind:3.0.3'
     implementation 'tools.jackson.dataformat:jackson-dataformat-yaml:3.0.3'
+
+    // GraalVM Polyglot & JS
+    implementation 'org.graalvm.polyglot:polyglot:25.0.0'
+    implementation 'org.graalvm.polyglot:js:25.0.0'
 
     testImplementation platform('org.junit:junit-bom:6.0.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
@@ -78,6 +82,8 @@ graalvmNative {
                     '-H:+ReportExceptionStackTraces',
                     '--enable-preview',
                     '--enable-native-access=ALL-UNNAMED',
+                    '--language:js',
+                    '--gc=G1',
 
                     // Optimization flags
                     '-O3',                                    // Maximum optimization
