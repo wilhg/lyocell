@@ -1,5 +1,6 @@
 package com.wilhg.lyocell.engine;
 
+import com.wilhg.lyocell.metrics.MetricsCollector;
 import java.nio.file.Path;
 import java.util.Collections;
 import java.util.Map;
@@ -9,6 +10,7 @@ import java.util.concurrent.StructuredTaskScope.Joiner;
 
 public class TestEngine {
     private final Map<String, Object> extraBindings;
+    private final MetricsCollector metricsCollector = new MetricsCollector();
 
     public TestEngine() {
         this(Collections.emptyMap());
@@ -18,16 +20,18 @@ public class TestEngine {
         this.extraBindings = extraBindings;
     }
 
+    public MetricsCollector getMetricsCollector() {
+        return metricsCollector;
+    }
+
     public void run(Path scriptPath, TestConfig config) throws InterruptedException, ExecutionException {
         String setupDataJson = null;
 
         // 1. Setup Phase (Single Thread)
-        // We use a separate engine for setup/teardown
-        try (JsEngine setupEngine = new JsEngine(extraBindings)) {
+        try (JsEngine setupEngine = new JsEngine(extraBindings, metricsCollector)) {
             try {
                 setupEngine.runScript(scriptPath);
                 
-                // Run setup() if it exists
                 if (setupEngine.hasExport("setup")) {
                     var data = setupEngine.executeSetup();
                     setupDataJson = setupEngine.toJson(data);
@@ -42,16 +46,14 @@ public class TestEngine {
                     int vuId = i;
                     String finalSetupDataJson = setupDataJson;
                     scope.fork(() -> {
-                        new VuWorker(vuId, scriptPath, extraBindings, finalSetupDataJson).run();
+                        new VuWorker(vuId, scriptPath, extraBindings, finalSetupDataJson, metricsCollector).run();
                         return null;
                     });
                 }
                 scope.join();
             }
 
-            // 3. Teardown Phase (Single Thread)
-            // We reuse the setup engine instance to mimic k6 behavior where teardown runs in a similar context context
-            // actually k6 runs teardown in a fresh VU usually, but reusing this one is efficient for now.
+            // 3. Teardown Phase
             try {
                 if (setupEngine.hasExport("teardown")) {
                      Object data = setupEngine.parseJsonData(setupDataJson);

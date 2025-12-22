@@ -1,9 +1,11 @@
 package com.wilhg.lyocell.engine;
 
 import com.wilhg.lyocell.js.LyocellFileSystem;
+import com.wilhg.lyocell.metrics.MetricsCollector;
 import com.wilhg.lyocell.modules.ConsoleModule;
 import com.wilhg.lyocell.modules.CoreModule;
 import com.wilhg.lyocell.modules.HttpModule;
+import com.wilhg.lyocell.modules.MetricsModule;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Source;
@@ -15,10 +17,10 @@ public class JsEngine implements AutoCloseable {
     private final Context context;
 
     public JsEngine() {
-        this(java.util.Collections.emptyMap());
+        this(java.util.Collections.emptyMap(), new MetricsCollector());
     }
 
-    public JsEngine(java.util.Map<String, Object> extraBindings) {
+    public JsEngine(java.util.Map<String, Object> extraBindings, MetricsCollector metricsCollector) {
         this.context = Context.newBuilder("js")
                 .allowHostAccess(HostAccess.ALL)
                 .allowHostClassLookup(s -> true)
@@ -30,6 +32,7 @@ public class JsEngine implements AutoCloseable {
         // Inject global bindings
         context.getBindings("js").putMember("LyocellHttp", new HttpModule());
         context.getBindings("js").putMember("LyocellCore", new CoreModule());
+        context.getBindings("js").putMember("LyocellMetrics", new MetricsModule(metricsCollector));
         context.getBindings("js").putMember("console", new ConsoleModule());
         
         // Inject extra bindings (e.g., for testing)

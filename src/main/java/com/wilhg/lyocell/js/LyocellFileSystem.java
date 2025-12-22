@@ -46,17 +46,31 @@ public class LyocellFileSystem implements FileSystem {
 
     private String getModuleName(String path) {
         if (path.contains("k6/http")) return "k6/http";
+        if (path.contains("k6/metrics")) return "k6/metrics";
         if (path.contains("k6")) return "k6";
         return path;
     }
 
     private String getSyntheticModule(String moduleName) {
-        if (moduleName.equals("k6/http") || moduleName.endsWith("/k6/http")) {
+        if (moduleName.equals("k6/http") || moduleName.contains("k6/http")) {
             return """
                 const Http = globalThis.LyocellHttp;
                 export const get = (url, params) => Http.get(url, params);
                 export const post = (url, body, params) => Http.post(url, body, params);
                 export default { get, post };
+                """;
+        } else if (moduleName.equals("k6/metrics") || moduleName.contains("k6/metrics")) {
+            return """
+                const Metrics = globalThis.LyocellMetrics;
+                export class Counter {
+                    constructor(name) { this.name = name; }
+                    add(val) { Metrics.addCounter(this.name, val); }
+                }
+                export class Trend {
+                    constructor(name) { this.name = name; }
+                    add(val) { Metrics.addTrend(this.name, val); }
+                }
+                export default { Counter, Trend };
                 """;
         } else if (moduleName.equals("k6") || moduleName.endsWith("/k6")) {
             return """
