@@ -1,6 +1,5 @@
 package com.wilhg.lyocell;
 
-import com.wilhg.lyocell.engine.JsEngine;
 import com.wilhg.lyocell.engine.TestConfig;
 import com.wilhg.lyocell.engine.TestEngine;
 import java.nio.file.Path;
@@ -8,9 +7,14 @@ import java.nio.file.Paths;
 
 public class Main {
     public static void main(String[] args) {
+        int exitCode = run(args);
+        System.exit(exitCode);
+    }
+
+    public static int run(String[] args) {
         if (args.length < 1) {
             printUsage();
-            System.exit(1);
+            return 1;
         }
 
         String scriptArg = null;
@@ -20,9 +24,19 @@ public class Main {
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
             if (arg.equals("-u") || arg.equals("--vus")) {
-                vus = Integer.parseInt(args[++i]);
+                if (i + 1 < args.length) {
+                    vus = Integer.parseInt(args[++i]);
+                } else {
+                    System.err.println("Missing value for --vus");
+                    return 1;
+                }
             } else if (arg.equals("-i") || arg.equals("--iterations")) {
-                iterations = Integer.parseInt(args[++i]);
+                if (i + 1 < args.length) {
+                    iterations = Integer.parseInt(args[++i]);
+                } else {
+                    System.err.println("Missing value for --iterations");
+                    return 1;
+                }
             } else if (!arg.startsWith("-")) {
                 scriptArg = arg;
             }
@@ -30,13 +44,13 @@ public class Main {
 
         if (scriptArg == null) {
             printUsage();
-            System.exit(1);
+            return 1;
         }
 
         Path scriptPath = Paths.get(scriptArg);
         if (!scriptPath.toFile().exists()) {
             System.err.println("Script not found: " + scriptArg);
-            System.exit(1);
+            return 1;
         }
 
         System.out.println("Starting Lyocell (k6 clone)...");
@@ -45,9 +59,11 @@ public class Main {
             TestEngine engine = new TestEngine();
             TestConfig config = new TestConfig(vus, iterations, null);
             engine.run(scriptPath, config);
+            return 0;
         } catch (Exception e) {
             System.err.println("Execution failed: " + e.getMessage());
-            System.exit(1);
+            e.printStackTrace();
+            return 1;
         }
     }
 

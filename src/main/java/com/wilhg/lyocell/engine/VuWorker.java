@@ -10,13 +10,15 @@ public class VuWorker implements Runnable {
     private final Map<String, Object> extraBindings;
     private final String setupDataJson;
     private final MetricsCollector metricsCollector;
+    private final int iterations;
 
-    public VuWorker(int id, Path scriptPath, Map<String, Object> extraBindings, String setupDataJson, MetricsCollector metricsCollector) {
+    public VuWorker(int id, Path scriptPath, Map<String, Object> extraBindings, String setupDataJson, MetricsCollector metricsCollector, int iterations) {
         this.id = id;
         this.scriptPath = scriptPath;
         this.extraBindings = extraBindings;
         this.setupDataJson = setupDataJson;
         this.metricsCollector = metricsCollector;
+        this.iterations = iterations;
     }
 
     @Override
@@ -29,8 +31,10 @@ public class VuWorker implements Runnable {
             Object data = engine.parseJsonData(setupDataJson);
             
             // 3. Run default
-            engine.executeDefault(data);
-            metricsCollector.addCounter("iterations", 1);
+            for (int i = 0; i < iterations; i++) {
+                engine.executeDefault(data);
+                metricsCollector.addCounter("iterations", 1);
+            }
             
         } catch (Exception e) {
             throw new RuntimeException("VU " + id + " failed", e);

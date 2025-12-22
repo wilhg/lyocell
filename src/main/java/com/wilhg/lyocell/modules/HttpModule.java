@@ -8,6 +8,10 @@ import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
 import java.net.http.HttpResponse;
 import java.time.Duration;
+import java.time.Instant;
+import java.util.HashMap;
+import java.util.List;
+import java.util.Map;
 
 public class HttpModule {
     private final HttpClient client = HttpClient.newBuilder()
@@ -32,6 +36,7 @@ public class HttpModule {
     }
 
     private HttpResponseWrapper request(String method, String url, Object body, Value params) {
+        Instant start = Instant.now();
         try {
             HttpRequest.Builder builder = HttpRequest.newBuilder()
                     .uri(URI.create(url));
@@ -52,28 +57,43 @@ public class HttpModule {
             builder.method(method, bodyPublisher);
 
             HttpResponse<String> response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
+            double duration = Duration.between(start, Instant.now()).toMillis();
 
-            return new HttpResponseWrapper(response, context);
+            return new HttpResponseWrapper(response, duration, context);
         } catch (Exception e) {
-            return new HttpResponseWrapper(e.getMessage(), context);
+            double duration = Duration.between(start, Instant.now()).toMillis();
+            return new HttpResponseWrapper(e.getMessage(), duration, context);
         }
     }
 
     public static class HttpResponseWrapper {
         @HostAccess.Export public final int status;
         @HostAccess.Export public final String body;
+        @HostAccess.Export public final Map<String, String> headers;
+        @HostAccess.Export public final Map<String, Double> timings;
         private final Context context;
 
-        public HttpResponseWrapper(HttpResponse<String> response, Context context) {
+        public HttpResponseWrapper(HttpResponse<String> response, double durationMs, Context context) {
             this.status = response.statusCode();
             this.body = response.body();
             this.context = context;
+            
+            this.headers = new HashMap<>();
+            for (Map.Entry<String, List<String>> entry : response.headers().map().entrySet()) {
+                this.headers.put(entry.getKey().toLowerCase(), String.join(",", entry.getValue()));
+            }
+            
+            this.timings = new HashMap<>();
+            this.timings.put("duration", durationMs);
         }
 
-        public HttpResponseWrapper(String error, Context context) {
+        public HttpResponseWrapper(String error, double durationMs, Context context) {
             this.status = 0;
             this.body = error;
             this.context = context;
+            this.headers = new HashMap<>();
+            this.timings = new HashMap<>();
+            this.timings.put("duration", durationMs);
         }
 
         @HostAccess.Export

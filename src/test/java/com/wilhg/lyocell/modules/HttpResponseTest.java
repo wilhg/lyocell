@@ -98,6 +98,36 @@ class HttpResponseTest {
         assertEquals("lyocell", result.get());
     }
 
+    @Test
+    void testHttpResponseHeadersAndTimings() throws Exception {
+        String url = "http://" + httpbin.getHost() + ":" + httpbin.getMappedPort(80) + "/get";
+        
+        Path script = tempDir.resolve("http_headers_test.js");
+        Files.writeString(script, """
+            import http from 'k6/http';
+            export default function() {
+                const res = http.get('%s');
+                globalThis.HeaderResult.set(res.headers['content-type']);
+                globalThis.TimingResult.set(res.timings.duration);
+            }
+            """.formatted(url));
+
+        AtomicReference<String> contentType = new AtomicReference<>();
+        TestResultBridge headerBridge = new TestResultBridge(contentType);
+        
+        AtomicReference<Double> duration = new AtomicReference<>();
+        TestTimingBridge timingBridge = new TestTimingBridge(duration);
+        
+        TestEngine engine = new TestEngine(Map.of(
+            "HeaderResult", headerBridge,
+            "TimingResult", timingBridge
+        ));
+        engine.run(script, new TestConfig(1, 1, null));
+
+        assertEquals("application/json", contentType.get());
+        assertTrue(duration.get() >= 0, "Duration should be non-negative");
+    }
+
     public static class TestResultBridge {
         private final AtomicReference<String> ref;
         public TestResultBridge(AtomicReference<String> ref) { this.ref = ref; }
@@ -108,5 +138,11 @@ class HttpResponseTest {
         private final AtomicInteger ref;
         public TestStatusBridge(AtomicInteger ref) { this.ref = ref; }
         @HostAccess.Export public void set(int val) { ref.set(val); }
+    }
+    
+    public static class TestTimingBridge {
+        private final AtomicReference<Double> ref;
+        public TestTimingBridge(AtomicReference<Double> ref) { this.ref = ref; }
+        @HostAccess.Export public void set(double val) { ref.set(val); }
     }
 }

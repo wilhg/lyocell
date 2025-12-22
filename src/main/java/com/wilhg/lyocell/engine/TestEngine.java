@@ -60,7 +60,7 @@ public class TestEngine {
                     int vuId = i;
                     String finalSetupDataJson = setupDataJson;
                     scope.fork(() -> {
-                        new VuWorker(vuId, scriptPath, extraBindings, finalSetupDataJson, metricsCollector).run();
+                        new VuWorker(vuId, scriptPath, extraBindings, finalSetupDataJson, metricsCollector, config.iterations()).run();
                         return null;
                     });
                 }
