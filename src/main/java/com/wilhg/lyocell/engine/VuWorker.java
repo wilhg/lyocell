@@ -28,9 +28,9 @@ public class VuWorker implements Runnable {
             // 2. Prepare data
             Object data = engine.parseJsonData(setupDataJson);
             
-            // 3. Run default (simple loop for now, just 1 iteration as per current config)
-            // TODO: Support loop based on config.iterations/duration
+            // 3. Run default
             engine.executeDefault(data);
+            metricsCollector.addCounter("iterations", 1);
             
         } catch (Exception e) {
             throw new RuntimeException("VU " + id + " failed", e);

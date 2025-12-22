@@ -72,12 +72,13 @@ public class LyocellFileSystem implements FileSystem {
                 }
                 export default { Counter, Trend };
                 """;
-        } else if (moduleName.equals("k6") || moduleName.endsWith("/k6")) {
+        } else if (moduleName.equals("k6") || moduleName.contains("/k6")) {
             return """
                 const Core = globalThis.LyocellCore;
                 export const check = (val, sets, tags) => Core.check(val, sets, tags);
+                export const group = (name, fn) => Core.group(name, fn);
                 export const sleep = (sec) => Core.sleep(sec);
-                export default { check, sleep };
+                export default { check, group, sleep };
                 """;
         }
         throw new IllegalArgumentException("Unknown lyocell module: " + moduleName);

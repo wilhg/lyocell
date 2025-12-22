@@ -30,8 +30,11 @@ public class JsEngine implements AutoCloseable {
                 .build();
 
         // Inject global bindings
-        context.getBindings("js").putMember("LyocellHttp", new HttpModule());
-        context.getBindings("js").putMember("LyocellCore", new CoreModule());
+        HttpModule httpModule = new HttpModule();
+        httpModule.setContext(this.context);
+        
+        context.getBindings("js").putMember("LyocellHttp", httpModule);
+        context.getBindings("js").putMember("LyocellCore", new CoreModule(metricsCollector));
         context.getBindings("js").putMember("LyocellMetrics", new MetricsModule(metricsCollector));
         context.getBindings("js").putMember("console", new ConsoleModule());
         
@@ -48,6 +51,13 @@ public class JsEngine implements AutoCloseable {
 
         // Evaluate the module and keep the exports
         this.moduleExports = context.eval(source);
+    }
+
+    public Value getOptions() {
+        if (hasExport("options")) {
+            return moduleExports.getMember("options");
+        }
+        return null;
     }
 
     public boolean hasExport(String name) {
