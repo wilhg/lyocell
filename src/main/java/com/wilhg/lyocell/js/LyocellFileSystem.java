@@ -33,7 +33,7 @@ public class LyocellFileSystem implements FileSystem {
     public SeekableByteChannel newByteChannel(Path path, Set<? extends OpenOption> options, FileAttribute<?>... attrs) throws IOException {
         String pathStr = path.toString();
         if (isVirtualModule(pathStr)) {
-            String content = getSyntheticModule(getModuleName(pathStr));
+            String content = getSyntheticModule(pathStr);
             return new ReadOnlyStringChannel(content);
         }
         return delegate.newByteChannel(path, options, attrs);
@@ -44,23 +44,15 @@ public class LyocellFileSystem implements FileSystem {
                path.endsWith("/k6") || path.contains("/k6/");
     }
 
-    private String getModuleName(String path) {
-        if (path.contains("k6/http")) return "k6/http";
-        if (path.contains("k6/metrics")) return "k6/metrics";
-        if (path.contains("k6")) return "k6";
-        return path;
-    }
-
     private String getSyntheticModule(String moduleName) {
-        if (moduleName.equals("k6/http") || moduleName.contains("k6/http")) {
-            return """
+        return switch (moduleName) {
+            case String s when s.contains("k6/http") -> """
                 const Http = globalThis.LyocellHttp;
                 export const get = (url, params) => Http.get(url, params);
                 export const post = (url, body, params) => Http.post(url, body, params);
                 export default { get, post };
                 """;
-        } else if (moduleName.equals("k6/metrics") || moduleName.contains("k6/metrics")) {
-            return """
+            case String s when s.contains("k6/metrics") -> """
                 const Metrics = globalThis.LyocellMetrics;
                 export class Counter {
                     constructor(name) { this.name = name; }
@@ -72,16 +64,15 @@ public class LyocellFileSystem implements FileSystem {
                 }
                 export default { Counter, Trend };
                 """;
-        } else if (moduleName.equals("k6") || moduleName.contains("/k6")) {
-            return """
+            case String s when s.contains("k6") -> """
                 const Core = globalThis.LyocellCore;
                 export const check = (val, sets, tags) => Core.check(val, sets, tags);
                 export const group = (name, fn) => Core.group(name, fn);
                 export const sleep = (sec) => Core.sleep(sec);
                 export default { check, group, sleep };
                 """;
-        }
-        throw new IllegalArgumentException("Unknown lyocell module: " + moduleName);
+            default -> throw new IllegalArgumentException("Unknown lyocell module: " + moduleName);
+        };
     }
 
     // Boilerplate delegation
@@ -99,13 +90,14 @@ public class LyocellFileSystem implements FileSystem {
         if (isVirtualModule(path.toString())) return path;
         return delegate.toRealPath(path, options);
     }
-    @Override public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) throws IOException {
-        if (isVirtualModule(path.toString())) {
-            String content = getSyntheticModule(getModuleName(path.toString()));
-            return Map.of("isRegularFile", true, "size", (long) content.length());
+        @Override
+        public Map<String, Object> readAttributes(Path path, String attributes, LinkOption... options) throws IOException {
+            if (isVirtualModule(path.toString())) {
+                String content = getSyntheticModule(path.toString());
+                return Map.of("isRegularFile", true, "size", (long) content.length());
+            }
+            return delegate.readAttributes(path, attributes, options);
         }
-        return delegate.readAttributes(path, attributes, options);
-    }
     @Override public DirectoryStream<Path> newDirectoryStream(Path dir, DirectoryStream.Filter<? super Path> filter) throws IOException { return delegate.newDirectoryStream(dir, filter); }
 
     private static class ReadOnlyStringChannel implements SeekableByteChannel {
