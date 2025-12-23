@@ -2,72 +2,40 @@
 
 This document serves as the architectural roadmap for evolving Lyocell from its current MVP state to a feature-rich k6 clone. It outlines necessary refactoring to support upcoming phases and provides a step-by-step guide for implementation.
 
-## 1. Critical Refactoring (The Foundation)
+## 1. Critical Refactoring (The Foundation) ✅ COMPLETED
 
-Before adding heavy features, we must strengthen the foundation.
+The foundation is now solid, supporting multi-executor scenarios and pluggable modules.
 
-### A. The Metrics Engine (Pre-req for Phase 6)
-**Current State:**
-*   `MetricsCollector` uses custom `LongAdder` and `ConcurrentHashMap` logic.
-*   Reporting is hardcoded to a console summary.
+### A. The Metrics Engine ✅
+*   **Status:** Replaced custom backend with **Micrometer**.
+*   **Result:** Support for InfluxDB and Prometheus is built-in.
 
-**The Refactor:**
-*   **Goal:** Replace the custom backend with **Micrometer**.
-*   **Why?** Phase 6 requires output to InfluxDB, Prometheus, etc. Micrometer handles this strictly better than we can.
-*   **Action Plan:**
-    1.  Introduce `micrometer-core`.
-    2.  Refactor `MetricsCollector` to act as a facade/registry wrapper.
-    3.  Map k6 metric types to Micrometer types:
-        *   `Counter` -> `io.micrometer.core.instrument.Counter`
-        *   `Trend` -> `io.micrometer.core.instrument.DistributionSummary` (with percentiles)
-        *   `Rate` -> `io.micrometer.core.instrument.Gauge` or specialized helper.
-    4.  Update `SummaryReporter` to read from the Micrometer `MeterRegistry`.
+### B. The Module System ✅
+*   **Status:** Implemented `LyocellModule` interface and `ModuleRegistry`.
+*   **Result:** Clean separation of concerns for k6 standard library parity.
 
-### B. The Module System (Pre-req for Phase 7)
-**Current State:**
-*   Modules (`HttpModule`, `CoreModule`) are manually instantiated and bound in `JsEngine`.
-*   Imports are handled by `LyocellFileSystem`.
-
-**The Refactor:**
-*   **Goal:** Create a `LyocellModule` interface and a `ModuleRegistry`.
-*   **Why?** Phase 7 adds many modules (`k6/crypto`, `k6/execution`, etc.). Hardcoding them in `JsEngine` is unmaintainable.
-*   **Action Plan:**
-    1.  Define interface `LyocellModule` with method `install(Context.Builder ctx)`.
-    2.  Update `JsEngine` to accept a list of modules.
-    3.  Implement a standard loading mechanism (ServiceLoader or static registry).
-
-### C. The Execution Engine (Pre-req for Phase 8)
-**Current State:**
-*   `TestEngine` contains the loop logic: "Spawn N threads, run `default` function M times."
-*   This is effectively a hardcoded `shared-iterations` or `constant-vus` executor.
-
-**The Refactor:**
-*   **Goal:** Extract the "workload model" into an `Executor` strategy.
-*   **Why?** Phase 8 (`scenarios`) requires support for `ramping-vus`, `constant-arrival-rate`, etc.
-*   **Action Plan:**
-    1.  Create interface `WorkloadExecutor`.
-    2.  Move the current loop logic into `SimpleExecutor`.
-    3.  `TestEngine` becomes a coordinator that selects and runs the correct `Executor`.
+### C. The Execution Engine ✅
+*   **Status:** Extracted workload models into `WorkloadExecutor` strategies.
+*   **Result:** Supports complex scenarios like `ramping-vus` and `constant-arrival-rate`.
 
 ---
 
-## 2. Implementation Guide: Phase 6 (Observability)
+## 2. Implementation Guide: Phase 6 (Observability) ✅ COMPLETED
 
 **Objective:** Add Micrometer and support external outputs.
 
 **Steps:**
-1.  **Dependencies:** Add `micrometer-core` and `micrometer-registry-prometheus` (or influx) to `build.gradle`.
-2.  **Refactor Metrics (as above):** Delete custom accumulation logic; delegate to Micrometer.
+1.  **Dependencies:** Added `micrometer-core` and `micrometer-registry-prometheus` (or influx) to `build.gradle`.
+2.  **Refactor Metrics (as above):** Deleted custom accumulation logic; delegated to Micrometer.
 3.  **JdkHttpSender:**
-    *   Implement a `HttpSender` compatible with Micrometer's `PushRegistry` that uses Java 25 `HttpClient`.
-    *   *Constraint:* Do NOT pull in OkHttp or Apache Client. Keep the binary small.
+    *   Implemented a `HttpSender` compatible with Micrometer's `PushRegistry` that uses Java 25 `HttpClient`.
 4.  **Configuration:**
     *   Parse `options.lyocell.outputs` (e.g., `["influxdb=http://localhost:8086"]`).
     *   Initialize the correct `MeterRegistry` implementation based on config.
 
 ---
 
-## 3. Implementation Guide: Phase 7 (Standard Library)
+## 3. Implementation Guide: Phase 7 (Standard Library) ✅ COMPLETED
 
 **Objective:** Add missing k6 modules.
 
@@ -86,7 +54,7 @@ Before adding heavy features, we must strengthen the foundation.
 
 ---
 
-## 4. Implementation Guide: Phase 8 (Scenarios)
+## 4. Implementation Guide: Phase 8 (Scenarios) ✅ COMPLETED
 
 **Objective:** Support complex scenarios and the `scenarios` config object.
 
@@ -94,10 +62,10 @@ Before adding heavy features, we must strengthen the foundation.
 1.  **Config Parsing:**
     *   Map the complex `options.scenarios` JSON object to a Java POJO/Record hierarchy.
 2.  **Executor Implementations:**
-    *   **`RampingVusExecutor`:** Needs a scheduler that adjusts the active `StructuredTaskScope` concurrency over time.
-    *   **`ConstantArrivalRate`:** Needs a rate-limiter based loop (Token Bucket algorithm) rather than a simple `for` loop.
+    *   **`RampingVusExecutor`**: A scheduler that adjusts the active `StructuredTaskScope` concurrency over time.
+    *   **`ConstantArrivalRate`**: A rate-limiter based loop (Token Bucket algorithm).
 3.  **Orchestrator:**
-    *   Update `TestEngine` to run multiple `WorkloadExecutor` instances in parallel (if scenarios are concurrent) or sequence.
+    *   Update `TestEngine` to run multiple `WorkloadExecutor` instances in parallel.
 
 ---
 

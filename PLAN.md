@@ -65,6 +65,8 @@ We adopted an **MVP-first approach**, focusing on getting a "walking skeleton" r
 The project is functionally complete as an MVP (Minimum Viable Product). It supports the core k6 API, runs concurrently on Virtual Threads, compiles to a Native Image, and includes comprehensive documentation and examples.
 
 ## Future Enhancements
+*   **HTTP Parallelism:** Implement `http.batch()` for parallel requests within a VU.
+*   **Granular Timings:** Add `blocked`, `connecting`, `tls_handshaking`, etc., to `http_req_duration`.
 *   **TUI:** Real-time dashboard (Curses-like UI).
 *   **Protocols:** WebSocket, gRPC support.
 *   **Distributions:** Linux/Windows builds in CI.

@@ -121,8 +121,8 @@ Lyocell supports configuration via the exported `options` object.
 *   **`fail(err)`**: Aborts the current iteration and increments the `iterations_failed` metric. ✅
 *   **`randomSeed(int)`**: Sets the seed for `Math.random` (for reproducible tests). ✅
 
-### D. Other Standard Modules (Planned)
-These modules are standard in k6 and are planned for future Lyocell phases.
+### D. Other Standard Modules
+These modules are standard in k6 and are fully supported by Lyocell.
 
 #### `k6/execution` ✅
 Exposes information about the current test execution state.
@@ -148,17 +148,34 @@ Exposes information about the current test execution state.
 
 ## 4. Lyocell Extensions
 
+
+
 Features specific to Lyocell, designed to be compatible with k6's philosophy.
 
-### Observability (Phase 6 - Planned)
-Configuring outputs directly in the script (Lyocell specific).
+
+
+### Observability
+
+Lyocell supports real-time metrics export to external backends. You can configure outputs directly in the script `options` or via the CLI `-o` flag.
+
+
+
 ```javascript
+
 export const options = {
+
   lyocell: {
+
     outputs: [
+
       { type: 'influxdb', url: 'http://localhost:8086' },
+
       { type: 'prometheus', port: 9090 }
+
     ]
+
   }
+
 };
+
 ```

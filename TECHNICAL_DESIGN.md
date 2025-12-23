@@ -58,28 +58,82 @@ We inject Java objects into the `globalThis` scope of every Context.
 ### B. Reporting
 *   **`SummaryReporter`**: Calculates aggregations (avg, min, max, p95, p99) at the end of the test and prints a k6-style ASCII table.
 
-## 4. Observability Architecture (Future: Phase 6)
+## 4. Observability Architecture
 
-To support Grafana (InfluxDB/Prometheus) without bloating the binary:
+
+
+Lyocell uses **Micrometer** as its metrics engine, enabling zero-dependency exports to modern observability stacks.
+
+
 
 ### A. Micrometer Integration
-*   **Core**: Switch to `io.micrometer.core.instrument.CompositeMeterRegistry`.
-*   **Polymorphism**: `MetricsCollector` will delegate to the registry, decoupling recording from exporting.
-*   **Efficiency**: Use **HdrHistogram** (via Micrometer) for accurate, memory-bounded percentiles.
+
+*   **Core**: Uses `io.micrometer.core.instrument.CompositeMeterRegistry` to manage multiple outputs.
+
+*   **Polymorphism**: `MetricsCollector` delegates to the registry, decoupling recording from exporting.
+
+*   **Efficiency**: Utilizes **HdrHistogram** (via Micrometer) for accurate, memory-bounded percentiles (p95, p99).
+
+
 
 ### B. Lightweight Networking
-*   **Problem**: Standard Micrometer registries (e.g., Influx) pull in heavy clients like `OkHttp`.
-*   **Solution**: Implement `JdkHttpSender` wrapping Java 25's `java.net.http.HttpClient`.
-*   **Result**: Zero extra network dependencies.
+
+*   **Implementation**: `JdkHttpSender` wraps Java 25's `java.net.http.HttpClient`.
+
+*   **Constraint**: Zero external network dependencies (no OkHttp or Apache Client) to keep the native binary lean.
+
+
 
 ### C. Configuration
-*   **Source**: Configuration read from `options.lyocell.outputs` (JS) or CLI flags.
-*   **Push (Influx)**: Starts a background Virtual Thread to flush metrics periodically.
-*   **Pull (Prometheus)**: Starts a lightweight `com.sun.net.httpserver.HttpServer` on a Virtual Thread to serve `/metrics`.
 
-## 5. Implementation Details
+*   **Source**: Configuration is read from `options.lyocell.outputs` (JS) or CLI flags (`-o`).
+
+*   **Push (InfluxDB)**: A background Virtual Thread flushes metrics periodically.
+
+*   **Pull (Prometheus)**: An embedded `com.sun.net.httpserver.HttpServer` serves metrics at `/metrics`.
+
+
+
+## 5. Advanced Workloads (Scenarios)
+
+
+
+Lyocell supports the full k6 `scenarios` specification, allowing for complex workload modeling.
+
+
+
+### A. Workload Executors
+
+Each scenario is assigned a specialized `WorkloadExecutor`:
+
+*   **`SharedIterationsExecutor`**: A fixed number of iterations shared among a pool of VUs.
+
+*   **`PerVuIterationsExecutor`**: Each VU executes a fixed number of iterations.
+
+*   **`ConstantVusExecutor`**: A fixed number of VUs execute as many iterations as possible for a specific duration.
+
+*   **`RampingVusExecutor`**: A variable number of VUs execute iterations, following a predefined schedule of stages.
+
+*   **`ConstantArrivalRateExecutor`**: A fixed number of iterations are started at a specific rate (iterations per period).
+
+
+
+### B. Execution Orchestration
+
+The `TestEngine` uses `StructuredTaskScope` to manage the lifecycle of these executors, ensuring that resources are cleaned up and metrics are aggregated even if a scenario fails or times out.
+
+
+
+## 6. Implementation Details
+
+
 
 1.  **JSON Handling**: We use Jackson to bridge JSON data between `setup()` and `default()` phases, as Graal values cannot be shared across contexts.
+
 2.  **Native Image**: The project is fully compatible with GraalVM Native Image.
+
     *   **Reflection**: `reflect-config.json` manually registers all Module methods.
+
     *   **GC**: Uses Serial GC on macOS (G1 not supported) and G1 on Linux.
+
+3.  **Standard Library**: Modules like `k6/crypto`, `k6/encoding`, `k6/data`, and `k6/execution` are implemented as high-performance Java modules injected into the JS environment.
