@@ -10,21 +10,21 @@ defaults:
 # List of requests to execute
 requests:
   # Simple GET request
-  - url: https://httpbin.org/get
+  - url: https://httpbun.com/get
     queryParams:
       foo: bar
       test: "123"
 
   # GET with custom headers
   - method: GET
-    url: https://httpbin.org/headers
+    url: https://httpbun.com/headers
     headers:
       X-Custom-Header: custom-value
       Accept: application/json
 
   # POST with JSON body
   - method: POST
-    url: https://httpbin.org/post
+    url: https://httpbun.com/post
     body:
       name: John Doe
       email: john@example.com
@@ -33,17 +33,17 @@ requests:
 
   # PUT request
   - method: PUT
-    url: https://httpbin.org/put
+    url: https://httpbun.com/put
     body:
       id: 123
       status: updated
 
   # Request with custom timeout
-  - url: https://httpbin.org/delay/2
+  - url: https://httpbun.com/delay/2
     timeout: 5000
 
   # DELETE request
   - method: DELETE
-    url: https://httpbin.org/delete
+    url: https://httpbun.com/delete
     queryParams:
       id: "456"

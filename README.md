@@ -43,7 +43,7 @@ export const options = {
 };
 
 export default function() {
-    const res = http.get('https://httpbin.org/get');
+    const res = http.get('https://httpbun.com/get');
     check(res, { 'status is 200': (r) => r.status === 200 });
     sleep(1);
 }
