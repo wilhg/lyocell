@@ -2,11 +2,11 @@ plugins {
     id 'java'
     id 'application'
     id 'jacoco'
-    id 'org.graalvm.buildtools.native' version '0.11.3'
+    id 'org.graalvm.buildtools.native' version '0.12.0'
 }
 
 group = 'com.wilhg'
-version = '0.2.2'
+version = '0.2.3'
 
 application {
     mainClass = 'com.wilhg.lyocell.Main'
@@ -108,6 +108,7 @@ graalvmNative {
             jvmArgs = [
                     '-Xmx12g',  // More memory for native-image build process
             ]
+            useArgFile = false
         }
     }
     testSupport = true
