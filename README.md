@@ -13,14 +13,47 @@ Running on **GraalVM**, Lyocell compiles to a standalone native binary that star
 
 ## 📋 Prerequisites
 
-*   **Java 25** (with `--enable-preview`) - Required to build/run.
-*   **GraalVM** - Optional, for building the native binary.
+*   **Java 25** (with `--enable-preview`) - Required to build/run from source.
+*   **GraalVM** - Optional, for building the native binary yourself.
+
+## 📦 Installation
+
+<details>
+<summary><strong>macOS</strong> (Homebrew)</summary>
+
+```bash
+brew tap get-lyocell/homebrew-tap
+brew install lyocell
+```
+</details>
+
+<details>
+<summary><strong>Linux</strong> (Homebrew or Binary)</summary>
+
+**Homebrew:**
+```bash
+brew tap get-lyocell/homebrew-tap
+brew install lyocell
+```
+
+**Manual:**
+Download the `.deb` or standalone binary from the [Releases](https://github.com/wilhg/lyocell/releases) page.
+</details>
+
+<details>
+<summary><strong>Windows</strong> (Scoop)</summary>
+
+```powershell
+scoop bucket add lyocell https://github.com/get-lyocell/scoop-bucket
+scoop install lyocell
+```
+</details>
 
 ## ⚡ Quick Start
 
-### 1. Installation
+### 1. Build from Source (Optional)
 
-Clone the repository and build the project:
+If you prefer to build it yourself:
 
 ```bash
 git clone https://github.com/wilhg/lyocell.git

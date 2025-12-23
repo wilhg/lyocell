@@ -3,6 +3,7 @@ plugins {
     id 'application'
     id 'jacoco'
     id 'org.graalvm.buildtools.native' version '0.11.3'
+    id 'org.jreleaser' version '1.16.0'
 }
 
 group = 'com.wilhg'
@@ -111,4 +112,61 @@ graalvmNative {
         }
     }
     testSupport = true
+}
+
+jreleaser {
+    project {
+        name = 'lyocell'
+        description = 'High-performance load testing tool (k6 clone) on Java 25 & GraalVM'
+        website = 'https://github.com/wilhg/lyocell'
+        authors = ['wilhg']
+        license = 'MIT'
+        inceptionYear = '2025'
+    }
+
+    release {
+        github {
+            owner = 'wilhg'
+            overwrite = true
+        }
+    }
+
+    distributions {
+        lyocell {
+            distributionType = 'BINARY'
+            artifact {
+                path = file("release-files/lyocell-linux-amd64")
+                platform = 'linux-x86_64'
+            }
+            artifact {
+                path = file("release-files/lyocell-macos-aarch64")
+                platform = 'osx-aarch_64'
+            }
+            artifact {
+                path = file("release-files/lyocell-windows-amd64.exe")
+                platform = 'windows-x86_64'
+            }
+        }
+    }
+
+    packagers {
+        brew {
+            active = 'ALWAYS'
+            tap {
+                owner = 'get-lyocell'
+            }
+        }
+        scoop {
+            active = 'ALWAYS'
+            bucket {
+                owner = 'get-lyocell'
+            }
+        }
+        deb {
+            active = 'ALWAYS'
+        }
+        rpm {
+            active = 'ALWAYS'
+        }
+    }
 }
