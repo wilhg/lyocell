@@ -7,6 +7,16 @@ import java.util.stream.Collectors;
 
 public class ConsoleModule implements LyocellModule {
     @Override
+    public String getName() {
+        return "lyocell/console";
+    }
+
+    @Override
+    public String getJsSource() {
+        return "export default globalThis.console;";
+    }
+
+    @Override
     public void install(Context context, ModuleContext moduleContext) {
         context.getBindings("js").putMember("console", this);
     }

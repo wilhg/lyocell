@@ -31,6 +31,24 @@ public class HttpModule implements LyocellModule {
     }
 
     @Override
+    public String getName() {
+        return "k6/http";
+    }
+
+    @Override
+    public String getJsSource() {
+        return """
+            const Http = globalThis.LyocellHttp;
+            export const get = (url, params) => Http.get(url, params);
+            export const post = (url, body, params) => Http.post(url, body, params);
+            export const put = (url, body, params) => Http.put(url, body, params);
+            export const patch = (url, body, params) => Http.patch(url, body, params);
+            export const del = (url, body, params) => Http.del(url, body, params);
+            export default { get, post, put, patch, del };
+            """;
+    }
+
+    @Override
     public void install(Context context, ModuleContext moduleContext) {
         this.context = context;
         this.metricsCollector = moduleContext.metricsCollector();
@@ -45,6 +63,21 @@ public class HttpModule implements LyocellModule {
     @HostAccess.Export
     public HttpResponseWrapper post(String url, Object body, Value params) {
         return request("POST", url, body, params);
+    }
+
+    @HostAccess.Export
+    public HttpResponseWrapper put(String url, Object body, Value params) {
+        return request("PUT", url, body, params);
+    }
+
+    @HostAccess.Export
+    public HttpResponseWrapper patch(String url, Object body, Value params) {
+        return request("PATCH", url, body, params);
+    }
+
+    @HostAccess.Export
+    public HttpResponseWrapper del(String url, Object body, Value params) {
+        return request("DELETE", url, body, params);
     }
 
     private HttpResponseWrapper request(String method, String url, Object body, Value params) {

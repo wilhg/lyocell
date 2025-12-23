@@ -1,5 +1,6 @@
 package com.wilhg.lyocell.engine;
 
+import com.wilhg.lyocell.engine.scenario.Scenario;
 import com.wilhg.lyocell.metrics.MetricsCollector;
 import org.junit.jupiter.api.Test;
 import java.nio.file.Path;
@@ -15,13 +16,12 @@ class WorkloadExecutorTest {
     @Test
     void testCustomExecutor() throws Exception {
         AtomicBoolean executed = new AtomicBoolean(false);
-        WorkloadExecutor mockExecutor = (scriptPath, config, extraBindings, setupDataJson, metricsCollector) -> {
+        WorkloadExecutor mockExecutor = (scenario, scriptPath, extraBindings, setupDataJson, metricsCollector, testEngine) -> {
             executed.set(true);
         };
 
-        // We need a way to inject the executor into TestEngine or test it directly.
-        // For now, let's just verify the interface and a manual call to ensure it works.
-        mockExecutor.execute(Paths.get("test.js"), new TestConfig(1, 1), Collections.emptyMap(), null, new MetricsCollector());
+        Scenario dummyScenario = new Scenario("test", new com.wilhg.lyocell.engine.scenario.PerVuIterationsConfig(1, 1, java.time.Duration.ZERO, java.time.Duration.ZERO));
+        mockExecutor.execute(dummyScenario, Paths.get("test.js"), Collections.emptyMap(), null, new MetricsCollector(), new TestEngine());
         
         assertTrue(executed.get(), "Executor should have been called");
     }

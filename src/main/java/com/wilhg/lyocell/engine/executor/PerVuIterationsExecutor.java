@@ -1,5 +1,10 @@
-package com.wilhg.lyocell.engine;
+package com.wilhg.lyocell.engine.executor;
 
+import com.wilhg.lyocell.engine.TestEngine;
+import com.wilhg.lyocell.engine.VuWorker;
+import com.wilhg.lyocell.engine.WorkloadExecutor;
+import com.wilhg.lyocell.engine.scenario.PerVuIterationsConfig;
+import com.wilhg.lyocell.engine.scenario.Scenario;
 import com.wilhg.lyocell.metrics.MetricsCollector;
 import java.nio.file.Path;
 import java.util.Map;
@@ -7,19 +12,23 @@ import java.util.concurrent.ExecutionException;
 import java.util.concurrent.StructuredTaskScope;
 import java.util.concurrent.StructuredTaskScope.Joiner;
 
-/**
- * A simple executor that runs a fixed number of VUs, each performing a fixed number of iterations.
- * This corresponds to a mix of constant-vus and per-vu-iterations (depending on how config is used).
- */
-public class SimpleExecutor implements WorkloadExecutor {
+public class PerVuIterationsExecutor implements WorkloadExecutor {
     @Override
     public void execute(
+        Scenario scenario,
         Path scriptPath,
-        TestConfig config,
         Map<String, Object> extraBindings,
         String setupDataJson,
-        MetricsCollector metricsCollector
+        MetricsCollector metricsCollector,
+        TestEngine testEngine
     ) throws InterruptedException, ExecutionException {
+        PerVuIterationsConfig config = (PerVuIterationsConfig) scenario.executor();
+
+        // Handle startTime delay
+        if (config.startTime() != null && !config.startTime().isZero()) {
+            Thread.sleep(config.startTime());
+        }
+
         try (var scope = StructuredTaskScope.open(Joiner.awaitAllSuccessfulOrThrow())) {
             for (int i = 0; i < config.vus(); i++) {
                 int vuId = i;
@@ -30,7 +39,9 @@ public class SimpleExecutor implements WorkloadExecutor {
                         extraBindings, 
                         setupDataJson, 
                         metricsCollector, 
-                        config.iterations()
+                        config.iterations(),
+                        testEngine,
+                        scenario.exec()
                     ).run();
                     return null;
                 });

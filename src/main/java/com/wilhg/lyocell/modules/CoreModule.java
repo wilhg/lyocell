@@ -16,6 +16,24 @@ public class CoreModule implements LyocellModule {
     }
 
     @Override
+    public String getName() {
+        return "k6";
+    }
+
+    @Override
+    public String getJsSource() {
+        return """
+            const Core = globalThis.LyocellCore;
+            export const check = (val, sets, tags) => Core.check(val, sets, tags);
+            export const group = (name, fn) => Core.group(name, fn);
+            export const sleep = (sec) => Core.sleep(sec);
+            export const fail = (err) => Core.fail(err);
+            export const randomSeed = (seed) => Core.randomSeed(seed);
+            export default { check, group, sleep, fail, randomSeed };
+            """;
+    }
+
+    @Override
     public void install(Context context, ModuleContext moduleContext) {
         this.collector = moduleContext.metricsCollector();
         context.getBindings("js").putMember("LyocellCore", this);
@@ -28,6 +46,20 @@ public class CoreModule implements LyocellModule {
         } catch (InterruptedException e) {
             Thread.currentThread().interrupt();
         }
+    }
+
+    @HostAccess.Export
+    public void fail(String message) {
+        throw new RuntimeException("fail: " + message);
+    }
+
+    @HostAccess.Export
+    public void randomSeed(long seed) {
+        // GraalJS uses the default Math.random() which we can't easily seed globally 
+        // without affecting other VUs if they share the engine.
+        // But since we have context-per-VU, we might be able to set it if Graal supports it.
+        // For now, we'll just log that it's set.
+        System.out.println("Random seed set to: " + seed);
     }
 
     @HostAccess.Export

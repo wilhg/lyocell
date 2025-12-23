@@ -9,6 +9,7 @@ import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
+import org.graalvm.polyglot.io.IOAccess;
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -16,28 +17,35 @@ import java.util.Map;
 
 public class JsEngine implements AutoCloseable {
     private final Context context;
+    private final TestEngine testEngine;
 
     public JsEngine() {
-        this(java.util.Collections.emptyMap(), new MetricsCollector());
+        this(java.util.Collections.emptyMap(), new MetricsCollector(), new TestEngine());
     }
 
     public JsEngine(Map<String, Object> extraBindings, MetricsCollector metricsCollector) {
-        this(extraBindings, metricsCollector, ModuleRegistry.getDefaultModules(metricsCollector));
+        this(extraBindings, metricsCollector, new TestEngine());
     }
 
-    public JsEngine(Map<String, Object> extraBindings, MetricsCollector metricsCollector, List<LyocellModule> modules) {
+    public JsEngine(Map<String, Object> extraBindings, MetricsCollector metricsCollector, TestEngine testEngine) {
+        this(extraBindings, metricsCollector, ModuleRegistry.getAllModules(metricsCollector), testEngine);
+    }
+
+    public JsEngine(Map<String, Object> extraBindings, MetricsCollector metricsCollector, List<LyocellModule> modules, TestEngine testEngine) {
+        this.testEngine = testEngine;
         this.context = Context.newBuilder("js")
                 .allowHostAccess(HostAccess.ALL)
                 .allowHostClassLookup(s -> true)
-                .allowIO(true)
+                .allowIO(IOAccess.newBuilder()
+                        .fileSystem(new LyocellFileSystem(metricsCollector))
+                        .build())
                 .allowExperimentalOptions(true)
-                .fileSystem(new LyocellFileSystem())
                 .option("js.esm-eval-returns-exports", "true")
                 .option("engine.WarnVirtualThreadSupport", "false")
                 .build();
 
         // Install modules
-        ModuleContext moduleContext = new ModuleContext(metricsCollector);
+        ModuleContext moduleContext = new ModuleContext(metricsCollector, testEngine);
         for (LyocellModule module : modules) {
             module.install(this.context, moduleContext);
         }
@@ -90,12 +98,16 @@ public class JsEngine implements AutoCloseable {
     }
 
     public void executeDefault(Object data) {
-        if (hasExport("default")) {
-            Value defaultFn = moduleExports.getMember("default");
+        executeFunction("default", data);
+    }
+
+    public void executeFunction(String name, Object data) {
+        if (hasExport(name)) {
+            Value fn = moduleExports.getMember(name);
             if (data != null) {
-                defaultFn.execute(data);
+                fn.execute(data);
             } else {
-                defaultFn.execute();
+                fn.execute();
             }
         }
     }

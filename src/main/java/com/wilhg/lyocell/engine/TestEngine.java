@@ -1,5 +1,6 @@
 package com.wilhg.lyocell.engine;
 
+import com.wilhg.lyocell.engine.scenario.Scenario;
 import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import com.wilhg.lyocell.metrics.MetricsCollector;
@@ -19,9 +20,18 @@ public class TestEngine {
     private final Map<String, Object> extraBindings;
     private final MetricsCollector metricsCollector = new MetricsCollector();
     private final ObjectMapper mapper = new ObjectMapper();
+    private volatile boolean aborted = false;
 
     public TestEngine() {
         this(Collections.emptyMap());
+    }
+
+    public void abort() {
+        this.aborted = true;
+    }
+
+    public boolean isAborted() {
+        return aborted;
     }
 
     public TestEngine(Map<String, Object> extraBindings) {
@@ -65,6 +75,39 @@ public class TestEngine {
         return metricsCollector;
     }
 
+    private TestConfig updateConfigWithScenarios(TestConfig config, Map<String, Scenario> scenarios) {
+        return new TestConfig(
+            config.vus(),
+            config.iterations(),
+            config.duration(),
+            config.outputs(),
+            scenarios
+        );
+    }
+
+    private TestConfig createDefaultScenario(TestConfig config) {
+        Scenario defaultScenario = new Scenario(
+            "default",
+            new com.wilhg.lyocell.engine.scenario.PerVuIterationsConfig(
+                config.vus(),
+                config.iterations(),
+                java.time.Duration.ZERO,
+                java.time.Duration.ofSeconds(30)
+            )
+        );
+        return updateConfigWithScenarios(config, Map.of("default", defaultScenario));
+    }
+
+    private WorkloadExecutor getExecutor(Scenario scenario) {
+        return switch (scenario.executor()) {
+            case com.wilhg.lyocell.engine.scenario.PerVuIterationsConfig _ -> new com.wilhg.lyocell.engine.executor.PerVuIterationsExecutor();
+            case com.wilhg.lyocell.engine.scenario.SharedIterationsConfig _ -> new com.wilhg.lyocell.engine.executor.SharedIterationsExecutor();
+            case com.wilhg.lyocell.engine.scenario.ConstantVusConfig _ -> new com.wilhg.lyocell.engine.executor.ConstantVusExecutor();
+            case com.wilhg.lyocell.engine.scenario.RampingVusConfig _ -> new com.wilhg.lyocell.engine.executor.RampingVusExecutor();
+            case com.wilhg.lyocell.engine.scenario.ConstantArrivalRateConfig _ -> new com.wilhg.lyocell.engine.executor.ConstantArrivalRateExecutor();
+        };
+    }
+
     public void run(Path scriptPath, TestConfig config) throws InterruptedException, ExecutionException {
         // Configure Outputs
         configureOutputs(config);
@@ -73,7 +116,7 @@ public class TestEngine {
         Map<String, Object> options = null;
 
         // 1. Setup Phase (Single Thread)
-        try (JsEngine setupEngine = new JsEngine(extraBindings, metricsCollector)) {
+        try (JsEngine setupEngine = new JsEngine(extraBindings, metricsCollector, this)) {
             try {
                 setupEngine.runScript(scriptPath);
                 Value optionsValue = setupEngine.getOptions();
@@ -82,9 +125,21 @@ public class TestEngine {
                     if (json != null) {
                         options = mapper.readValue(json, new TypeReference<Map<String, Object>>() {});
                         configureOutputsFromOptions(options);
+                        
+                        if (options.containsKey("scenarios")) {
+                             @SuppressWarnings("unchecked")
+                             Map<String, Object> scenariosMap = (Map<String, Object>) options.get("scenarios");
+                             Map<String, Scenario> scenarios = ScenarioParser.parse(scenariosMap);
+                             config = updateConfigWithScenarios(config, scenarios);
+                        }
                     }
                 }
                 
+                // If no scenarios in options, and none in config, create default
+                if (config.scenarios().isEmpty()) {
+                    config = createDefaultScenario(config);
+                }
+
                 if (setupEngine.hasExport("setup")) {
                     var data = setupEngine.executeSetup();
                     setupDataJson = setupEngine.toJson(data);
@@ -93,9 +148,19 @@ public class TestEngine {
                 throw new RuntimeException("Setup failed", e);
             }
         
-            // 2. Execution Phase (Concurrent VUs)
-            WorkloadExecutor executor = new SimpleExecutor();
-            executor.execute(scriptPath, config, extraBindings, setupDataJson, metricsCollector);
+            final String finalSetupDataJson = setupDataJson;
+
+            // 2. Execution Phase (Parallel Scenarios)
+            try (var scope = StructuredTaskScope.open(Joiner.awaitAllSuccessfulOrThrow())) {
+                for (Scenario scenario : config.scenarios().values()) {
+                    scope.fork(() -> {
+                        WorkloadExecutor executor = getExecutor(scenario);
+                        executor.execute(scenario, scriptPath, extraBindings, finalSetupDataJson, metricsCollector, this);
+                        return null;
+                    });
+                }
+                scope.join();
+            }
 
             // 3. Teardown Phase
             try {

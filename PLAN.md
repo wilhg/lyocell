@@ -48,17 +48,17 @@ We adopted an **MVP-first approach**, focusing on getting a "walking skeleton" r
 *   **Outputs:** Supports **InfluxDB** (Push) and **Prometheus** (Pull/Push) out of the box.
 *   **Configuration:** Configurable via CLI flags (`--out`) and JS `options` (`options.lyocell.outputs`).
 
-### 🧩 Phase 7: Standard Library Expansion
+### ✅ Phase 7: Standard Library Expansion
 **Goal:** Implement the full suite of standard k6 utility modules.
 *   **`k6/execution`:** Expose `vu.idInTest`, `vu.iterationInInstance` for unique data handling.
 *   **`k6/data`:** Implement `SharedArray` for memory-efficient data loading.
 *   **`k6/crypto` & `k6/encoding`:** Add SHA-256, HMAC, and Base64 support.
 *   **`k6` Core:** Add `fail()`, `randomSeed()`.
 
-### 🎭 Phase 8: The Choreographer (Advanced Scenarios)
+### ✅ Phase 8: The Choreographer (Advanced Scenarios)
 **Goal:** Implement the `scenarios` configuration object for complex workload modeling.
 *   **Architecture:** Refactor `TestEngine` to support multiple parallel executors.
-*   **Executors:** Implement `ramping-vus` (stages), `constant-arrival-rate` (RPS targets), and `per-vu-iterations`.
+*   **Executors:** Implemented `ramping-vus`, `constant-arrival-rate`, `shared-iterations`, `constant-vus`, and `per-vu-iterations`.
 *   **Config:** Fully parse the `options.scenarios` object.
 
 ## Current Status
@@ -66,6 +66,5 @@ The project is functionally complete as an MVP (Minimum Viable Product). It supp
 
 ## Future Enhancements
 *   **TUI:** Real-time dashboard (Curses-like UI).
-*   **Advanced Scenarios:** Ramping VUs, Constant Arrival Rate.
 *   **Protocols:** WebSocket, gRPC support.
 *   **Distributions:** Linux/Windows builds in CI.

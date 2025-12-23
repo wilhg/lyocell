@@ -7,6 +7,16 @@ import org.graalvm.polyglot.Context;
  */
 public interface LyocellModule {
     /**
+     * Returns the name of the k6 module (e.g., "k6/http").
+     */
+    String getName();
+
+    /**
+     * Returns the synthetic JS source code for this module.
+     */
+    String getJsSource();
+
+    /**
      * Installs the module into the GraalJS context.
      * 
      * @param context The GraalJS context to install into.

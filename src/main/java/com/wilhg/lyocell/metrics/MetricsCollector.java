@@ -62,6 +62,25 @@ public class MetricsCollector {
         }).set(value);
     }
 
+    /// Adds a boolean sample to a rate metric.
+    ///
+    /// @param name The metric name
+    /// @param value The sample value (true/false)
+    public void addRate(String name, boolean value) {
+        registry.counter(name + ".total").increment();
+        if (value) {
+            registry.counter(name + ".true").increment();
+        }
+    }
+
+    public void recordIteration(long duration, boolean success) {
+        addTrend("iteration_duration", duration);
+        addCounter("iterations", 1);
+        if (!success) {
+            addCounter("iterations_failed", 1);
+        }
+    }
+
     public long getCounterValue(String name) {
         Counter counter = registry.find(name).counter();
         return counter != null ? (long) counter.count() : 0;

@@ -58,14 +58,14 @@ Lyocell supports configuration via the exported `options` object.
 | `duration` | `string` | Test duration (e.g., `'10s'`, `'1m'`). | ✅ |
 | `iterations` | `integer` | Fixed number of total iterations. | ✅ |
 | `thresholds` | `object` | Pass/fail criteria (e.g., `{'http_req_duration': ['p(95)<500']}`). | ✅ |
+| `scenarios` | `object` | Advanced executors to model complex workloads. | ✅ |
 
-### Planned Options
-*   **`scenarios`**: Advanced executors to model complex workloads. ⏳
-    *   `shared-iterations`: Fixed iterations shared across VUs.
-    *   `per-vu-iterations`: Fixed iterations per VU.
-    *   `constant-vus`: Fixed VUs for a duration.
-    *   `ramping-vus`: Scale VUs up/down over time (stages).
-    *   `constant-arrival-rate`: Open model (RPS targets).
+### Supported Scenarios
+*   `shared-iterations`: Fixed iterations shared across VUs. ✅
+*   `per-vu-iterations`: Fixed iterations per VU. ✅
+*   `constant-vus`: Fixed VUs for a duration. ✅
+*   `ramping-vus`: Scale VUs up/down over time (stages). ✅
+*   `constant-arrival-rate`: Open model (RPS targets). ✅
 *   `ext`: Extension configuration.
 
 ## 4. JavaScript API Reference
@@ -77,8 +77,9 @@ Lyocell supports configuration via the exported `options` object.
 | :--- | :--- | :--- |
 | `get` | `http.get(url, [params])` | ✅ |
 | `post` | `http.post(url, body, [params])` | ✅ |
-| `put` | `http.put(url, body, [params])` | ⏳ Planned |
-| `del` | `http.del(url, [body], [params])` | ⏳ Planned |
+| `put` | `http.put(url, body, [params])` | ✅ |
+| `patch` | `http.patch(url, body, [params])` | ✅ |
+| `del` | `http.del(url, [body], [params])` | ✅ |
 | `batch` | `http.batch(requests)` | ⏳ Planned |
 
 **Request `params` Object**:
@@ -105,8 +106,8 @@ Lyocell supports configuration via the exported `options` object.
 | :--- | :--- | :--- |
 | `Counter` | Cumulative sum (e.g., errors). | ✅ |
 | `Trend` | Statistics: min, max, avg, p95 (e.g., latency). Supports `add(value, tags)`. | ✅ |
-| `Rate` | Percentage of "true" values. | ⏳ Planned |
-| `Gauge` | Stores the last value. | ⏳ Planned |
+| `Rate` | Percentage of "true" values. | ✅ |
+| `Gauge` | Stores the last value. | ✅ |
 
 ### C. `k6` Core Module
 **Imports**: `import { check, group, sleep, fail, randomSeed } from 'k6';`
@@ -117,27 +118,27 @@ Lyocell supports configuration via the exported `options` object.
     ```
 *   **`sleep(sec)`**: Suspends the VU for `sec` seconds (blocking the Virtual Thread, not the OS thread).
 *   **`group(name, fn)`**: Groups metrics/checks under a label.
-*   **`fail(err)`**: Aborts the current iteration and increments the `iterations_failed` metric. ⏳ Planned
-*   **`randomSeed(int)`**: Sets the seed for `Math.random` (for reproducible tests). ⏳ Planned
+*   **`fail(err)`**: Aborts the current iteration and increments the `iterations_failed` metric. ✅
+*   **`randomSeed(int)`**: Sets the seed for `Math.random` (for reproducible tests). ✅
 
 ### D. Other Standard Modules (Planned)
 These modules are standard in k6 and are planned for future Lyocell phases.
 
-#### `k6/execution` ⏳
+#### `k6/execution` ✅
 Exposes information about the current test execution state.
 *   `execution.vu.idInTest`: Unique ID of the VU (1 to N).
 *   `execution.vu.iterationInInstance`: Current iteration number.
 *   `execution.test.abort()`: Stops the entire test.
 
-#### `k6/encoding` ⏳
+#### `k6/encoding` ✅
 *   `b64encode(input)`: Base64 encode.
 *   `b64decode(input)`: Base64 decode.
 
-#### `k6/crypto` ⏳
+#### `k6/crypto` ✅
 *   `sha256(input)`: SHA-256 hashing.
 *   `hmac(algo, secret, data)`: HMAC generation.
 
-#### `k6/data` ⏳
+#### `k6/data` ✅
 *   `SharedArray`: Memory-efficient way to share large data (e.g., JSON) between VUs.
 
 ### E. Environment Variables

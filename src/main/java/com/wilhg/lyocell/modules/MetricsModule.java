@@ -15,6 +15,35 @@ public class MetricsModule implements LyocellModule {
     }
 
     @Override
+    public String getName() {
+        return "k6/metrics";
+    }
+
+    @Override
+    public String getJsSource() {
+        return """
+            const Metrics = globalThis.LyocellMetrics;
+            export class Counter {
+                constructor(name) { this.name = name; }
+                add(val) { Metrics.addCounter(this.name, val); }
+            }
+            export class Trend {
+                constructor(name) { this.name = name; }
+                add(val) { Metrics.addTrend(this.name, val); }
+            }
+            export class Gauge {
+                constructor(name) { this.name = name; }
+                add(val) { Metrics.setGauge(this.name, val); }
+            }
+            export class Rate {
+                constructor(name) { this.name = name; }
+                add(val) { Metrics.addRate(this.name, val); }
+            }
+            export default { Counter, Trend, Gauge, Rate };
+            """;
+    }
+
+    @Override
     public void install(Context context, ModuleContext moduleContext) {
         this.collector = moduleContext.metricsCollector();
         context.getBindings("js").putMember("LyocellMetrics", this);
@@ -30,5 +59,13 @@ public class MetricsModule implements LyocellModule {
         collector.addTrend(name, value);
     }
 
-    // We can add Gauge and Rate later using similar logic
+    @HostAccess.Export
+    public void setGauge(String name, double value) {
+        collector.setGauge(name, value);
+    }
+
+    @HostAccess.Export
+    public void addRate(String name, boolean value) {
+        collector.addRate(name, value);
+    }
 }
