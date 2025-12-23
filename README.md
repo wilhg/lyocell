@@ -54,6 +54,32 @@ Run a load test by supplying a JavaScript file and configuration flags.
 | :--- | :--- | :--- |
 | `-u`, `--vus <n>` | Number of Virtual Users (concurrency). | 1 |
 | `-i`, `--iterations <n>` | Total iterations per VU. | 1 |
+| `-o`, `--out <type=url>` | Export metrics (e.g., `influxdb=http://localhost:8086`). | - |
+
+### Observability
+
+Lyocell supports real-time metrics export to **InfluxDB** and **Prometheus**.
+
+#### InfluxDB 2.x
+```bash
+# Set credentials
+export INFLUX_TOKEN=my-token
+export INFLUX_ORG=my-org
+export INFLUX_BUCKET=my-bucket
+
+# Run with output
+lyocell script.js -o influxdb=http://localhost:8086
+```
+
+#### Prometheus
+*   **Pull Mode (Scrape):** Starts an HTTP server at `http://localhost:9090/metrics`.
+    ```bash
+    lyocell script.js -o prometheus=9090
+    ```
+*   **Push Mode (Pushgateway):** Pushes to a Pushgateway URL.
+    ```bash
+    lyocell script.js -o prometheus=http://pushgateway:9091
+    ```
 
 ### Example Script (`test.js`)
 

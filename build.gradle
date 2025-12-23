@@ -43,6 +43,8 @@ dependencies {
 
     // Metrics
     implementation 'io.micrometer:micrometer-core:1.16.1'
+    implementation 'io.micrometer:micrometer-registry-influx:1.16.1'
+    implementation 'io.micrometer:micrometer-registry-prometheus:1.16.1'
 
     testImplementation platform('org.junit:junit-bom:5.11.4')
     testImplementation 'org.junit.jupiter:junit-jupiter'

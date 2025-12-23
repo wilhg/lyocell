@@ -4,6 +4,7 @@ import io.micrometer.core.instrument.Counter;
 import io.micrometer.core.instrument.DistributionSummary;
 import io.micrometer.core.instrument.Gauge;
 import io.micrometer.core.instrument.MeterRegistry;
+import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
 import java.util.concurrent.ConcurrentHashMap;
@@ -14,19 +15,20 @@ import java.util.concurrent.atomic.AtomicReference;
 /// This class acts as a facade over Micrometer's MeterRegistry,
 /// mapping k6 metric types to Micrometer instruments.
 public class MetricsCollector {
-    private final MeterRegistry registry;
+    private final CompositeMeterRegistry registry;
     private final ConcurrentHashMap<String, AtomicReference<Double>> gaugeValues = new ConcurrentHashMap<>();
 
     public MetricsCollector() {
-        this(new SimpleMeterRegistry());
+        this.registry = new CompositeMeterRegistry();
+        this.registry.add(new SimpleMeterRegistry());
     }
 
-    public MetricsCollector(MeterRegistry registry) {
-        this.registry = registry;
-    }
-
-    public MeterRegistry getRegistry() {
+    public CompositeMeterRegistry getRegistry() {
         return registry;
+    }
+
+    public void addRegistry(MeterRegistry childRegistry) {
+        this.registry.add(childRegistry);
     }
 
     /// Adds a value to a cumulative counter.

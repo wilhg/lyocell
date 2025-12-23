@@ -20,6 +20,7 @@ public class Main {
         String scriptArg = null;
         int vus = 1;
         int iterations = 1;
+        java.util.List<com.wilhg.lyocell.engine.OutputConfig> outputs = new java.util.ArrayList<>();
 
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
@@ -35,6 +36,17 @@ public class Main {
                     iterations = Integer.parseInt(args[++i]);
                 } else {
                     System.err.println("Missing value for --iterations");
+                    return 1;
+                }
+            } else if (arg.equals("-o") || arg.equals("--out")) {
+                if (i + 1 < args.length) {
+                    String outputArg = args[++i];
+                    String[] parts = outputArg.split("=", 2);
+                    String type = parts[0];
+                    String target = parts.length > 1 ? parts[1] : "";
+                    outputs.add(new com.wilhg.lyocell.engine.OutputConfig(type, target));
+                } else {
+                    System.err.println("Missing value for --out");
                     return 1;
                 }
             } else if (!arg.startsWith("-")) {
@@ -57,7 +69,7 @@ public class Main {
         
         try {
             TestEngine engine = new TestEngine();
-            TestConfig config = new TestConfig(vus, iterations, null);
+            TestConfig config = new TestConfig(vus, iterations, null, outputs);
             engine.run(scriptPath, config);
             return 0;
         } catch (Exception e) {
@@ -72,5 +84,6 @@ public class Main {
         System.err.println("Options:");
         System.err.println("  -u, --vus <n>          Number of virtual users (default: 1)");
         System.err.println("  -i, --iterations <n>   Total iterations (per VU for now) (default: 1)");
+        System.err.println("  -o, --out <type=url>   Output metrics to an external service (e.g. influxdb=http://localhost:8086)");
     }
 }
