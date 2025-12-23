@@ -1,0 +1,6 @@
+version: '3'
+services:
+  httpbun:
+    image: sharat87/httpbun
+    ports:
+      - "80:80"

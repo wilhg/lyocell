@@ -1,5 +1,6 @@
 package com.wilhg.lyocell.modules;
 
+import com.wilhg.lyocell.metrics.MetricsCollector;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Value;
@@ -20,6 +21,11 @@ public class HttpModule {
             .build();
     
     private Context context;
+    private final MetricsCollector metricsCollector;
+
+    public HttpModule(MetricsCollector metricsCollector) {
+        this.metricsCollector = metricsCollector;
+    }
 
     public void setContext(Context context) {
         this.context = context;
@@ -58,10 +64,17 @@ public class HttpModule {
 
             HttpResponse<String> response = client.send(builder.build(), HttpResponse.BodyHandlers.ofString());
             double duration = Duration.between(start, Instant.now()).toMillis();
+            
+            if (metricsCollector != null) {
+                metricsCollector.addTrend("http_req_duration", duration);
+            }
 
             return new HttpResponseWrapper(response, duration, context);
         } catch (Exception e) {
             double duration = Duration.between(start, Instant.now()).toMillis();
+            if (metricsCollector != null) {
+                metricsCollector.addTrend("http_req_duration", duration);
+            }
             return new HttpResponseWrapper(e.getMessage(), duration, context);
         }
     }

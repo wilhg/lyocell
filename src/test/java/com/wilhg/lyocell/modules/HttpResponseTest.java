@@ -20,7 +20,7 @@ import static org.junit.jupiter.api.Assertions.*;
 class HttpResponseTest {
 
     @Container
-    public GenericContainer<?> httpbin = new GenericContainer<>(DockerImageName.parse("kong/httpbin"))
+    public GenericContainer<?> httpbin = new GenericContainer<>(DockerImageName.parse("sharat87/httpbun"))
             .withExposedPorts(80);
 
     @TempDir

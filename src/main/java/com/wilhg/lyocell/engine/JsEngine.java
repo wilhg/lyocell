@@ -25,12 +25,14 @@ public class JsEngine implements AutoCloseable {
                 .allowHostAccess(HostAccess.ALL)
                 .allowHostClassLookup(s -> true)
                 .allowIO(true)
+                .allowExperimentalOptions(true)
                 .fileSystem(new LyocellFileSystem())
                 .option("js.esm-eval-returns-exports", "true")
+                .option("engine.WarnVirtualThreadSupport", "false")
                 .build();
 
         // Inject global bindings
-        HttpModule httpModule = new HttpModule();
+        HttpModule httpModule = new HttpModule(metricsCollector);
         httpModule.setContext(this.context);
         
         context.getBindings("js").putMember("LyocellHttp", httpModule);
@@ -38,8 +40,25 @@ public class JsEngine implements AutoCloseable {
         context.getBindings("js").putMember("LyocellMetrics", new MetricsModule(metricsCollector));
         context.getBindings("js").putMember("console", new ConsoleModule());
         
+        // Setup __ENV
+        // We merge System.getenv() with any provided extra envs (if we decide to support -e flags later)
+        // For now, let's just expose System.getenv() combined with any string-based extraBindings
+        java.util.Map<String, String> env = new java.util.HashMap<>(System.getenv());
+        if (extraBindings.containsKey("__ENV")) {
+            @SuppressWarnings("unchecked")
+            java.util.Map<String, String> extras = (java.util.Map<String, String>) extraBindings.get("__ENV");
+            env.putAll(extras);
+        }
+        
+        // Convert Map to a ProxyObject or just a Map that Graal handles
+        context.getBindings("js").putMember("__ENV", env);
+        
         // Inject extra bindings (e.g., for testing)
-        extraBindings.forEach((k, v) -> context.getBindings("js").putMember(k, v));
+        extraBindings.forEach((k, v) -> {
+            if (!k.equals("__ENV")) {
+                context.getBindings("js").putMember(k, v);
+            }
+        });
     }
 
     private Value moduleExports;

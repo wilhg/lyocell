@@ -1,284 +1,190 @@
 # Lyocell
 
-A modern HTTP client CLI built with Java 25, featuring virtual threads and real-time monitoring.
+**Lyocell** is a high-performance, open-source load testing tool rewritten as a **Java-based clone of k6**. It allows you to run standard k6 JavaScript scripts using the power of **Java 25 Virtual Threads** for massive concurrency and **GraalVM (GraalJS)** for high-performance script execution.
 
-## Features
+Unlike the original Go-based k6, Lyocell leverages Project Loom (Virtual Threads) to provide a thread-per-virtual-user model that is both scalable and easy to reason about.
 
-- 🧵 Virtual Threads - 100-thread pool for high concurrency
-- 🔄 Structured Concurrency - Proper task lifecycle management
-- 🎨 Real-time CLI - Live monitoring with color-coded status
-- ⚡ Native Image - ~10ms startup, ~50MB memory
-- 📊 Live Statistics - Real-time success/failure tracking
+## 🚀 Features
 
-## Building the CLI
+*   **k6 Compatibility:** Runs standard k6 scripts (`import http from 'k6/http'`).
+*   **Virtual Threads:** Uses Java 25 Virtual Threads to spawn thousands of concurrent users with minimal overhead.
+*   **GraalVM Native Image:** Compiles to a standalone native binary for instant startup (~10ms).
+*   **Metrics Engine:** High-performance, lock-free metrics aggregation (p95, p99, throughput).
+*   **Thresholds:** Define pass/fail criteria directly in your script (`rate<0.01`).
 
-### Prerequisites
+## 📋 Prerequisites
 
-1. **Install Mandrel (GraalVM distribution):**
+To build and run from source, you need:
+*   **Java 25** (with `--enable-preview`).
+*   **GraalVM for JDK 25** (optional, for building the native binary).
 
-You can use SDKMAN to install Java 25 with Native Image support:
+## 🛠️ Building & Installation
+
+### 1. Clone the Repository
 ```bash
-sdk install java 25.0.1.r25-mandrel
-sdk use java 25.0.1.r25-mandrel
-```
-
-Or download Mandrel directly from [GitHub releases](https://github.com/graalvm/mandrel/releases)
-
-2. **Verify installation:**
-```bash
-java -version        # Should show: java version "25"
-native-image --version  # Should show Mandrel version
-```
-
-### Build Steps
-
-```bash
-# Clone the repository
-git clone <repository-url>
+git clone https://github.com/wilhg/lyocell.git
 cd lyocell
+```
 
-# Build the native binary
+### 2. Build the Native Binary (Recommended)
+This produces a standalone executable that requires no JVM to run.
+```bash
 ./gradlew nativeCompile
 ```
+The binary will be generated at `build/native/nativeCompile/lyocell`.
 
-The CLI binary will be created at: **`build/native/nativeCompile/lyocell`**
+### 3. Run with Gradle (Development)
+If you don't want to compile a native image, you can run directly with Gradle:
+```bash
+./gradlew run --args="script.js -u 10 -i 100"
+```
 
-Build time: ~2-5 minutes (first build)
+## 📖 Usage
 
-## Using the CLI
-
-### Demo Mode
-
-Run without arguments to see the demo:
+Run a load test by supplying a JavaScript file and configuration flags.
 
 ```bash
-./build/native/nativeCompile/lyocell
+./lyocell <script.js> [flags]
 ```
 
-This will:
-1. Submit sample HTTP requests to httpbin.org
-2. Display real-time monitoring dashboard
-3. Show live statistics and task status updates
+### Flags
 
-### HTTP Requests (httpie-style)
+| Flag | Description | Default |
+| :--- | :--- | :--- |
+| `-u`, `--vus <n>` | Number of Virtual Users (concurrency). | 1 |
+| `-i`, `--iterations <n>` | Total iterations per VU. | 1 |
 
-Make HTTP requests with simple, intuitive syntax:
+### Example Script (`test.js`)
+
+Lyocell supports standard k6 syntax:
+
+```javascript
+import http from 'k6/http';
+import { check, sleep } from 'k6';
+import { Counter } from 'k6/metrics';
+
+export const options = {
+    thresholds: {
+        'checks': ['rate>0.95'], // Fail if success rate is below 95%
+    },
+};
+
+const myCounter = new Counter('my_custom_counter');
+
+export default function() {
+    const res = http.get('https://httpbin.org/get');
+    
+    check(res, {
+        'status is 200': (r) => r.status === 200,
+    });
+
+    myCounter.add(1);
+    sleep(1);
+}
+```
+
+### Running the Example
 
 ```bash
-# Simple GET request
-lyocell GET https://httpbin.org/get
-
-# GET with query parameters
-lyocell https://httpbin.org/get name==John age==30
-
-# POST with JSON data
-lyocell POST https://httpbin.org/post name=John age:=30 active:=true
-
-# With custom headers
-lyocell https://httpbin.org/get User-Agent:Lyocell Authorization:"Bearer token"
-
-# PUT with timeout
-lyocell PUT https://httpbin.org/put id:=123 --timeout=3000
+# Run with 50 concurrent users, 10 iterations each
+./build/native/nativeCompile/lyocell test.js -u 50 -i 10
 ```
 
-### Request Item Syntax
+**Output:**
+```text
+========================================
+          LYOCELL TEST SUMMARY
+========================================
 
-| Syntax | Description | Example |
-|--------|-------------|---------|
-| `key=value` | JSON string field | `name=John` → `{"name":"John"}` |
-| `key:=value` | JSON raw/number | `age:=30` → `{"age":30}` |
-| `key==value` | URL query parameter | `q==search` → `?q=search` |
-| `Header:value` | Request header | `User-Agent:CLI` |
+[Execution]
+  iterations................: 500
 
-### Options
+[Checks]
+  checks....................: 100.00% (500 pass, 0 fail)
 
-| Option | Description | Default |
-|--------|-------------|---------|
-| `-to, --timeout=ms` | Request timeout in milliseconds | `5000` |
-| `-n, --requests=N` | Number of requests to send | `1` |
-| `-c, --concurrency=N` | Number of concurrent requests | `1` |
+[Trends]
+  http_req_duration:
+    avg=124.50   min=89.00    p(95)=180.20   p(99)=210.50
+========================================
+```
 
-### Batch Requests from YAML
+## 🧩 Supported API
 
-Execute multiple different requests from a YAML file:
+Lyocell implements a core subset of the k6 API:
+
+### Modules
+*   **`k6/http`**:
+    *   `get(url, [params])`
+    *   `post(url, body, [params])`
+    *   `Response` object: `status`, `body`, `headers`, `timings`, `json()`
+*   **`k6/metrics`**:
+    *   `Counter`: `add(value)`
+    *   `Trend`: `add(value)`
+    *   *(Gauge and Rate coming soon)*
+*   **`k6`**:
+    *   `check(val, sets)`
+    *   `group(name, fn)`
+    *   `sleep(seconds)`
+
+### Lifecycle
+*   `init` context (global scope)
+*   `setup()`
+*   `default()` (VU execution)
+*   `teardown()`
+
+## 🧪 Running Examples
+
+We provide a set of example scripts in the `examples/` directory to help you get started. These scripts are designed to run against a local instance of `httpbun`.
+
+### 1. Start the Test Server
+Use Docker Compose to start a local `httpbun` service:
 
 ```bash
-# Run batch requests
-lyocell requests.yaml
-lyocell ./config/api-tests.yml
+cd examples
+docker-compose up -d
 ```
+This will start a service at `http://localhost:80`.
 
-**YAML Format:**
+### 2. Run Example Scripts
 
-```yaml
-# Optional defaults applied to all requests
-defaults:
-  timeout: 8000
-  headers:
-    Authorization: Bearer token123
-    Content-Type: application/json
-
-# List of requests to execute
-requests:
-  - name: Get Users
-    method: GET
-    url: https://api.example.com/users
-    queryParams:
-      page: "1"
-      size: "50"
-
-  - name: Create User
-    method: POST
-    url: https://api.example.com/users
-    headers:
-      X-Custom-Header: custom-value
-    body:
-      name: Alice
-      email: alice@example.com
-      age: 25
-
-  - name: Update User
-    method: PUT
-    url: https://api.example.com/users/123
-    timeout: 15000
-    body:
-      name: Bob Updated
-```
-
-**YAML Schema:**
-
-| Field | Required | Description |
-|-------|----------|-------------|
-| `defaults.timeout` | No | Default timeout for all requests (ms) |
-| `defaults.headers` | No | Default headers for all requests |
-| `requests[].name` | No | Descriptive name for the request |
-| `requests[].method` | No | HTTP method (default: GET) |
-| `requests[].url` | **Yes** | Request URL |
-| `requests[].headers` | No | Request headers (merged with defaults) |
-| `requests[].queryParams` | No | URL query parameters |
-| `requests[].body` | No | Request body (object or string) |
-| `requests[].timeout` | No | Request timeout (overrides default) |
-
-Batch mode will:
-- Execute all requests sequentially
-- Display real-time progress in the CLI
-- Show summary statistics at the end
-
-### Load Testing
-
-Send multiple requests with controlled concurrency:
-
+**Basic GET Request:**
 ```bash
-# Send 100 requests with 10 concurrent
-lyocell https://httpbin.org/get -n=100 -c=10
-
-# POST load test with JSON body
-lyocell POST https://httpbin.org/post name=test id:=1 -n=50 -c=5
-
-# Load test with custom headers
-lyocell https://api.example.com/endpoint Authorization:"Bearer token" -n=200 -c=20
+./lyocell examples/basic-get.js -u 5 -i 10
 ```
 
-Results will show:
-- Total time
-- Successful/failed requests
-- Requests per second
-- Average time per request
-
-### CLI Interface
-
-```
-╔═══════════════════════════════════════════════════════════╗
-║           LYOCELL - HTTP Client Monitor                   ║
-╚═══════════════════════════════════════════════════════════╝
-
-📊 Statistics:
-   Total: 10 | ✓ Success: 8 | ✗ Failed: 1 | ⏳ In Progress: 1
-
-📝 Recent Tasks:
-   ✓ Task #1  - SUCCESS    - GET https://httpbin.org/delay/0 - 245ms
-   ✓ Task #2  - SUCCESS    - GET https://httpbin.org/delay/1 - 1234ms
-   ⏳ Task #3  - PENDING    - GET https://httpbin.org/delay/2 - 456ms (ongoing)
-
-Press Ctrl+C to exit
-```
-
-### Status Indicators
-
-- ✓ **SUCCESS** (Green) - Request completed successfully (HTTP 2xx)
-- ✗ **FAILED** (Red) - Request failed (network error, timeout, or HTTP 4xx/5xx)
-- ⏳ **PENDING** (Yellow) - Request currently executing
-- ⏸ **AWAITING** (Blue) - Request queued, waiting for worker thread
-
-### Controls
-
-- **Ctrl+C** - Gracefully shutdown the CLI
-
-
-## Development
-
-### Run Tests
-
+**POST with JSON:**
 ```bash
-./gradlew test
+./lyocell examples/post-json.js -u 1 -i 1
 ```
 
-### Generate Coverage Report
-
+**Custom Metrics:**
 ```bash
-./gradlew test jacocoTestReport
-open build/reports/jacoco/test/html/index.html
+./lyocell examples/custom-metrics.js -u 10 -i 50
 ```
 
-### Run with JVM (for development)
-
+### 3. Cleanup
+When you are done, stop the test server:
 ```bash
-./gradlew run
+cd examples
+docker-compose down
 ```
 
+## 🏗️ Architecture
 
-## Performance
+*   **Engine:** `TestEngine` manages a `StructuredTaskScope` (Java 25) to supervise thousands of `VuWorker` threads.
+*   **Isolation:** Each VU runs in its own isolated GraalJS `Context`, ensuring thread safety without shared mutable state.
+*   **Bridge:** A custom `LyocellFileSystem` intercepts imports to inject high-performance Java implementations of k6 modules.
 
-Native image with optimizations provides:
-- ⚡ **Instant startup**: ~10-50ms (vs ~500-1000ms JVM)
-- 💾 **Low memory**: ~50-100MB RSS (vs ~150-250MB JVM)
-- 📦 **Single binary**: No JVM installation required
-- 🚀 **CPU optimized**: Built with `-O3` and `-march=native`
-- 🔋 **Memory efficient**: 128MB max heap, parallel GC
+## 🤝 Contributing
 
-Compare performance:
-```bash
-./compare-performance.sh
-```
+We welcome contributions! Please ensure all PRs follow **Test-Driven Development (TDD)** and include integration tests.
 
-## Architecture
+1.  Fork the repo.
+2.  Create a feature branch.
+3.  Add tests (`src/test/java`).
+4.  Implement feature.
+5.  Submit PR.
 
-### Concurrency Model
-```
-Submit Task → Queue → Worker Pool (100 Virtual Threads) → Listeners
-```
+## 📄 License
 
-### Task Lifecycle
-```
-AWAITING → PENDING → SUCCEED/FAILED
-```
-
-
-## Technical Details
-
-### Built With
-- **Java 25** - Virtual threads, structured concurrency, ScopedValue
-- **JLine 3.25.1** - Terminal UI
-- **Mandrel 25** - Native Image AOT compilation (Red Hat's GraalVM distribution)
-- **Testcontainers** - Integration testing
-
-### Test Coverage
-- Total: 80%
-- Tests: 12 integration tests
-- All tests use Docker-based httpbun for real HTTP testing
-
-### Architecture
-- 100 virtual thread pool (configurable)
-- Queue-based task distribution
-- Event-driven status updates
-- CLI refreshes every 500ms
+MIT
