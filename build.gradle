@@ -104,7 +104,9 @@ graalvmNative {
 
             // JVM arguments for build process
             jvmArgs = [
-                    '-Xmx12g',  // More memory for native-image build process
+            '-O3',
+            '-Xmx8g',  // More memory for native-image build process
+            '--enable-preview',
             ]
             useArgFile = false
         }
