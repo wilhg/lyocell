@@ -105,7 +105,7 @@ graalvmNative {
 
             // JVM arguments for build process
             jvmArgs = [
-            '-Xmx7g',
+            '-Xmx8g',
             '--enable-preview',
             ]
             useArgFile = false
