@@ -1,114 +1,163 @@
-# Lyocell Architecture & Reference (k6 clone)
+# Lyocell Reference Manual (k6 Clone)
 
-This document is the definitive blueprint for rewriting Lyocell as a high-performance, Java 25-based clone of k6.
+This document serves as the user manual for Lyocell, a clean-room implementation of the k6 load testing tool on the Java platform. It adheres strictly to the [official k6 documentation](https://grafana.com/docs/k6/latest/using-k6/).
 
-## 1. Internal Architecture
+## 1. Test Lifecycle
 
-### A. Threading Model (Java 25)
-Unlike k6 (Go), which uses goroutines, Lyocell will leverage **Java 25 Virtual Threads** (Project Loom).
-*   **1 VU = 1 Virtual Thread**: Each Virtual User runs on its own dedicated Virtual Thread. This allows blocking I/O (e.g., HTTP requests, `sleep()`) to be written in a synchronous style without blocking OS threads.
-*   **Structured Concurrency**: Use `StructuredTaskScope` to manage the lifecycle of VUs. If the test is aborted, the scope ensures all VUs are properly cancelled.
-*   **Scoped Values**: Use `ScopedValue<VuContext>` to implicitly pass the current VU's state (ID, iteration, context) to static helper methods (like `k6/http` functions) without polluting method signatures or using expensive `ThreadLocal`.
+A Lyocell test execution follows the standard four-stage k6 lifecycle:
 
-### B. JavaScript Engine (GraalJS)
-*   **Context Strategy**: GraalJS `Context` is **not thread-safe**.
-    *   **Per-VU Context**: Each VU (Virtual Thread) *must* have its own isolated `Context` instance.
-    *   **Shared Code**: To save memory, parsed `Source` objects (the test script) should be cached and shared across contexts.
-*   **Module Loading**:
-    *   We will strictly support **ES Modules** (`import`).
-    *   **Internal Modules**: `k6/http`, `k6/metrics`, etc., will be implemented as Java classes and exposed via a custom `FileSystem` or by injecting them into the global scope during Context initialization, then aliased in a synthetic "loader" script.
-    *   **Files**: Local script files will be loaded via the standard file system.
+### A. Init Stage
+*   **Context**: Runs once per VU.
+*   **Purpose**: Initialize global variables, import modules, and define functions.
+*   **Constraints**: No network requests allowed (HTTP calls here will fail).
+*   **Example**:
+    ```javascript
+    import http from 'k6/http';
+    const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
+    ```
 
-### C. Metrics Aggregation
-High-concurrency aggregation is critical. We will avoid a single central lock.
-*   **Distributed Aggregation**: Each VU maintains a local buffer of metrics (e.g., `VuMetricsBuffer`).
-*   **Flush Mechanism**:
-    *   **Periodic**: Every 1s (or batch size), the VU flushes its buffer to a central `MetricsIngester`.
-    *   **Ingester**: Uses `LongAdder` for counters and `DoubleAccumulator` for simple trends to ensure lock-free ingestion.
-    *   **RingBuffer (Disruptor style)**: For high-volume distinct data points (like detailed trend percentiles), use a ring buffer to pass events from VUs to a single "calculator" thread that updates the global histograms.
+### B. Setup Stage (Optional)
+*   **Function**: `export function setup() { ... }`
+*   **Context**: Runs **once** for the entire test (by a special VU).
+*   **Purpose**: Create test data, register users, or obtain tokens.
+*   **Data Passing**: The return value (JSON-serializable) is passed to the VU and Teardown stages.
+*   **Status**: ✅ Fully Implemented.
 
-## 2. Configuration (`options` object)
+### C. VU Stage (The Test)
+*   **Function**: `export default function(data) { ... }`
+*   **Context**: Runs repeatedly in a loop for every Virtual User.
+*   **Purpose**: The main load testing logic.
+*   **Concurrency**: Each VU runs on its own **Java Virtual Thread**, allowing massive concurrency.
+*   **Status**: ✅ Fully Implemented.
 
-The `options` object exported by the script controls execution. We must parse this JSON object from JS.
+### D. Teardown Stage (Optional)
+*   **Function**: `export function teardown(data) { ... }`
+*   **Context**: Runs **once** after all VUs have finished.
+*   **Purpose**: Cleanup data or environments.
+*   **Status**: ✅ Fully Implemented.
 
-### A. Scenarios (`options.scenarios`)
-A map of scenario names to configuration objects.
-*   **`executor`**: String (e.g., `constant-vus`, `ramping-vus`).
-*   **`vus`**: Integer (for constant/ramping VUs).
-*   **`duration`**: String (e.g., `30s`).
-*   **`stages`**: Array of `{ duration: string, target: int }` (for ramping).
-*   **`startTime`**: String (offset).
-*   **`exec`**: String (exported function name to run, defaults to `default`).
+## 2. Test Types (Methodology)
 
-### B. Thresholds (`options.thresholds`)
-A map of metric names to criteria strings.
-*   **Keys**: Metric name (e.g., `http_req_duration`, `checks`).
-*   **Values**: Array of strings (e.g., `['p(95)<200', 'rate<0.01']`).
-*   **Abort**: `['p(95)<200', { threshold: 'rate<0.05', abortOnFail: true }]`.
+Lyocell supports standard performance testing methodologies defined by k6:
 
-## 3. JavaScript API Schema
+*   **Smoke Test**: Minimal load (1 VU) for short duration to verify script logic and system health.
+*   **Load Test**: Simulates normal "day-in-the-life" traffic to verify SLOs.
+*   **Stress Test**: Load beyond normal limits to find the breaking point or test stability.
+*   **Soak Test**: Run for extended periods (hours) to detect memory leaks or resource exhaustion.
+*   **Spike Test**: Sudden, massive surge in traffic to test autoscaling recovery.
+*   **Breakpoint Test**: Ramp up load indefinitely until the system fails.
 
-### A. `k6/http`
-**`request(method, url, [body], [params])`**
-*   **`params` Object**:
-    *   `headers`: `Map<String, String>` (Request headers).
-    *   `cookies`: `Map<String, String | Object>` (Request cookies).
-    *   `tags`: `Map<String, String>` (Custom tags for metrics).
-    *   `auth`: `String` (e.g., `"user:pass"` for Basic Auth).
-    *   `timeout`: `String` (e.g., `"5s"`).
-    *   `redirects`: `Integer` (Max redirects).
-    *   `compression`: `String` (`gzip`).
-*   **`Response` Object**:
-    *   `status`: `int` (200).
-    *   `url`: `String`.
-    *   `body`: `String`.
-    *   `headers`: `Map<String, String>`.
-    *   `cookies`: `Map<String, Object>`.
-    *   `error`: `String`.
-    *   `error_code`: `int`.
-    *   `timings`: `{ duration: float, blocked: float, connecting: float, sending: float, waiting: float, receiving: float }`.
-    *   `json(selector)`: Method to parse JSON.
+## 3. Configuration (`options`)
 
-### B. `k6` (Core)
-*   **`check(val, sets, [tags])`**:
-    *   `sets`: `{ "check name": (val) => boolean }`.
-    *   Returns `boolean` (true if all pass).
-*   **`group(name, fn)`**:
-    *   Executes `fn`. Adds `group` tag to all metrics generated inside.
-*   **`sleep(seconds)`**:
-    *   Blocking sleep (via `Thread.sleep`).
+Lyocell supports configuration via the exported `options` object.
 
-### C. `k6/metrics`
-*   **Classes**: `Counter`, `Gauge`, `Rate`, `Trend`.
-*   **Constructor**: `new Counter('name', [isTime])`.
-*   **Methods**: `add(value, [tags])`.
+### Supported Options
+| Option | Type | Description | Status |
+| :--- | :--- | :--- | :--- |
+| `vus` | `integer` | Number of concurrent Virtual Users. | ✅ |
+| `duration` | `string` | Test duration (e.g., `'10s'`, `'1m'`). | ✅ |
+| `iterations` | `integer` | Fixed number of total iterations. | ✅ |
+| `thresholds` | `object` | Pass/fail criteria (e.g., `{'http_req_duration': ['p(95)<500']}`). | ✅ |
 
-## 4. Java Implementation Strategy
+### Planned Options
+*   **`scenarios`**: Advanced executors to model complex workloads. ⏳
+    *   `shared-iterations`: Fixed iterations shared across VUs.
+    *   `per-vu-iterations`: Fixed iterations per VU.
+    *   `constant-vus`: Fixed VUs for a duration.
+    *   `ramping-vus`: Scale VUs up/down over time (stages).
+    *   `constant-arrival-rate`: Open model (RPS targets).
+*   `ext`: Extension configuration.
 
-### Directory Structure
+## 4. JavaScript API Reference
+
+### A. `k6/http` Module
+**Imports**: `import http from 'k6/http';`
+
+| Method | Signature | Status |
+| :--- | :--- | :--- |
+| `get` | `http.get(url, [params])` | ✅ |
+| `post` | `http.post(url, body, [params])` | ✅ |
+| `put` | `http.put(url, body, [params])` | ⏳ Planned |
+| `del` | `http.del(url, [body], [params])` | ⏳ Planned |
+| `batch` | `http.batch(requests)` | ⏳ Planned |
+
+**Request `params` Object**:
+*   `headers`: `Map<String, String>` ✅
+*   `tags`: `Map<String, String>` (Custom metric tags) ⏳ Planned
+*   `timeout`: `string` ⏳ Planned
+*   `cookies`: `object` ⏳ Planned
+*   `auth`: `string` ⏳ Planned
+
+**`Response` Object**:
+*   `status` (number): HTTP status code. ✅
+*   `url` (string): The URL extracted. ✅
+*   `headers` (object): Response headers. ✅
+*   `body` (string): Response body. ✅
+*   `timings` (object): `{ duration: float, blocked: float, connecting: float, ... }`. ✅
+*   `json([selector])` (function): Parse body as JSON. ✅
+*   `clickLink()`: ⏳ Planned
+*   `submitForm()`: ⏳ Planned
+
+### B. `k6/metrics` Module
+**Imports**: `import { Counter, Trend, Rate, Gauge } from 'k6/metrics';`
+
+| Class | Description | Status |
+| :--- | :--- | :--- |
+| `Counter` | Cumulative sum (e.g., errors). | ✅ |
+| `Trend` | Statistics: min, max, avg, p95 (e.g., latency). Supports `add(value, tags)`. | ✅ |
+| `Rate` | Percentage of "true" values. | ⏳ Planned |
+| `Gauge` | Stores the last value. | ⏳ Planned |
+
+### C. `k6` Core Module
+**Imports**: `import { check, group, sleep, fail, randomSeed } from 'k6';`
+
+*   **`check(val, sets)`**: Assertions that don't stop the test.
+    ```javascript
+    check(res, { 'status is 200': (r) => r.status === 200 });
+    ```
+*   **`sleep(sec)`**: Suspends the VU for `sec` seconds (blocking the Virtual Thread, not the OS thread).
+*   **`group(name, fn)`**: Groups metrics/checks under a label.
+*   **`fail(err)`**: Aborts the current iteration and increments the `iterations_failed` metric. ⏳ Planned
+*   **`randomSeed(int)`**: Sets the seed for `Math.random` (for reproducible tests). ⏳ Planned
+
+### D. Other Standard Modules (Planned)
+These modules are standard in k6 and are planned for future Lyocell phases.
+
+#### `k6/execution` ⏳
+Exposes information about the current test execution state.
+*   `execution.vu.idInTest`: Unique ID of the VU (1 to N).
+*   `execution.vu.iterationInInstance`: Current iteration number.
+*   `execution.test.abort()`: Stops the entire test.
+
+#### `k6/encoding` ⏳
+*   `b64encode(input)`: Base64 encode.
+*   `b64decode(input)`: Base64 decode.
+
+#### `k6/crypto` ⏳
+*   `sha256(input)`: SHA-256 hashing.
+*   `hmac(algo, secret, data)`: HMAC generation.
+
+#### `k6/data` ⏳
+*   `SharedArray`: Memory-efficient way to share large data (e.g., JSON) between VUs.
+
+### E. Environment Variables
+*   **`__ENV`**: Global object containing environment variables.
+    *   Usage: `__ENV.MY_VAR`
+    *   System env vars are automatically injected.
+
+## 4. Lyocell Extensions
+
+Features specific to Lyocell, designed to be compatible with k6's philosophy.
+
+### Observability (Phase 6 - Planned)
+Configuring outputs directly in the script (Lyocell specific).
+```javascript
+export const options = {
+  lyocell: {
+    outputs: [
+      { type: 'influxdb', url: 'http://localhost:8086' },
+      { type: 'prometheus', port: 9090 }
+    ]
+  }
+};
 ```
-src/main/java/com/wilhg/lyocell/
-├── engine/
-│   ├── TestEngine.java       # Main coordinator
-│   ├── VuWorker.java         # Runnable for VirtualThread
-│   └── ScenarioScheduler.java
-├── js/
-│   ├── JsRuntime.java        # Graal Context Wrapper
-│   └── ModuleLoader.java     # Custom module resolver
-├── modules/
-│   ├── HttpModule.java       # k6/http implementation
-│   ├── CoreModule.java       # k6 (check, group, sleep)
-│   └── MetricsModule.java    # k6/metrics
-├── metrics/
-│   ├── MetricsCollector.java # Aggregator
-│   └── listeners/            # Listeners for TUI/Console
-└── model/
-    ├── HttpRequest.java
-    └── HttpResponse.java
-```
-
-### Key Dependencies
-*   **GraalJS & Polyglot**: For JS execution.
-*   **Java 25 (Preview)**: For Virtual Threads.
-*   **Jackson**: For parsing options/results.
-*   **JLine**: For TUI (already present).

@@ -10,6 +10,7 @@ Unlike the original Go-based k6, Lyocell leverages Project Loom (Virtual Threads
 *   **Virtual Threads:** Uses Java 25 Virtual Threads to spawn thousands of concurrent users with minimal overhead.
 *   **GraalVM Native Image:** Compiles to a standalone native binary for instant startup (~10ms).
 *   **Metrics Engine:** High-performance, lock-free metrics aggregation (p95, p99, throughput).
+*   **Dynamic Config:** Support for environment variables (`__ENV`).
 *   **Thresholds:** Define pass/fail criteria directly in your script (`rate<0.01`).
 
 ## 📋 Prerequisites
@@ -72,7 +73,7 @@ export const options = {
 const myCounter = new Counter('my_custom_counter');
 
 export default function() {
-    const res = http.get('https://httpbin.org/get');
+    const res = http.get(__ENV.BASE_URL || 'https://httpbin.org/get');
     
     check(res, {
         'status is 200': (r) => r.status === 200,
@@ -117,14 +118,17 @@ Lyocell implements a core subset of the k6 API:
     *   `get(url, [params])`
     *   `post(url, body, [params])`
     *   `Response` object: `status`, `body`, `headers`, `timings`, `json()`
+    *   *(Planned: `put`, `del`, `batch`)*
 *   **`k6/metrics`**:
     *   `Counter`: `add(value)`
     *   `Trend`: `add(value)`
-    *   *(Gauge and Rate coming soon)*
+    *   *(Planned: `Gauge`, `Rate`)*
 *   **`k6`**:
     *   `check(val, sets)`
     *   `group(name, fn)`
     *   `sleep(seconds)`
+*   **Global**:
+    *   `__ENV`: Environment variables.
 
 ### Lifecycle
 *   `init` context (global scope)

@@ -17,6 +17,4 @@ export default function() {
         'status is 200': (r) => r.status === 200,
         'content type is json': (r) => r.headers['content-type'].includes('application/json'),
     });
-
-    sleep(1);
 }
