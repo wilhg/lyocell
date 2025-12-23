@@ -109,7 +109,7 @@ Lyocell supports configuration via the exported `options` object.
 | `Rate` | Percentage of "true" values. | ✅ |
 | `Gauge` | Stores the last value. | ✅ |
 
-### C. `k6` Core Module
+### C. `lyocell` Core Module
 **Imports**: `import { check, group, sleep, fail, randomSeed } from 'lyocell';`
 
 *   **`check(val, sets)`**: Assertions that don't stop the test.

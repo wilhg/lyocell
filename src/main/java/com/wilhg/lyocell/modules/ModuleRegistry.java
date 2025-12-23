@@ -38,7 +38,7 @@ public class ModuleRegistry {
     public static String getModuleJs(String name, MetricsCollector metricsCollector) {
         ensureInitialized(metricsCollector);
         
-        // Match k6/http even if name is full path
+        // Match lyocell/http even if name is full path
         for (Map.Entry<String, LyocellModule> entry : modulesByName.entrySet()) {
             if (name.equals(entry.getKey()) || name.endsWith("/" + entry.getKey())) {
                 return entry.getValue().getJsSource();
