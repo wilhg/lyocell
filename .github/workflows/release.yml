@@ -90,7 +90,7 @@ jobs:
       - name: Install RPM tools
         run: sudo apt-get update && sudo apt-get install -y rpm
 
-      - name: Release with JReleaser
+      - name: Run JReleaser
+        uses: jreleaser/release-action@v2
         env:
           JRELEASER_GITHUB_TOKEN: ${{ secrets.JRELEASER_GITHUB_TOKEN }}
-        run: ./gradlew jreleaserFullRelease
