@@ -1,7 +1,8 @@
 project:
   name: lyocell
   description: High-performance load testing tool (k6 clone) on Java 25 & GraalVM
-  website: https://github.com/wilhg/lyocell
+  links:
+    homepage: https://github.com/wilhg/lyocell
   authors:
     - wilhg
   license: MIT
@@ -26,16 +27,17 @@ distributions:
 packagers:
   brew:
     active: ALWAYS
-    tap:
+    repository:
       owner: get-lyocell
+      name: homebrew-tap
   scoop:
     active: ALWAYS
-    bucket:
+    repository:
       owner: get-lyocell
-  deb:
+      name: scoop-bucket
+  nfpm:
     active: ALWAYS
-  rpm:
-    active: ALWAYS
+    formats: [ DEB, RPM ]
 
 upload:
   cloudsmith:
