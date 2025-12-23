@@ -10,7 +10,7 @@ We adopted an **MVP-first approach**, focusing on getting a "walking skeleton" r
 ### ✅ Phase 1: The Walking Skeleton (MVP)
 **Goal:** Run a simple JS script that makes a single HTTP request.
 *   **Core:** Set up project structure, dependencies (GraalJS, Polyglot).
-*   **Module System:** Implemented `LyocellFileSystem` to handle `import ... from 'k6/http'`.
+*   **Module System:** Implemented `LyocellFileSystem` to handle `import ... from 'lyocell/http'`.
 *   **Engine:** Implemented `JsEngine` with `HostAccess` to expose Java bindings (`HttpBridge`).
 *   **Modules:** Implemented a minimal `HttpBridge` (GET/POST) and `console.log` support.
 *   **CLI:** Wired up `Main` to accept a file path, initialize the engine, and execute.
@@ -24,7 +24,7 @@ We adopted an **MVP-first approach**, focusing on getting a "walking skeleton" r
 
 ### ✅ Phase 3: The Pulse (Metrics)
 **Goal:** Collect, aggregate, and report performance data.
-*   **API:** Implemented `k6/metrics` (`Counter`, `Trend`).
+*   **API:** Implemented `lyocell/metrics` (`Counter`, `Trend`).
 *   **Aggregation:** Created a high-performance, thread-safe `MetricsCollector` (using `LongAdder` and synchronized trends).
 *   **Reporting:** Generated the standard "end-of-test" summary to stdout.
 
@@ -50,9 +50,9 @@ We adopted an **MVP-first approach**, focusing on getting a "walking skeleton" r
 
 ### ✅ Phase 7: Standard Library Expansion
 **Goal:** Implement the full suite of standard k6 utility modules.
-*   **`k6/execution`:** Expose `vu.idInTest`, `vu.iterationInInstance` for unique data handling.
-*   **`k6/data`:** Implement `SharedArray` for memory-efficient data loading.
-*   **`k6/crypto` & `k6/encoding`:** Add SHA-256, HMAC, and Base64 support.
+*   **`lyocell/execution`:** Expose `vu.idInTest`, `vu.iterationInInstance` for unique data handling.
+*   **`lyocell/data`:** Implement `SharedArray` for memory-efficient data loading.
+*   **`lyocell/crypto` & `lyocell/encoding`:** Add SHA-256, HMAC, and Base64 support.
 *   **`k6` Core:** Add `fail()`, `randomSeed()`.
 
 ### ✅ Phase 8: The Choreographer (Advanced Scenarios)

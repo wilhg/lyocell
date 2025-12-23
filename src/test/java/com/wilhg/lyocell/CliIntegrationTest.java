@@ -17,7 +17,7 @@ class CliIntegrationTest {
     void testMainExecution() throws Exception {
         Path script = tempDir.resolve("cli_test.js");
         Files.writeString(script, """
-            import { Counter } from 'k6/metrics';
+            import { Counter } from 'lyocell/metrics';
             const c = new Counter('cli_counter');
             export default function() {
                 c.add(1);

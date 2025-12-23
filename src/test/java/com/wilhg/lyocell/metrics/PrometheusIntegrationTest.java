@@ -21,7 +21,7 @@ class PrometheusIntegrationTest {
     void testPrometheusScrapeEndpoint() throws Exception {
         int port = 9091; // Use a different port to avoid conflict
         Path script = Files.createTempFile("test-prom", ".js");
-        Files.writeString(script, "import { Counter } from 'k6/metrics'; const c = new Counter('test_counter'); export default function() { c.add(1); }");
+        Files.writeString(script, "import { Counter } from 'lyocell/metrics'; const c = new Counter('test_counter'); export default function() { c.add(1); }");
 
         TestEngine engine = new TestEngine();
         TestConfig config = new TestConfig(1, 10, null, List.of(

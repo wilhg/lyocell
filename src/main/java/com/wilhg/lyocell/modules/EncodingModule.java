@@ -8,7 +8,7 @@ import java.util.Base64;
 public class EncodingModule implements LyocellModule {
     @Override
     public String getName() {
-        return "k6/encoding";
+        return "lyocell/encoding";
     }
 
     @Override

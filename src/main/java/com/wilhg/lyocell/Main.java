@@ -65,7 +65,7 @@ public class Main {
             return 1;
         }
 
-        System.out.println("Starting Lyocell (k6 clone)...");
+        System.out.println("Starting Lyocell (compatible with k6)...");
         
         try {
             TestEngine engine = new TestEngine();

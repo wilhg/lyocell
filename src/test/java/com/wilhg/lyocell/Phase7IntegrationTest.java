@@ -14,13 +14,13 @@ public class Phase7IntegrationTest {
     @Test
     public void testFullPhase7Features() throws Exception {
         String script = """
-            import http from 'k6/http';
-            import { check, sleep, fail } from 'k6';
-            import exec from 'k6/execution';
-            import encoding from 'k6/encoding';
-            import crypto from 'k6/crypto';
-            import { SharedArray } from 'k6/data';
-            import { Counter } from 'k6/metrics';
+            import http from 'lyocell/http';
+            import { check, sleep, fail } from 'lyocell';
+            import exec from 'lyocell/execution';
+            import encoding from 'lyocell/encoding';
+            import crypto from 'lyocell/crypto';
+            import { SharedArray } from 'lyocell/data';
+            import { Counter } from 'lyocell/metrics';
             
             const data = new SharedArray('users', () => [
                 { id: 1, name: 'Alice' },
@@ -74,7 +74,7 @@ public class Phase7IntegrationTest {
     @Test
     public void testFailFunction() throws Exception {
         String script = """
-            import { fail } from 'k6';
+            import { fail } from 'lyocell';
             export default function() {
                 fail('explicit failure');
             }

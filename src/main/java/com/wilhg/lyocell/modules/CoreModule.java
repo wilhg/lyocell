@@ -17,7 +17,7 @@ public class CoreModule implements LyocellModule {
 
     @Override
     public String getName() {
-        return "k6";
+        return "lyocell";
     }
 
     @Override

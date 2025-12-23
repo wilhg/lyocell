@@ -1,5 +1,5 @@
-import http from 'k6/http';
-import { check } from 'k6';
+import http from 'lyocell/http';
+import { check } from 'lyocell';
 
 export default function() {
     const baseUrl = __ENV.BASE_URL || 'http://localhost:80';

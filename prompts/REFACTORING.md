@@ -40,15 +40,15 @@ The foundation is now solid, supporting multi-executor scenarios and pluggable m
 **Objective:** Add missing k6 modules.
 
 **Steps:**
-1.  **`k6/execution`:**
+1.  **`lyocell/execution`:**
     *   Requires injecting *context* into the module.
     *   Update `JsEngine` to allow passing the `VuWorker` ID/Context to modules.
     *   Implement `ExecutionModule` that exposes `vu.idInTest`, `vu.iterationInInstance`.
-2.  **`k6/data` (SharedArray):**
+2.  **`lyocell/data` (SharedArray):**
     *   This requires a "Global" context that is shared across VUs.
     *   Implement `SharedArray` as a Java object that wraps a read-only data structure.
     *   Ensure `HostAccess` allows safe concurrent access from JS.
-3.  **`k6/crypto` & `k6/encoding`:**
+3.  **`lyocell/crypto` & `lyocell/encoding`:**
     *   Pure function implementations using Java's `java.security.MessageDigest` and `java.util.Base64`.
     *   Straightforward mapping.
 

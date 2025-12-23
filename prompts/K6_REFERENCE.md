@@ -1,6 +1,6 @@
 # Lyocell Reference Manual (k6 Clone)
 
-This document serves as the user manual for Lyocell, a clean-room implementation of the k6 load testing tool on the Java platform. It adheres strictly to the [official k6 documentation](https://grafana.com/docs/k6/latest/using-k6/).
+This document serves as the user manual for Lyocell, a clean-room implementation of the k6 load testing tool on the Java platform. It adheres strictly to the [official k6 documentation](https://grafana.com/docs/lyocell/latest/using-lyocell/).
 
 ## 1. Test Lifecycle
 
@@ -12,7 +12,7 @@ A Lyocell test execution follows the standard four-stage k6 lifecycle:
 *   **Constraints**: No network requests allowed (HTTP calls here will fail).
 *   **Example**:
     ```javascript
-    import http from 'k6/http';
+    import http from 'lyocell/http';
     const BASE_URL = __ENV.BASE_URL || 'http://localhost:3000';
     ```
 
@@ -70,8 +70,8 @@ Lyocell supports configuration via the exported `options` object.
 
 ## 4. JavaScript API Reference
 
-### A. `k6/http` Module
-**Imports**: `import http from 'k6/http';`
+### A. `lyocell/http` Module
+**Imports**: `import http from 'lyocell/http';`
 
 | Method | Signature | Status |
 | :--- | :--- | :--- |
@@ -99,8 +99,8 @@ Lyocell supports configuration via the exported `options` object.
 *   `clickLink()`: ⏳ Planned
 *   `submitForm()`: ⏳ Planned
 
-### B. `k6/metrics` Module
-**Imports**: `import { Counter, Trend, Rate, Gauge } from 'k6/metrics';`
+### B. `lyocell/metrics` Module
+**Imports**: `import { Counter, Trend, Rate, Gauge } from 'lyocell/metrics';`
 
 | Class | Description | Status |
 | :--- | :--- | :--- |
@@ -110,7 +110,7 @@ Lyocell supports configuration via the exported `options` object.
 | `Gauge` | Stores the last value. | ✅ |
 
 ### C. `k6` Core Module
-**Imports**: `import { check, group, sleep, fail, randomSeed } from 'k6';`
+**Imports**: `import { check, group, sleep, fail, randomSeed } from 'lyocell';`
 
 *   **`check(val, sets)`**: Assertions that don't stop the test.
     ```javascript
@@ -124,21 +124,21 @@ Lyocell supports configuration via the exported `options` object.
 ### D. Other Standard Modules
 These modules are standard in k6 and are fully supported by Lyocell.
 
-#### `k6/execution` ✅
+#### `lyocell/execution` ✅
 Exposes information about the current test execution state.
 *   `execution.vu.idInTest`: Unique ID of the VU (1 to N).
 *   `execution.vu.iterationInInstance`: Current iteration number.
 *   `execution.test.abort()`: Stops the entire test.
 
-#### `k6/encoding` ✅
+#### `lyocell/encoding` ✅
 *   `b64encode(input)`: Base64 encode.
 *   `b64decode(input)`: Base64 decode.
 
-#### `k6/crypto` ✅
+#### `lyocell/crypto` ✅
 *   `sha256(input)`: SHA-256 hashing.
 *   `hmac(algo, secret, data)`: HMAC generation.
 
-#### `k6/data` ✅
+#### `lyocell/data` ✅
 *   `SharedArray`: Memory-efficient way to share large data (e.g., JSON) between VUs.
 
 ### E. Environment Variables

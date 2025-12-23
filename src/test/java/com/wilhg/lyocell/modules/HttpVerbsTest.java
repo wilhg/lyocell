@@ -12,8 +12,8 @@ public class HttpVerbsTest {
     @Test
     public void testHttpVerbs() throws Exception {
         String script = """
-            import http from 'k6/http';
-            import { check } from 'k6';
+            import http from 'lyocell/http';
+            import { check } from 'lyocell';
             
             export default function() {
                 // Use a real URL that supports these methods or a mock if available

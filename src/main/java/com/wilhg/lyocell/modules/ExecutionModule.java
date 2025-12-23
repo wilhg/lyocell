@@ -10,7 +10,7 @@ public class ExecutionModule implements LyocellModule {
 
     @Override
     public String getName() {
-        return "k6/execution";
+        return "lyocell/execution";
     }
 
     @Override

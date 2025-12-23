@@ -26,17 +26,17 @@ We use a **Thread-per-VU** model powered by Java 25 Virtual Threads. The lifecyc
 *   **Source Caching**: The user's script is read *once* into a `org.graalvm.polyglot.Source` object. This cached `Source` is passed to every VU context to avoid re-reading/parsing overhead.
 *   **Engine Sharing**: All Contexts share the same underlying `org.graalvm.polyglot.Engine` to enable code sharing (JIT compilation artifacts) across threads.
 
-## 2. Module System (`import ... from 'k6/...'`)
+## 2. Module System (`import ... from 'lyocell/...'`)
 
 GraalJS does not automatically find "virtual" files. We implemented a custom filesystem to inject the `k6` API.
 
 ### A. `LyocellFileSystem`
 Implements `org.graalvm.polyglot.io.FileSystem`.
 *   **Strategy**: Intercepts `parsePath` and `newByteChannel`.
-*   **Detection**: Checks if paths start with or contain `k6/` (e.g., `k6/http`, `k6/metrics`).
+*   **Detection**: Checks if paths start with or contain `lyocell/` (e.g., `lyocell/http`, `lyocell/metrics`).
 *   **Virtual Files**:
-    *   `k6/http`: Returns a synthetic source code that exports Java bindings (proxies to `LyocellHttp`).
-    *   `k6/metrics`: Exports `Counter` and `Trend` classes that bridge to `LyocellMetrics`.
+    *   `lyocell/http`: Returns a synthetic source code that exports Java bindings (proxies to `LyocellHttp`).
+    *   `lyocell/metrics`: Exports `Counter` and `Trend` classes that bridge to `LyocellMetrics`.
     *   `k6`: Exports core functions like `check`, `group`, `sleep`.
 
 ### B. Global Bindings (`HostAccess`)
@@ -136,4 +136,4 @@ The `TestEngine` uses `StructuredTaskScope` to manage the lifecycle of these exe
 
     *   **GC**: Uses Serial GC on macOS (G1 not supported) and G1 on Linux.
 
-3.  **Standard Library**: Modules like `k6/crypto`, `k6/encoding`, `k6/data`, and `k6/execution` are implemented as high-performance Java modules injected into the JS environment.
+3.  **Standard Library**: Modules like `lyocell/crypto`, `lyocell/encoding`, `lyocell/data`, and `lyocell/execution` are implemented as high-performance Java modules injected into the JS environment.

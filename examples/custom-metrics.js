@@ -1,5 +1,5 @@
-import { Counter, Trend } from 'k6/metrics';
-import { sleep } from 'k6';
+import { Counter, Trend } from 'lyocell/metrics';
+import { sleep } from 'lyocell';
 
 const myCounter = new Counter('my_counter');
 const myTrend = new Trend('response_time_trend');

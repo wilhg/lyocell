@@ -108,8 +108,8 @@ Pushes metrics to a Pushgateway.
 Efficiently load large datasets (e.g., CSV/JSON) once and share them across thousands of VUs.
 
 ```javascript
-import { SharedArray } from 'k6/data';
-import http from 'k6/http';
+import { SharedArray } from 'lyocell/data';
+import http from 'lyocell/http';
 
 const data = new SharedArray('users', function () {
   return JSON.parse(open('./users.json'));
@@ -121,11 +121,11 @@ export default function () {
 }
 ```
 
-### B. Cryptography (`k6/crypto`)
+### B. Cryptography (`lyocell/crypto`)
 Generate HMAC signatures for API authentication.
 
 ```javascript
-import crypto from 'k6/crypto';
+import crypto from 'lyocell/crypto';
 
 export default function () {
   const secret = 'my-secret-key';
@@ -135,11 +135,11 @@ export default function () {
 }
 ```
 
-### C. Execution Context (`k6/execution`)
+### C. Execution Context (`lyocell/execution`)
 Access unique identifiers for data partitioning.
 
 ```javascript
-import execution from 'k6/execution';
+import execution from 'lyocell/execution';
 
 export default function () {
   // Use VU ID to select unique data

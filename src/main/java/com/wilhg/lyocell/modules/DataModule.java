@@ -11,7 +11,7 @@ public class DataModule implements LyocellModule {
 
     @Override
     public String getName() {
-        return "k6/data";
+        return "lyocell/data";
     }
 
     @Override

@@ -22,7 +22,7 @@ class Phase8IntegrationTest {
     void testParallelScenarios() throws Exception {
         Path script = tempDir.resolve("scenarios.js");
         Files.writeString(script, """
-            import { sleep } from 'k6';
+            import { sleep } from 'lyocell';
             const helper = globalThis.TestHelper;
 
             export const options = {
@@ -68,7 +68,7 @@ class Phase8IntegrationTest {
     void testConstantVus() throws Exception {
         Path script = tempDir.resolve("constant_vus.js");
         Files.writeString(script, """
-            import { sleep } from 'k6';
+            import { sleep } from 'lyocell';
             const helper = globalThis.TestHelper;
 
             export const options = {

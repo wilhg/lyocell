@@ -17,7 +17,7 @@ class JsMetricsIntegrationTest {
     void testJsMetricsAggregation() throws Exception {
         Path script = tempDir.resolve("metrics_test.js");
         Files.writeString(script, """
-            import { Counter, Trend } from 'k6/metrics';
+            import { Counter, Trend } from 'lyocell/metrics';
             const c = new Counter('js_counter');
             const t = new Trend('js_trend');
             export default function() {

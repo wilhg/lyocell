@@ -7,7 +7,7 @@ Running on **GraalVM**, Lyocell compiles to a standalone native binary that star
 ## 🚀 Why Lyocell?
 
 *   **Virtual Threads:** Uses Java 25's Project Loom to run every Virtual User (VU) on its own lightweight thread.
-*   **k6 Compatible:** Runs standard k6 scripts (`import http from 'k6/http'`).
+*   **k6 Compatible:** Runs standard k6 scripts (`import http from 'lyocell/http'`).
 *   **Native Performance:** Compiles to a native executable (no JVM startup lag).
 *   **Ecosystem:** Leverages the robust Java ecosystem for networking and metrics (Micrometer).
 
@@ -33,8 +33,8 @@ cd lyocell
 Create a file named `test.js`:
 
 ```javascript
-import http from 'k6/http';
-import { check, sleep } from 'k6';
+import http from 'lyocell/http';
+import { check, sleep } from 'lyocell';
 
 export const options = {
     thresholds: {
@@ -61,7 +61,7 @@ Run directly with Gradle (developer mode):
 
 ## 📚 Documentation
 
-*   **[User Guide & API Reference](prompts/K6_REFERENCE.md)**: Detailed API docs for `k6/http`, `k6/metrics`, and standard modules.
+*   **[User Guide & API Reference](prompts/K6_REFERENCE.md)**: Detailed API docs for `lyocell/http`, `lyocell/metrics`, and standard modules.
 *   **[Advanced Usage](ADVANCED_USAGE.md)**: Complex scenarios (Ramping VUs), Observability (Influx/Prometheus), and Data Seeding.
 *   **[Architecture](prompts/TECHNICAL_DESIGN.md)**: Deep dive into the internal design (Virtual Threads, GraalJS Contexts).
 

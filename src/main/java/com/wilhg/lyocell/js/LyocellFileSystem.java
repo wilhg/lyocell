@@ -13,7 +13,7 @@ import java.util.Set;
 
 public class LyocellFileSystem implements FileSystem {
     private final FileSystem delegate = FileSystem.newDefaultFileSystem();
-    private static final String K6_PREFIX = "k6/";
+    private static final String LYOCELL_PREFIX = "lyocell/";
     private final MetricsCollector metricsCollector;
 
     public LyocellFileSystem() {
@@ -53,8 +53,8 @@ public class LyocellFileSystem implements FileSystem {
     }
 
     private boolean isVirtualModule(String path) {
-        return path.equals("k6") || path.startsWith("k6/") || 
-               path.endsWith("/k6") || path.contains("/k6/");
+        return path.equals("lyocell") || path.startsWith("lyocell/") || 
+               path.endsWith("/lyocell") || path.contains("/lyocell/");
     }
 
     @Override

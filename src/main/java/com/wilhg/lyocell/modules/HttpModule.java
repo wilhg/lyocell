@@ -32,7 +32,7 @@ public class HttpModule implements LyocellModule {
 
     @Override
     public String getName() {
-        return "k6/http";
+        return "lyocell/http";
     }
 
     @Override

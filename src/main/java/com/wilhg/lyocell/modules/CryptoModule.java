@@ -12,7 +12,7 @@ import java.util.HexFormat;
 public class CryptoModule implements LyocellModule {
     @Override
     public String getName() {
-        return "k6/crypto";
+        return "lyocell/crypto";
     }
 
     @Override

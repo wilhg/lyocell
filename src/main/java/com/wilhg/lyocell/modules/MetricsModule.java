@@ -16,7 +16,7 @@ public class MetricsModule implements LyocellModule {
 
     @Override
     public String getName() {
-        return "k6/metrics";
+        return "lyocell/metrics";
     }
 
     @Override

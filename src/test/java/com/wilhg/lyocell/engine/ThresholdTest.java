@@ -18,7 +18,7 @@ class ThresholdTest {
     void testThresholdFailure() throws Exception {
         Path script = tempDir.resolve("threshold_fail.js");
         Files.writeString(script, """
-            import { check } from 'k6';
+            import { check } from 'lyocell';
             export const options = {
                 thresholds: {
                     'checks': ['rate<0.1'], // Allow < 10% failure

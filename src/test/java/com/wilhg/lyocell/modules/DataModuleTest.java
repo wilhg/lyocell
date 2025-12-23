@@ -13,8 +13,8 @@ public class DataModuleTest {
     @Test
     public void testSharedArray() throws Exception {
         String script = """
-            import { SharedArray } from 'k6/data';
-            import { check } from 'k6';
+            import { SharedArray } from 'lyocell/data';
+            import { check } from 'lyocell';
             
             const data = new SharedArray('test-data', function() {
                 return [1, 2, 3];

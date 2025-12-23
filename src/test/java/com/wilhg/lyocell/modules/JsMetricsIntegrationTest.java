@@ -12,7 +12,7 @@ public class JsMetricsIntegrationTest {
     @Test
     public void testCustomMetrics() throws Exception {
         String script = """
-            import { Counter, Trend, Gauge, Rate } from 'k6/metrics';
+            import { Counter, Trend, Gauge, Rate } from 'lyocell/metrics';
             
             const myCounter = new Counter('my_counter');
             const myTrend = new Trend('my_trend');

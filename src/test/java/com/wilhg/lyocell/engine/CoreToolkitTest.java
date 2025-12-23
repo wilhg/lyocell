@@ -17,7 +17,7 @@ class CoreToolkitTest {
     void testCheckMetric() throws Exception {
         Path script = tempDir.resolve("check_test.js");
         Files.writeString(script, """
-            import { check } from 'k6';
+            import { check } from 'lyocell';
             export default function() {
                 check(200, {
                     'is 200': (s) => s === 200,
@@ -43,8 +43,8 @@ class CoreToolkitTest {
     void testGroupExecution() throws Exception {
         Path script = tempDir.resolve("group_test.js");
         Files.writeString(script, """
-            import { group } from 'k6';
-            import { Counter } from 'k6/metrics';
+            import { group } from 'lyocell';
+            import { Counter } from 'lyocell/metrics';
             const c = new Counter('group_counter');
             export default function() {
                 group('my-group', function() {

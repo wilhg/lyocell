@@ -32,7 +32,7 @@ class HttpResponseTest {
         
         Path script = tempDir.resolve("http_json_test.js");
         Files.writeString(script, """
-            import http from 'k6/http';
+            import http from 'lyocell/http';
             export default function() {
                 const res = http.get('%s');
                 const data = res.json();
@@ -55,7 +55,7 @@ class HttpResponseTest {
         
         Path script = tempDir.resolve("http_status_test.js");
         Files.writeString(script, """
-            import http from 'k6/http';
+            import http from 'lyocell/http';
             export default function() {
                 const res = http.get('%s');
                 globalThis.StatusResult.set(res.status);
@@ -77,7 +77,7 @@ class HttpResponseTest {
         
         Path script = tempDir.resolve("http_post_test.js");
         Files.writeString(script, """
-            import http from 'k6/http';
+            import http from 'lyocell/http';
             export default function() {
                 const payload = JSON.stringify({ name: 'lyocell' });
                 const params = { headers: { 'Content-Type': 'application/json' } };
@@ -102,7 +102,7 @@ class HttpResponseTest {
         
         Path script = tempDir.resolve("http_headers_test.js");
         Files.writeString(script, """
-            import http from 'k6/http';
+            import http from 'lyocell/http';
             export default function() {
                 const res = http.get('%s');
                 globalThis.HeaderResult.set(res.headers['content-type']);

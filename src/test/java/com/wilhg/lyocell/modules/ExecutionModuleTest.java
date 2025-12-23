@@ -20,8 +20,8 @@ public class ExecutionModuleTest {
     @Test
     public void testExecutionModule() throws Exception {
         String script = """
-            import exec from 'k6/execution';
-            import { check } from 'k6';
+            import exec from 'lyocell/execution';
+            import { check } from 'lyocell';
             
             export default function() {
                 check(null, {

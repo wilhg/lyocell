@@ -26,7 +26,7 @@ class JsEngineTest {
     void testK6HttpImport() throws IOException {
         Path script = tempDir.resolve("http_test.js");
         Files.writeString(script, """
-            import http from 'k6/http';
+            import http from 'lyocell/http';
             export default function() {
                 // We just check if 'http' is defined and has 'get'
                 if (typeof http.get !== 'function') throw new Error('http.get is not a function');
@@ -42,7 +42,7 @@ class JsEngineTest {
     void testSleepInCore() throws IOException {
         Path script = tempDir.resolve("sleep_test.js");
         Files.writeString(script, """
-            import { sleep } from 'k6';
+            import { sleep } from 'lyocell';
             sleep(0.1);
             """);
 

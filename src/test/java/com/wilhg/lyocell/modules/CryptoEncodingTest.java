@@ -12,9 +12,9 @@ public class CryptoEncodingTest {
     @Test
     public void testCryptoAndEncoding() throws Exception {
         String script = """
-            import encoding from 'k6/encoding';
-            import crypto from 'k6/crypto';
-            import { check } from 'k6';
+            import encoding from 'lyocell/encoding';
+            import crypto from 'lyocell/crypto';
+            import { check } from 'lyocell';
             
             export default function() {
                 const encoded = encoding.b64encode('hello');
