@@ -8,7 +8,7 @@ The foundation is now solid, supporting multi-executor scenarios and pluggable m
 
 ### A. The Metrics Engine ✅
 *   **Status:** Replaced custom backend with **Micrometer**.
-*   **Result:** Support for InfluxDB and Prometheus is built-in.
+*   **Result:** Support for Prometheus is built-in.
 
 ### B. The Module System ✅
 *   **Status:** Implemented `LyocellModule` interface and `ModuleRegistry`.
@@ -25,7 +25,7 @@ The foundation is now solid, supporting multi-executor scenarios and pluggable m
 **Objective:** Add Micrometer and support external outputs.
 
 **Steps:**
-1.  **Dependencies:** Added `micrometer-core` and `micrometer-registry-prometheus` (or influx) to `build.gradle`.
+1.  **Dependencies:** Added `micrometer-core` and `micrometer-registry-prometheus` to `build.gradle`.
 2.  **Refactor Metrics (as above):** Deleted custom accumulation logic; delegated to Micrometer.
 3.  **JdkHttpSender:**
     *   Implemented a `HttpSender` compatible with Micrometer's `PushRegistry` that uses Java 25 `HttpClient`.

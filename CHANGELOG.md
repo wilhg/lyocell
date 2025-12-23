@@ -10,7 +10,6 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Observability (Phase 6):**
     - **Micrometer Integration:** Decoupled metrics recording from reporting using a `CompositeMeterRegistry`.
-    - **InfluxDB 2.x Support:** Push metrics to InfluxDB with support for Org, Bucket, and Token.
     - **Prometheus Support:** 
         - **Pull Model:** Embedded HTTP server (default port 9090) for scraping `/metrics`.
         - **Push Model:** Support for Prometheus Pushgateway.

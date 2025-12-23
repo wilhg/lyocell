@@ -5,7 +5,6 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import com.wilhg.lyocell.metrics.MetricsCollector;
 import com.wilhg.lyocell.metrics.SummaryReporter;
-import com.wilhg.lyocell.metrics.InfluxOutput;
 import com.wilhg.lyocell.metrics.PrometheusOutput;
 import org.graalvm.polyglot.Value;
 import java.nio.file.Path;
@@ -64,9 +63,7 @@ public class TestEngine {
     }
 
     private void registerOutput(OutputConfig output) {
-        if ("influxdb".equals(output.type())) {
-            metricsCollector.addRegistry(InfluxOutput.createRegistry(output));
-        } else if ("prometheus".equals(output.type())) {
+        if ("prometheus".equals(output.type())) {
             metricsCollector.addRegistry(PrometheusOutput.createRegistry(output));
         }
     }

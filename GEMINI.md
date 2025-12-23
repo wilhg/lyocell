@@ -35,7 +35,7 @@
 *   **Engine:** `TestEngine` manages the `StructuredTaskScope` and various `WorkloadExecutor` implementations (e.g., `RampingVusExecutor`).
 *   **JS Runtime:** Uses a strict "Context-per-VU" model with `JsEngine` handling Graal `Context` creation and script evaluation.
 *   **Modules:** Standard k6 modules are implemented as Java modules and injected via `LyocellFileSystem`.
-*   **Metrics:** Uses **Micrometer** for high-performance, polymorphic metrics aggregation and export (InfluxDB, Prometheus).
+*   **Metrics:** Uses **Micrometer** for high-performance, polymorphic metrics aggregation and export (Prometheus).
 
 ## Development Conventions
 *   **Strict Java 25:** Must use `--enable-preview`.

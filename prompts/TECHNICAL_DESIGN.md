@@ -88,7 +88,7 @@ Lyocell uses **Micrometer** as its metrics engine, enabling zero-dependency expo
 
 *   **Source**: Configuration is read from `options.lyocell.outputs` (JS) or CLI flags (`-o`).
 
-*   **Push (InfluxDB)**: A background Virtual Thread flushes metrics periodically.
+*   **Push**: A background Virtual Thread flushes metrics periodically (e.g. for Prometheus Pushgateway).
 
 *   **Pull (Prometheus)**: An embedded `com.sun.net.httpserver.HttpServer` serves metrics at `/metrics`.
 

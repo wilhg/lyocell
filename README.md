@@ -107,7 +107,7 @@ Run directly with Gradle (developer mode):
 ## 📚 Documentation
 
 *   **[User Guide & API Reference](prompts/K6_REFERENCE.md)**: Detailed API docs for `lyocell/http`, `lyocell/metrics`, and standard modules.
-*   **[Advanced Usage](ADVANCED_USAGE.md)**: Complex scenarios (Ramping VUs), Observability (Influx/Prometheus), and Data Seeding.
+*   **[Advanced Usage](ADVANCED_USAGE.md)**: Complex scenarios (Ramping VUs), Observability (Prometheus), and Data Seeding.
 *   **[Architecture](prompts/TECHNICAL_DESIGN.md)**: Deep dive into the internal design (Virtual Threads, GraalJS Contexts).
 
 ## 🛠️ Building Native Image

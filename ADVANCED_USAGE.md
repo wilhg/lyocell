@@ -61,46 +61,41 @@ export const options = {
 
 ## 2. Observability & Metrics
 
-Lyocell integrates with **Micrometer** to support real-time monitoring.
+Lyocell uses **Micrometer** to push metrics to external systems.
 
-### A. InfluxDB (Push)
-Push metrics directly to InfluxDB 2.x.
+### A. Prometheus (Pushgateway)
+
+Lyocell pushes metrics to a Prometheus Pushgateway.
 
 **CLI:**
 ```bash
-./lyocell script.js -o "influxdb=http://localhost:8086?org=myorg&bucket=mybucket&token=mytoken"
-```
-
-**Script Config:**
-```javascript
-export const options = {
-  lyocell: {
-    outputs: [
-      { 
-        type: 'influxdb', 
-        url: 'http://localhost:8086',
-        org: 'myorg',
-        bucket: 'mybucket',
-        token: 'mytoken'
-      }
-    ]
-  }
-};
-```
-
-### B. Prometheus (Pull & Push)
-
-**Pull Mode (Scrape):**
-Starts an HTTP server exposing `/metrics`.
-```bash
-./lyocell script.js -o prometheus=9090
-```
-
-**Push Mode (Pushgateway):**
-Pushes metrics to a Pushgateway.
-```bash
 ./lyocell script.js -o prometheus=http://pushgateway:9091
 ```
+
+**Basic Authentication:**
+You can include credentials directly in the URL:
+```bash
+./lyocell script.js -o prometheus=http://user:password@pushgateway:9091
+```
+
+**Configuration (Defaults):**
+You can configure a default output so you don't have to specify it in every command.
+
+1.  **Environment Variables:**
+    ```bash
+    export LYOCELL_PROMETHEUS_URL=http://pushgateway:9091
+    ```
+
+2.  **Config File (`~/.lyocell/config.yaml`):**
+    ```yaml
+    outputs:
+      - type: prometheus
+        url: http://pushgateway:9091
+        username: myuser
+        password: mypassword
+    ```
+
+If both are present, the CLI flag takes precedence, followed by the Environment Variable, and finally the config file.
 
 ## 3. Advanced Standard Library
 

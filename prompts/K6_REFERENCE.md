@@ -168,8 +168,6 @@ export const options = {
 
     outputs: [
 
-      { type: 'influxdb', url: 'http://localhost:8086' },
-
       { type: 'prometheus', port: 9090 }
 
     ]
