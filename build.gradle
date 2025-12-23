@@ -2,11 +2,11 @@ plugins {
     id 'java'
     id 'application'
     id 'jacoco'
-    id 'org.graalvm.buildtools.native' version '0.12.0'
+    id 'org.graalvm.buildtools.native' version '0.11.3'
 }
 
 group = 'com.wilhg'
-version = '0.2.3'
+version = '0.2.4'
 
 application {
     mainClass = 'com.wilhg.lyocell.Main'
