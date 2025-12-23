@@ -61,9 +61,9 @@ Run directly with Gradle (developer mode):
 
 ## 📚 Documentation
 
-*   **[User Guide & API Reference](K6_REFERENCE.md)**: Detailed API docs for `k6/http`, `k6/metrics`, and standard modules.
+*   **[User Guide & API Reference](prompts/K6_REFERENCE.md)**: Detailed API docs for `k6/http`, `k6/metrics`, and standard modules.
 *   **[Advanced Usage](ADVANCED_USAGE.md)**: Complex scenarios (Ramping VUs), Observability (Influx/Prometheus), and Data Seeding.
-*   **[Architecture](TECHNICAL_DESIGN.md)**: Deep dive into the internal design (Virtual Threads, GraalJS Contexts).
+*   **[Architecture](prompts/TECHNICAL_DESIGN.md)**: Deep dive into the internal design (Virtual Threads, GraalJS Contexts).
 
 ## 🛠️ Building Native Image
 
