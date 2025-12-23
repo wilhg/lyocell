@@ -81,19 +81,20 @@ graalvmNative {
             mainClass = 'com.wilhg.lyocell.Main'
             buildArgs.addAll(
                     '--verbose',
+                    '-H:+UnlockExperimentalVMOptions',
                     '--no-fallback',
                     '-H:+ReportExceptionStackTraces',
                     '--enable-preview',
                     '--enable-native-access=ALL-UNNAMED',
+                    '--enable-native-access=org.graalvm.truffle',
 
                     // Optimization flags
                     '-O3',                                    // Maximum optimization
                     '-march=native',                          // Optimize for current CPU
 
                     // Size optimizations
-                    '--no-server',                            // Remove server compiler
                     '-H:+RemoveUnusedSymbols',               // Strip unused symbols
-                    '-H:-UseServiceLoaderFeature',           // Disable ServiceLoader if not used
+                    '-H:+UseServiceLoaderFeature',           // Enable ServiceLoader
 
                     // Resource configuration
                     '-H:IncludeResources=.*\\.properties$',

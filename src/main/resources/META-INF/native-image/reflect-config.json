@@ -5,7 +5,10 @@
     "allPublicMethods": true,
     "methods": [
       { "name": "get", "parameterTypes": ["java.lang.String", "org.graalvm.polyglot.Value"] },
-      { "name": "post", "parameterTypes": ["java.lang.String", "java.lang.Object", "org.graalvm.polyglot.Value"] }
+      { "name": "post", "parameterTypes": ["java.lang.String", "java.lang.Object", "org.graalvm.polyglot.Value"] },
+      { "name": "put", "parameterTypes": ["java.lang.String", "java.lang.Object", "org.graalvm.polyglot.Value"] },
+      { "name": "patch", "parameterTypes": ["java.lang.String", "java.lang.Object", "org.graalvm.polyglot.Value"] },
+      { "name": "del", "parameterTypes": ["java.lang.String", "java.lang.Object", "org.graalvm.polyglot.Value"] }
     ]
   },
   {
@@ -45,9 +48,50 @@
     ]
   },
   {
+    "name": "com.wilhg.lyocell.modules.EncodingModule",
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "methods": [
+      { "name": "b64encode", "parameterTypes": ["java.lang.String"] },
+      { "name": "b64decode", "parameterTypes": ["java.lang.String"] }
+    ]
+  },
+  {
+    "name": "com.wilhg.lyocell.modules.CryptoModule",
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "methods": [
+      { "name": "sha256", "parameterTypes": ["java.lang.String", "java.lang.String"] },
+      { "name": "hmac", "parameterTypes": ["java.lang.String", "java.lang.String", "java.lang.String", "java.lang.String"] }
+    ]
+  },
+  {
+    "name": "com.wilhg.lyocell.modules.ExecutionModule",
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "methods": [
+      { "name": "abort", "parameterTypes": [] },
+      { "name": "getVuId", "parameterTypes": [] },
+      { "name": "getIteration", "parameterTypes": [] }
+    ]
+  },
+  {
+    "name": "com.wilhg.lyocell.modules.DataModule",
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true,
+    "methods": [
+      { "name": "getOrCreateSharedArray", "parameterTypes": ["java.lang.String", "org.graalvm.polyglot.Value"] }
+    ]
+  },
+  {
     "name": "com.wilhg.lyocell.engine.TestConfig",
     "allPublicMethods": true,
     "allDeclaredFields": true,
     "allDeclaredConstructors": true
+  },
+  {
+    "name": "com.wilhg.lyocell.modules.LyocellModule",
+    "allDeclaredConstructors": true,
+    "allPublicMethods": true
   }
 ]
