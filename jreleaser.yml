@@ -36,3 +36,10 @@ packagers:
     active: ALWAYS
   rpm:
     active: ALWAYS
+
+upload:
+  cloudsmith:
+    lyocell:
+      active: ALWAYS
+      organization: get-lyocell
+      repository: lyocell

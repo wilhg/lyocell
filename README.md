@@ -28,7 +28,7 @@ brew install lyocell
 </details>
 
 <details>
-<summary><strong>Linux</strong> (Homebrew or Binary)</summary>
+<summary><strong>Linux</strong> (Homebrew, APT, or RPM)</summary>
 
 **Homebrew:**
 ```bash
@@ -36,8 +36,20 @@ brew tap get-lyocell/homebrew-tap
 brew install lyocell
 ```
 
+**Debian / Ubuntu (APT):**
+```bash
+curl -1sLf 'https://dl.cloudsmith.io/public/get-lyocell/lyocell/setup.deb.sh' | sudo -E bash
+sudo apt-get install lyocell
+```
+
+**RHEL / Fedora / CentOS (RPM):**
+```bash
+curl -1sLf 'https://dl.cloudsmith.io/public/get-lyocell/lyocell/setup.rpm.sh' | sudo -E bash
+sudo yum install lyocell
+```
+
 **Manual:**
-Download the `.deb` or standalone binary from the [Releases](https://github.com/wilhg/lyocell/releases) page.
+Download the standalone binary from the [Releases](https://github.com/wilhg/lyocell/releases) page.
 </details>
 
 <details>
