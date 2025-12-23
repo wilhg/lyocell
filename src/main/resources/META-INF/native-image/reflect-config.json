@@ -1,0 +1,59 @@
+[
+  {
+    "name": "org.jline.terminal.impl.PosixSysTerminal",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "org.jline.terminal.impl.PosixPtyTerminal",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "org.jline.terminal.impl.ExecPty",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "org.jline.terminal.impl.DumbTerminal",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "org.jline.utils.InfoCmp",
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true
+  },
+  {
+    "name": "com.wilhg.lyocell.BatchRequest",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.wilhg.lyocell.BatchRequest$RequestDefinition",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  },
+  {
+    "name": "com.wilhg.lyocell.BatchRequest$RequestDefaults",
+    "allDeclaredConstructors": true,
+    "allPublicConstructors": true,
+    "allDeclaredFields": true,
+    "allDeclaredMethods": true,
+    "allPublicMethods": true
+  }
+]

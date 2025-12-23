@@ -1,0 +1,89 @@
+name: Release
+
+on:
+  push:
+    tags:
+      - 'v*'
+
+jobs:
+  release:
+    runs-on: ${{ matrix.os }}
+    strategy:
+      matrix:
+        os: [ubuntu-latest, macos-latest]
+        include:
+          - os: ubuntu-latest
+            platform: linux-amd64
+          - os: macos-latest
+            platform: macos-aarch64
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Setup Mandrel
+        uses: graalvm/setup-graalvm@v1
+        with:
+          distribution: 'mandrel'
+          java-version: '25'
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+          native-image-job-reports: 'true'
+
+      - name: Verify Mandrel installation
+        run: |
+          java -version
+          native-image --version
+
+      - name: Grant execute permission for gradlew
+        run: chmod +x gradlew
+
+      - name: Build native image
+        run: ./gradlew nativeCompile
+
+      - name: Rename binary
+        run: |
+          if [ "${{ matrix.os }}" == "ubuntu-latest" ]; then
+            mv build/native/nativeCompile/lyocell build/native/nativeCompile/lyocell-${{ matrix.platform }}
+          else
+            mv build/native/nativeCompile/lyocell build/native/nativeCompile/lyocell-${{ matrix.platform }}
+          fi
+
+      - name: Upload binary
+        uses: actions/upload-artifact@v4
+        with:
+          name: lyocell-${{ matrix.platform }}
+          path: build/native/nativeCompile/lyocell-${{ matrix.platform }}
+
+  create-release:
+    needs: release
+    runs-on: ubuntu-latest
+    permissions:
+      contents: write
+
+    steps:
+      - uses: actions/checkout@v4
+
+      - name: Download all artifacts
+        uses: actions/download-artifact@v4
+        with:
+          path: artifacts
+
+      - name: List downloaded artifacts
+        run: |
+          echo "Downloaded artifacts:"
+          ls -R artifacts/
+
+      - name: Prepare release files
+        run: |
+          mkdir -p release-files
+          find artifacts -type f -name "lyocell-*" -exec cp {} release-files/ \;
+          ls -lh release-files/
+
+      - name: Create Release
+        uses: softprops/action-gh-release@v1
+        with:
+          files: release-files/lyocell-*
+          generate_release_notes: true
+          draft: false
+          prerelease: false
+        env:
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}

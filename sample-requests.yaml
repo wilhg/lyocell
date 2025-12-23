@@ -1,0 +1,49 @@
+# Sample batch requests for Lyocell CLI
+# Usage: lyocell sample-requests.yaml
+
+# Optional defaults applied to all requests
+defaults:
+  timeout: 8000
+  headers:
+    User-Agent: Lyocell-CLI/1.0
+
+# List of requests to execute
+requests:
+  # Simple GET request
+  - url: https://httpbin.org/get
+    queryParams:
+      foo: bar
+      test: "123"
+
+  # GET with custom headers
+  - method: GET
+    url: https://httpbin.org/headers
+    headers:
+      X-Custom-Header: custom-value
+      Accept: application/json
+
+  # POST with JSON body
+  - method: POST
+    url: https://httpbin.org/post
+    body:
+      name: John Doe
+      email: john@example.com
+      age: 30
+      active: true
+
+  # PUT request
+  - method: PUT
+    url: https://httpbin.org/put
+    body:
+      id: 123
+      status: updated
+
+  # Request with custom timeout
+  - url: https://httpbin.org/delay/2
+    timeout: 5000
+
+  # DELETE request
+  - method: DELETE
+    url: https://httpbin.org/delete
+    queryParams:
+      id: "456"

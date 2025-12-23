@@ -1,0 +1,105 @@
+plugins {
+    id 'java'
+    id 'application'
+    id 'jacoco'
+    id 'org.graalvm.buildtools.native' version '0.10.4'
+}
+
+group = 'com.wilhg'
+version = '0.1.0'
+
+application {
+    mainClass = 'com.wilhg.lyocell.Main'
+    applicationDefaultJvmArgs = ['--enable-preview']
+}
+
+java {
+    toolchain {
+        languageVersion = JavaLanguageVersion.of(25)
+    }
+}
+
+tasks.withType(JavaCompile).configureEach {
+    options.compilerArgs += ['--enable-preview']
+}
+
+tasks.withType(Test).configureEach {
+    jvmArgs += ['--enable-preview']
+}
+
+repositories {
+    mavenCentral()
+}
+
+dependencies {
+    implementation 'org.jline:jline:3.30.6'
+    implementation 'org.jline:jline-native:3.30.6'
+    implementation 'tools.jackson.core:jackson-databind:3.0.3'
+    implementation 'tools.jackson.dataformat:jackson-dataformat-yaml:3.0.3'
+
+    testImplementation platform('org.junit:junit-bom:6.0.1')
+    testImplementation 'org.junit.jupiter:junit-jupiter'
+    testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
+    testImplementation 'org.testcontainers:testcontainers:2.0.3'
+    testImplementation 'org.testcontainers:testcontainers-junit-jupiter:2.0.3'
+}
+
+test {
+    useJUnitPlatform()
+    finalizedBy jacocoTestReport
+}
+
+jacocoTestReport {
+    dependsOn test
+    reports {
+        xml.required = true
+        html.required = true
+    }
+}
+
+jacocoTestCoverageVerification {
+    violationRules {
+        rule {
+            limit {
+                minimum = 0.80
+            }
+        }
+    }
+}
+
+graalvmNative {
+    binaries {
+        main {
+            imageName = 'lyocell'
+            mainClass = 'com.wilhg.lyocell.Main'
+            buildArgs.addAll(
+                    '--verbose',
+                    '--no-fallback',
+                    '-H:+ReportExceptionStackTraces',
+                    '--enable-preview',
+                    '--enable-native-access=ALL-UNNAMED',
+
+                    // Optimization flags
+                    '-O3',                                    // Maximum optimization
+                    '-march=native',                          // Optimize for current CPU
+
+                    // Size optimizations
+                    '--no-server',                            // Remove server compiler
+                    '-H:+RemoveUnusedSymbols',               // Strip unused symbols
+                    '-H:-UseServiceLoaderFeature',           // Disable ServiceLoader if not used
+
+                    // Resource configuration
+                    '-H:IncludeResources=.*\\.properties$',
+
+                    // Performance monitoring
+                    '-H:+PrintClassInitialization'
+            )
+
+            // JVM arguments for build process
+            jvmArgs = [
+                    '-Xmx12g',  // More memory for native-image build process
+            ]
+        }
+    }
+    testSupport = true
+}

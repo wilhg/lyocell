@@ -1,0 +1,26 @@
+{
+  "$schema": "https://docs.renovatebot.com/renovate-schema.json",
+  "extends": [
+    "config:recommended"
+  ],
+  "automerge": true,
+  "automergeType": "pr",
+  "platformAutomerge": true,
+  "packageRules": [
+    {
+      "description": "Auto-merge all GitHub Actions updates",
+      "matchManagers": ["github-actions"],
+      "automerge": true
+    },
+    {
+      "description": "Auto-merge all Gradle dependencies (including major)",
+      "matchManagers": ["gradle", "gradle-wrapper"],
+      "automerge": true
+    }
+  ],
+  "labels": ["dependencies"],
+  "dependencyDashboard": true,
+  "prConcurrentLimit": 10,
+  "schedule": ["before 6am on Monday"],
+  "timezone": "UTC"
+}
