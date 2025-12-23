@@ -32,8 +32,6 @@ repositories {
 }
 
 dependencies {
-    implementation 'org.jline:jline:3.30.6'
-    implementation 'org.jline:jline-native:3.30.6'
     implementation 'tools.jackson.core:jackson-databind:3.0.3'
     implementation 'tools.jackson.dataformat:jackson-dataformat-yaml:3.0.3'
 
