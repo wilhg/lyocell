@@ -13,15 +13,15 @@ jobs:
     steps:
       - uses: actions/checkout@v4
 
-      - name: Setup Mandrel
+      - name: Setup Oracle GraalVM
         uses: graalvm/setup-graalvm@v1
         with:
-          distribution: 'mandrel'
+          distribution: 'graalvm'
           java-version: '25'
           github-token: ${{ secrets.GITHUB_TOKEN }}
           native-image-job-reports: 'true'
 
-      - name: Verify Mandrel installation
+      - name: Verify GraalVM installation
         run: |
           java -version
           native-image --version
