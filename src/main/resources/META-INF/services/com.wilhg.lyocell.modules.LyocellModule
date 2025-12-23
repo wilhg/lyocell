@@ -1,0 +1,4 @@
+com.wilhg.lyocell.modules.HttpModule
+com.wilhg.lyocell.modules.CoreModule
+com.wilhg.lyocell.modules.MetricsModule
+com.wilhg.lyocell.modules.ConsoleModule

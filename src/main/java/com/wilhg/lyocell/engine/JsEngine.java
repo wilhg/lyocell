@@ -2,16 +2,17 @@ package com.wilhg.lyocell.engine;
 
 import com.wilhg.lyocell.js.LyocellFileSystem;
 import com.wilhg.lyocell.metrics.MetricsCollector;
-import com.wilhg.lyocell.modules.ConsoleModule;
-import com.wilhg.lyocell.modules.CoreModule;
-import com.wilhg.lyocell.modules.HttpModule;
-import com.wilhg.lyocell.modules.MetricsModule;
+import com.wilhg.lyocell.modules.LyocellModule;
+import com.wilhg.lyocell.modules.ModuleContext;
+import com.wilhg.lyocell.modules.ModuleRegistry;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 import java.io.IOException;
 import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
 
 public class JsEngine implements AutoCloseable {
     private final Context context;
@@ -20,7 +21,11 @@ public class JsEngine implements AutoCloseable {
         this(java.util.Collections.emptyMap(), new MetricsCollector());
     }
 
-    public JsEngine(java.util.Map<String, Object> extraBindings, MetricsCollector metricsCollector) {
+    public JsEngine(Map<String, Object> extraBindings, MetricsCollector metricsCollector) {
+        this(extraBindings, metricsCollector, ModuleRegistry.getDefaultModules(metricsCollector));
+    }
+
+    public JsEngine(Map<String, Object> extraBindings, MetricsCollector metricsCollector, List<LyocellModule> modules) {
         this.context = Context.newBuilder("js")
                 .allowHostAccess(HostAccess.ALL)
                 .allowHostClassLookup(s -> true)
@@ -31,18 +36,13 @@ public class JsEngine implements AutoCloseable {
                 .option("engine.WarnVirtualThreadSupport", "false")
                 .build();
 
-        // Inject global bindings
-        HttpModule httpModule = new HttpModule(metricsCollector);
-        httpModule.setContext(this.context);
-        
-        context.getBindings("js").putMember("LyocellHttp", httpModule);
-        context.getBindings("js").putMember("LyocellCore", new CoreModule(metricsCollector));
-        context.getBindings("js").putMember("LyocellMetrics", new MetricsModule(metricsCollector));
-        context.getBindings("js").putMember("console", new ConsoleModule());
+        // Install modules
+        ModuleContext moduleContext = new ModuleContext(metricsCollector);
+        for (LyocellModule module : modules) {
+            module.install(this.context, moduleContext);
+        }
         
         // Setup __ENV
-        // We merge System.getenv() with any provided extra envs (if we decide to support -e flags later)
-        // For now, let's just expose System.getenv() combined with any string-based extraBindings
         java.util.Map<String, String> env = new java.util.HashMap<>(System.getenv());
         if (extraBindings.containsKey("__ENV")) {
             @SuppressWarnings("unchecked")
@@ -50,7 +50,6 @@ public class JsEngine implements AutoCloseable {
             env.putAll(extras);
         }
         
-        // Convert Map to a ProxyObject or just a Map that Graal handles
         context.getBindings("js").putMember("__ENV", env);
         
         // Inject extra bindings (e.g., for testing)

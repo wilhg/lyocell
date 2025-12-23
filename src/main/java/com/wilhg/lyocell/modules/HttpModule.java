@@ -14,21 +14,27 @@ import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
 
-public class HttpModule {
+public class HttpModule implements LyocellModule {
     private final HttpClient client = HttpClient.newBuilder()
             .connectTimeout(Duration.ofSeconds(10))
             .followRedirects(HttpClient.Redirect.NORMAL)
             .build();
     
     private Context context;
-    private final MetricsCollector metricsCollector;
+    private MetricsCollector metricsCollector;
+
+    public HttpModule() {
+    }
 
     public HttpModule(MetricsCollector metricsCollector) {
         this.metricsCollector = metricsCollector;
     }
 
-    public void setContext(Context context) {
+    @Override
+    public void install(Context context, ModuleContext moduleContext) {
         this.context = context;
+        this.metricsCollector = moduleContext.metricsCollector();
+        context.getBindings("js").putMember("LyocellHttp", this);
     }
 
     @HostAccess.Export

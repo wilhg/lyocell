@@ -28,7 +28,7 @@ class HttpResponseTest {
 
     @Test
     void testHttpResponseJson() throws Exception {
-        String url = "http://" + httpbin.getHost() + ":" + httpbin.getMappedPort(80) + "/json";
+        String url = "http://" + httpbin.getHost() + ":" + httpbin.getMappedPort(80) + "/get";
         
         Path script = tempDir.resolve("http_json_test.js");
         Files.writeString(script, """
@@ -36,8 +36,6 @@ class HttpResponseTest {
             export default function() {
                 const res = http.get('%s');
                 const data = res.json();
-                // httpbun's /json response has a different structure than httpbin
-                // Usually returns a simple JSON. Let's just verify we can access something.
                 globalThis.TestResult.set(res.status.toString());
             }
             """.formatted(url));

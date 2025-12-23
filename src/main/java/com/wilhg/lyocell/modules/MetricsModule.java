@@ -1,13 +1,23 @@
 package com.wilhg.lyocell.modules;
 
 import com.wilhg.lyocell.metrics.MetricsCollector;
+import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 
-public class MetricsModule {
-    private final MetricsCollector collector;
+public class MetricsModule implements LyocellModule {
+    private MetricsCollector collector;
+
+    public MetricsModule() {
+    }
 
     public MetricsModule(MetricsCollector collector) {
         this.collector = collector;
+    }
+
+    @Override
+    public void install(Context context, ModuleContext moduleContext) {
+        this.collector = moduleContext.metricsCollector();
+        context.getBindings("js").putMember("LyocellMetrics", this);
     }
 
     @HostAccess.Export

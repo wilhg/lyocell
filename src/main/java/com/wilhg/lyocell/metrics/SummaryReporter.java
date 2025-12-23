@@ -1,7 +1,8 @@
 package com.wilhg.lyocell.metrics;
 
-import java.util.Map;
-import java.util.concurrent.atomic.LongAdder;
+import io.micrometer.core.instrument.Meter;
+
+import java.util.stream.Collectors;
 
 public class SummaryReporter {
     public void report(MetricsCollector collector) {
@@ -21,11 +22,16 @@ public class SummaryReporter {
         System.out.printf("  checks....................: %.2f%% (%d pass, %d fail)\n", rate, pass, fail);
 
         System.out.println("\n[Trends]");
-        for (String name : collector.getTrends().keySet()) {
+        var trendNames = collector.getRegistry().getMeters().stream()
+                .filter(m -> m.getId().getType() == Meter.Type.DISTRIBUTION_SUMMARY)
+                .map(m -> m.getId().getName())
+                .collect(Collectors.toSet());
+
+        for (String name : trendNames) {
             MetricSummary summary = collector.getTrendSummary(name);
             System.out.printf("  %s:\n", name);
-            System.out.printf("    avg=%-10.2f min=%-10.2f med=%-10.2f max=%-10.2f p(95)=%-10.2f p(99)=%-10.2f\n",
-                    summary.avg(), summary.min(), summary.avg(), summary.max(), summary.p95(), summary.p99());
+            System.out.printf("    avg=%-10.2f max=%-10.2f p(95)=%-10.2f p(99)=%-10.2f count=%d\n",
+                    summary.avg(), summary.max(), summary.p95(), summary.p99(), summary.count());
         }
         
         System.out.println("=".repeat(40) + "\n");

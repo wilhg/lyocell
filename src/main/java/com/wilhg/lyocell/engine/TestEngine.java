@@ -55,17 +55,8 @@ public class TestEngine {
             }
         
             // 2. Execution Phase (Concurrent VUs)
-            try (var scope = StructuredTaskScope.open(Joiner.awaitAllSuccessfulOrThrow())) {
-                for (int i = 0; i < config.vus(); i++) {
-                    int vuId = i;
-                    String finalSetupDataJson = setupDataJson;
-                    scope.fork(() -> {
-                        new VuWorker(vuId, scriptPath, extraBindings, finalSetupDataJson, metricsCollector, config.iterations()).run();
-                        return null;
-                    });
-                }
-                scope.join();
-            }
+            WorkloadExecutor executor = new SimpleExecutor();
+            executor.execute(scriptPath, config, extraBindings, setupDataJson, metricsCollector);
 
             // 3. Teardown Phase
             try {
