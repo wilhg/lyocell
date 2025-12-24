@@ -22,7 +22,7 @@ Running on **GraalVM**, Lyocell compiles to a standalone native binary that star
 <summary><strong>macOS</strong> (Homebrew)</summary>
 
 ```bash
-brew tap wilhg/lyocell-tap
+brew tap wilhg/wilhg/lyocell
 brew install lyocell
 ```
 </details>
@@ -32,7 +32,7 @@ brew install lyocell
 
 **Homebrew:**
 ```bash
-brew tap wilhg/lyocell-tap
+brew tap wilhg/wilhg/lyocell
 brew install lyocell
 ```
 

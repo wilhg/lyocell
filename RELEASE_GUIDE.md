@@ -8,14 +8,14 @@ This guide explains how to publish new releases of Lyocell to Homebrew and Scoop
 
 You need to create/verify these GitHub repositories:
 
-- **`wilhg/lyocell-tap`** - Homebrew tap repository
+- **`wilhg/wilhg/lyocell`** - Homebrew tap repository
 - **`wilhg/lyocell-scoop`** - Scoop bucket repository
 
 Both repositories should be public and initialized with a README.
 
 ### 2. GitHub Token
 
-The release workflow uses `secrets.GITHUB_TOKEN` which is automatically provided by GitHub Actions. However, to push to other repositories (`lyocell-tap` and `lyocell-scoop`), you need to create a **Personal Access Token (PAT)** with the following permissions:
+The release workflow uses `secrets.GITHUB_TOKEN` which is automatically provided by GitHub Actions. However, to push to other repositories (`wilhg/lyocell` and `lyocell-scoop`), you need to create a **Personal Access Token (PAT)** with the following permissions:
 
 1. Go to GitHub Settings → Developer settings → Personal access tokens → Tokens (classic)
 2. Generate a new token with these scopes:
@@ -31,9 +31,9 @@ Then update the workflow to use `PAT_TOKEN` instead of `GITHUB_TOKEN` for cross-
 
 ### 3. Repository Structure
 
-#### Homebrew Tap (`wilhg/lyocell-tap`)
+#### Homebrew Tap (`wilhg/wilhg/lyocell`)
 ```
-lyocell-tap/
+wilhg/lyocell/
 ├── README.md
 └── Formula/
     └── lyocell.rb  (will be auto-generated)
@@ -102,7 +102,7 @@ This will automatically trigger the release workflow which will:
 
 **macOS:**
 ```bash
-brew tap wilhg/lyocell-tap
+brew tap wilhg/wilhg/lyocell
 brew install lyocell
 lyocell --version
 ```
@@ -124,9 +124,9 @@ chmod +x lyocell-linux-amd64
 
 ## Troubleshooting
 
-### Workflow Fails to Push to lyocell-tap or lyocell-scoop
+### Workflow Fails to Push to wilhg/lyocell or lyocell-scoop
 
-**Problem:** `remote: Permission to wilhg/lyocell-tap.git denied`
+**Problem:** `remote: Permission to wilhg/wilhg/lyocell.git denied`
 
 **Solution:** Make sure you created the `PAT_TOKEN` secret as described in Prerequisites.
 
@@ -176,8 +176,8 @@ gh release create v0.3.0 \
 ### 3. Update Homebrew Tap Manually
 
 ```bash
-git clone https://github.com/wilhg/lyocell-tap.git
-cd lyocell-tap
+git clone https://github.com/wilhg/wilhg/lyocell.git
+cd wilhg/lyocell
 # Edit Formula/lyocell.rb with new version and SHA256
 git commit -am "Update lyocell to 0.3.0"
 git push
