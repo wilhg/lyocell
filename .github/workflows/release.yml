@@ -84,34 +84,46 @@ jobs:
     runs-on: ubuntu-latest
     permissions:
       contents: write
+      packages: write
 
     steps:
-      - uses: actions/checkout@v4
+      - name: Checkout
+        uses: actions/checkout@v4
         with:
           fetch-depth: 0
+
+      - name: Setup Go
+        uses: actions/setup-go@v5
+        with:
+          go-version: 'stable'
+
+      - name: Install goreleaser-cloudsmith
+        run: go install github.com/goreleaser/goreleaser-cloudsmith@latest
 
       - name: Download all artifacts
         uses: actions/download-artifact@v4
         with:
           path: artifacts
 
-      - name: List downloaded artifacts
-        run: |
-          echo "Downloaded artifacts:"
-          ls -R artifacts/
-
       - name: Prepare release files
         run: |
           mkdir -p release-files
-          find artifacts -type f -name "lyocell-*" -exec cp {} release-files/ \;
+          # The download-artifact action creates a directory for each artifact,
+          # so we need to find the binary inside and move it to our staging dir.
+          find artifacts/lyocell-linux-amd64 -type f -name "lyocell-linux-amd64" -exec cp {} release-files/ \;
+          find artifacts/lyocell-macos-aarch64 -type f -name "lyocell-macos-aarch64" -exec cp {} release-files/ \;
+          find artifacts/lyocell-windows-amd64 -type f -name "lyocell-windows-amd64.exe" -exec cp {} release-files/ \;
+          echo "Prepared files for GoReleaser:"
           ls -lh release-files/
 
-      - name: Install RPM tools
-        run: sudo apt-get update && sudo apt-get install -y rpm
-
-
-      - name: Run JReleaser
-        uses: jreleaser/release-action@v2
+      - name: Run GoReleaser
+        uses: goreleaser/goreleaser-action@v5
+        with:
+          # We use the 'release' command to execute the release process.
+          # The '--clean' flag ensures any previous GoReleaser artifacts are removed.
+          args: release --clean
         env:
-          JRELEASER_GITHUB_TOKEN: ${{ secrets.JRELEASER_GITHUB_TOKEN }}
-          JRELEASER_CLOUDSMITH_API_KEY: ${{ secrets.CLOUDSMITH_API_KEY }}
+          # The GITHUB_TOKEN is a special token provided by GitHub Actions.
+          # GoReleaser uses this to authenticate with the GitHub API.
+          GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+          CLOUDSMITH_TOKEN: ${{ secrets.CLOUDSMITH_API_KEY }}
