@@ -213,4 +213,38 @@ public class CliAnimationTest {
                        "Should contain animation character: " + ch);
         }
     }
+
+    @Test
+    void testSetMessage() throws InterruptedException {
+        animation = new CliAnimation("Initial");
+        animation.start();
+        Thread.sleep(150);
+        
+        animation.setMessage("Updated");
+        Thread.sleep(150);
+        
+        animation.stop();
+        
+        String output = outputStream.toString();
+        assertTrue(output.contains("Initial"), "Should contain initial message");
+        assertTrue(output.contains("Updated"), "Should contain updated message");
+    }
+
+    @Test
+    void testPrintLog() throws InterruptedException {
+        animation = new CliAnimation("Animation");
+        animation.start();
+        Thread.sleep(150);
+        
+        animation.printLog("Log message 1");
+        animation.printLog("Log message 2");
+        Thread.sleep(150);
+        
+        animation.stop();
+        
+        String output = outputStream.toString();
+        assertTrue(output.contains("Log message 1\n"), "Should contain first log message followed by newline");
+        assertTrue(output.contains("Log message 2\n"), "Should contain second log message followed by newline");
+        assertTrue(output.contains("Animation"), "Should still contain the animation message");
+    }
 }

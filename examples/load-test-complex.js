@@ -15,24 +15,24 @@ import execution from 'lyocell/execution';
  */
 export const options = {
     scenarios: {
-        // stage_1: {
-        //     executor: 'shared-iterations',
-        //     vus: 500,
-        //     iterations: 200000,
-        //     startTime: '0s',
-        // },
+        stage_1: {
+            executor: 'shared-iterations',
+            vus: 50,
+            iterations: 200,
+            startTime: '0s',
+        },
         stage_2: {
             executor: 'shared-iterations',
             vus: 50,
-            iterations: 100,
+            iterations: 1000,
             startTime: '1s', // 5s duration + 2s wait
         },
-        // stage_3: {
-        //     executor: 'shared-iterations',
-        //     vus: 500,
-        //     iterations: 50000,
-        //     startTime: '3s', // 7s + 3s wait (assuming stage 2 finishes or just starting then)
-        // },
+        stage_3: {
+            executor: 'shared-iterations',
+            vus: 5,
+            iterations: 50,
+            startTime: '3s', // 7s + 3s wait (assuming stage 2 finishes or just starting then)
+        },
     },
     thresholds: {
         'http_req_duration': ['p(95)<500'],

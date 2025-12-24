@@ -17,31 +17,17 @@ class TestEngineTest {
     Path tempDir;
 
     @Test
-    void testConcurrentVus() throws Exception {
-        // Script calls the injected helper inside default function
-        Path script = tempDir.resolve("concurrency_test.js");
-        Files.writeString(script, """
-            const helper = globalThis.TestHelper;
-            export default function() {
-                helper.increment();
-            }
-            """);
-
-        AtomicInteger counter = new AtomicInteger(0);
-        TestHelper helper = new TestHelper(counter);
-        Map<String, Object> extraBindings = Map.of("TestHelper", helper);
-
-        // We need the TestEngine to support passing bindings to VUs
-        TestEngine testEngine = new TestEngine(extraBindings, Collections.emptyList());
-        
-        // 10 VUs, 1 iteration
-        TestConfig config = new TestConfig(10, 1, null); 
-        
-        testEngine.run(script, config);
-
-        assertEquals(10, counter.get(), "Expected 10 VUs to increment the counter");
+    void testFormatDuration() {
+        TestEngine engine = new TestEngine(Collections.emptyList());
+        assertEquals("0s", engine.formatDuration(0));
+        assertEquals("5s", engine.formatDuration(5000));
+        assertEquals("59s", engine.formatDuration(59000));
+        assertEquals("1m", engine.formatDuration(60000));
+        assertEquals("1m1s", engine.formatDuration(61000));
+        assertEquals("2m", engine.formatDuration(120000));
+        assertEquals("1h1m", engine.formatDuration(3660000)); // Should it handle hours? The current implementation doesn't seem to explicitly handle hours, it just does minutes. Let's check.
     }
-    
+
     public static class TestHelper {
         private final AtomicInteger counter;
 

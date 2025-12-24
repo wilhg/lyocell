@@ -164,11 +164,23 @@ public class TestEngine {
             // 2. Execution Phase (Parallel Scenarios)
             try (com.wilhg.lyocell.cli.CliAnimation animation = new com.wilhg.lyocell.cli.CliAnimation("Running test...")) {
                 animation.start();
+                java.util.Set<String> activeScenarios = java.util.Collections.synchronizedSet(new java.util.HashSet<>());
                 try (var scope = StructuredTaskScope.open(Joiner.awaitAllSuccessfulOrThrow())) {
                     for (Scenario scenario : config.scenarios().values()) {
                         scope.fork(() -> {
-                            WorkloadExecutor executor = getExecutor(scenario);
-                            executor.execute(scenario, scriptPath, extraBindings, finalSetupDataJson, metricsCollector, this);
+                            activeScenarios.add(scenario.name());
+                            updateAnimationMessage(animation, activeScenarios);
+                            
+                            long start = System.currentTimeMillis();
+                            try {
+                                WorkloadExecutor executor = getExecutor(scenario);
+                                executor.execute(scenario, scriptPath, extraBindings, finalSetupDataJson, metricsCollector, this);
+                            } finally {
+                                long durationMs = System.currentTimeMillis() - start;
+                                activeScenarios.remove(scenario.name());
+                                updateAnimationMessage(animation, activeScenarios);
+                                animation.printLog("Scenario '" + scenario.name() + "' finished in " + formatDuration(durationMs));
+                            }
                             return null;
                         });
                     }
@@ -245,5 +257,37 @@ public class TestEngine {
                 }
             }
         }
+    }
+
+    void updateAnimationMessage(com.wilhg.lyocell.cli.CliAnimation animation, java.util.Set<String> activeScenarios) {
+        if (activeScenarios.isEmpty()) {
+            animation.setMessage("Finalizing...");
+        } else {
+            animation.setMessage("Running: " + String.join(", ", activeScenarios));
+        }
+    }
+
+    String formatDuration(long ms) {
+        long seconds = ms / 1000;
+        if (seconds < 60) {
+            return seconds + "s";
+        }
+        long minutes = seconds / 60;
+        long remainingSeconds = seconds % 60;
+        if (minutes < 60) {
+            if (remainingSeconds == 0) {
+                return minutes + "m";
+            }
+            return minutes + "m" + remainingSeconds + "s";
+        }
+        long hours = minutes / 60;
+        long remainingMinutes = minutes % 60;
+        if (remainingMinutes == 0 && remainingSeconds == 0) {
+            return hours + "h";
+        }
+        if (remainingSeconds == 0) {
+            return hours + "h" + remainingMinutes + "m";
+        }
+        return hours + "h" + remainingMinutes + "m" + remainingSeconds + "s";
     }
 }
