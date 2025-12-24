@@ -2,7 +2,6 @@ package com.wilhg.lyocell;
 
 import com.wilhg.lyocell.engine.TestConfig;
 import com.wilhg.lyocell.engine.TestEngine;
-import com.wilhg.lyocell.config.GlobalConfig;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 
@@ -55,15 +54,6 @@ public class Main {
             }
         }
 
-        // Apply Global Defaults if no outputs specified via CLI
-        if (outputs.isEmpty()) {
-            GlobalConfig globalConfig = GlobalConfig.load();
-            outputs.addAll(globalConfig.outputs());
-            if (!outputs.isEmpty()) {
-                System.out.println("Loaded default outputs from config/env: " + outputs);
-            }
-        }
-
         if (scriptArg == null) {
             printUsage();
             return 1;
@@ -94,6 +84,6 @@ public class Main {
         System.err.println("Options:");
         System.err.println("  -u, --vus <n>          Number of virtual users (default: 1)");
         System.err.println("  -i, --iterations <n>   Total iterations (per VU for now) (default: 1)");
-        System.err.println("  -o, --out <type=url>   Output metrics to an external service (e.g. prometheus=http://pushgateway:9091)");
+        System.err.println("  -o, --out <type=file>  Output metrics to a file (e.g. html=report.html)");
     }
 }

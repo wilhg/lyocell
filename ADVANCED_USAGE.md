@@ -61,41 +61,15 @@ export const options = {
 
 ## 2. Observability & Metrics
 
-Lyocell uses **Micrometer** to push metrics to external systems.
+Lyocell supports generating static reports.
 
-### A. Prometheus (Pushgateway)
-
-Lyocell pushes metrics to a Prometheus Pushgateway.
+### A. HTML Report (No-JS)
+Generate a self-contained, static HTML5 report with CSS charts. This is useful for sharing results without needing an external metrics backend.
 
 **CLI:**
 ```bash
-./lyocell script.js -o prometheus=http://pushgateway:9091
+./lyocell script.js -o html=report.html
 ```
-
-**Basic Authentication:**
-You can include credentials directly in the URL:
-```bash
-./lyocell script.js -o prometheus=http://user:password@pushgateway:9091
-```
-
-**Configuration (Defaults):**
-You can configure a default output so you don't have to specify it in every command.
-
-1.  **Environment Variables:**
-    ```bash
-    export LYOCELL_PROMETHEUS_URL=http://pushgateway:9091
-    ```
-
-2.  **Config File (`~/.lyocell/config.yaml`):**
-    ```yaml
-    outputs:
-      - type: prometheus
-        url: http://pushgateway:9091
-        username: myuser
-        password: mypassword
-    ```
-
-If both are present, the CLI flag takes precedence, followed by the Environment Variable, and finally the config file.
 
 ## 3. Advanced Standard Library
 

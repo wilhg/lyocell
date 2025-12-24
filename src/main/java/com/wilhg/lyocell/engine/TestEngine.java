@@ -5,7 +5,6 @@ import tools.jackson.core.type.TypeReference;
 import tools.jackson.databind.ObjectMapper;
 import com.wilhg.lyocell.metrics.MetricsCollector;
 import com.wilhg.lyocell.metrics.SummaryReporter;
-import com.wilhg.lyocell.metrics.PrometheusOutput;
 import org.graalvm.polyglot.Value;
 import java.nio.file.Path;
 import java.util.Collections;
@@ -62,9 +61,11 @@ public class TestEngine {
         }
     }
 
+    private final java.util.List<String> htmlReportPaths = java.util.Collections.synchronizedList(new java.util.ArrayList<>());
+
     private void registerOutput(OutputConfig output) {
-        if ("prometheus".equals(output.type())) {
-            metricsCollector.addRegistry(PrometheusOutput.createRegistry(output));
+        if ("html".equals(output.type())) {
+            htmlReportPaths.add(output.target());
         }
     }
 
@@ -182,6 +183,12 @@ public class TestEngine {
 
         // 5. Final Report
         new SummaryReporter().report(metricsCollector);
+        
+        // 6. Generate HTML Reports
+        com.wilhg.lyocell.report.HtmlReportRenderer htmlRenderer = new com.wilhg.lyocell.report.HtmlReportRenderer();
+        for (String path : htmlReportPaths) {
+            htmlRenderer.generate(metricsCollector, path);
+        }
     }
 
     @SuppressWarnings("unchecked")
