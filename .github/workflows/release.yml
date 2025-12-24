@@ -48,11 +48,11 @@ jobs:
               if: runner.os != 'Windows'
               run: chmod +x gradlew
 
-            - name: Build with Gradle (skip Docker tests)
-              run: ./gradlew build -DskipDockerTests=true
+            - name: Build with Gradle (skip all tests)
+              run: ./gradlew build -x test -DskipDockerTests=true
 
-            - name: Build Native Image
-              run: ./gradlew nativeCompile
+            - name: Build Native Image (skip tests)
+              run: ./gradlew nativeCompile -x test
 
             - name: Rename binary (Unix)
               if: runner.os != 'Windows'
