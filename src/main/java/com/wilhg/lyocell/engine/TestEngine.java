@@ -160,15 +160,18 @@ public class TestEngine {
             final String finalSetupDataJson = setupDataJson;
 
             // 2. Execution Phase (Parallel Scenarios)
-            try (var scope = StructuredTaskScope.open(Joiner.awaitAllSuccessfulOrThrow())) {
-                for (Scenario scenario : config.scenarios().values()) {
-                    scope.fork(() -> {
-                        WorkloadExecutor executor = getExecutor(scenario);
-                        executor.execute(scenario, scriptPath, extraBindings, finalSetupDataJson, metricsCollector, this);
-                        return null;
-                    });
+            try (com.wilhg.lyocell.cli.CliAnimation animation = new com.wilhg.lyocell.cli.CliAnimation("Running test...")) {
+                animation.start();
+                try (var scope = StructuredTaskScope.open(Joiner.awaitAllSuccessfulOrThrow())) {
+                    for (Scenario scenario : config.scenarios().values()) {
+                        scope.fork(() -> {
+                            WorkloadExecutor executor = getExecutor(scenario);
+                            executor.execute(scenario, scriptPath, extraBindings, finalSetupDataJson, metricsCollector, this);
+                            return null;
+                        });
+                    }
+                    scope.join();
                 }
-                scope.join();
             }
 
             // 3. Teardown Phase

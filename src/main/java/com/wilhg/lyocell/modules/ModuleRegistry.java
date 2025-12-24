@@ -6,7 +6,6 @@ import java.util.List;
 import java.util.Map;
 import java.util.ServiceLoader;
 import java.util.concurrent.ConcurrentHashMap;
-import java.util.stream.Collectors;
 
 /**
  * Registry for all available Lyocell modules.
@@ -57,7 +56,30 @@ public class ModuleRegistry {
 
     public static List<LyocellModule> getAllModules(MetricsCollector metricsCollector) {
         ensureInitialized(metricsCollector);
-        return new ArrayList<>(modulesByName.values());
+        
+        // Always create fresh instances for default modules to ensure thread safety (Context-per-VU)
+        List<LyocellModule> modules = getDefaultModules(metricsCollector);
+        
+        // For discovered modules (from ServiceLoader), we must also create new instances.
+        // The prototypes in modulesByName are only for getModuleJs/metadata.
+        // We attempt to re-instantiate them using their default constructor.
+        for (LyocellModule prototype : modulesByName.values()) {
+            boolean isDefault = modules.stream().anyMatch(m -> m.getClass().equals(prototype.getClass()));
+            if (!isDefault) {
+                try {
+                    // Try to create a new instance
+                    LyocellModule newInstance = prototype.getClass().getDeclaredConstructor().newInstance();
+                    modules.add(newInstance);
+                } catch (Exception e) {
+                    // Fallback to prototype if we can't instantiate (unsafe, but best effort)
+                    // Or log a warning. For now, we'll log to stderr.
+                    System.err.println("Warning: Could not instantiate fresh module for " + prototype.getName() + ", using shared instance. This may cause threading issues.");
+                    modules.add(prototype);
+                }
+            }
+        }
+        
+        return modules;
     }
 
     /**
