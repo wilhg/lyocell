@@ -10,6 +10,7 @@ import java.nio.file.Paths;
 import java.time.Instant;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Locale;
 import java.util.stream.Collectors;
 
 public class HtmlReportRenderer {
@@ -40,6 +41,7 @@ public class HtmlReportRenderer {
                     %s
                     %s
                     %s
+                    %s
                 </div>
             </body>
             </html>
@@ -48,7 +50,8 @@ public class HtmlReportRenderer {
                 renderHeader(),
                 renderSummaryCards(collector),
                 renderCharts(collector),
-                renderDetailedTable(collector)
+                renderDetailedTable(collector),
+                renderFooter()
         );
     }
 
@@ -57,6 +60,7 @@ public class HtmlReportRenderer {
             <style>
                 :root {
                     --primary: #0061ff;
+                    --primary-gradient: linear-gradient(180deg, #0061ff 0%, #004ecc 100%);
                     --bg: #f5f7fa;
                     --card-bg: #ffffff;
                     --text: #333;
@@ -65,14 +69,14 @@ public class HtmlReportRenderer {
                     --error: #e74c3c;
                 }
                 body {
-                    font-family: -apple-system, BlinkMacSystemFont, \"Segoe UI\", Roboto, Helvetica, Arial, sans-serif;
+                    font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
                     background: var(--bg);
                     color: var(--text);
                     line-height: 1.6;
                     margin: 0;
                     padding: 20px;
                 }
-                .container { max-width: 960px; margin: 0 auto; }
+                .container { max-width: 1024px; margin: 0 auto; }
                 h1 { margin-bottom: 20px; color: #1a1a1a; font-weight: 700; }
                 
                 .grid {
@@ -86,7 +90,7 @@ public class HtmlReportRenderer {
                     background: var(--card-bg);
                     padding: 24px;
                     border-radius: 12px;
-                    box-shadow: 0 2px 5px rgba(0,0,0,0.05);
+                    box-shadow: 0 4px 6px rgba(0,0,0,0.02);
                     border: 1px solid var(--border);
                 }
                 .card h2 {
@@ -103,33 +107,41 @@ public class HtmlReportRenderer {
                 .metric-big { font-size: 3rem; font-weight: 800; color: var(--primary); line-height: 1; }
                 .metric-label { font-size: 0.85rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; font-weight: 600; }
 
-                /* Bar Chart (CSS-only) */
-                .bar-chart { display: flex; height: 200px; align-items: flex-end; gap: 12px; padding-top: 20px; }
-                .bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; }
+                /* Bar Chart */
+                .bar-chart { display: flex; height: 220px; align-items: flex-end; gap: 16px; padding-top: 20px; }
+                .bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; position: relative; }
                 .bar {
                     width: 100%;
-                    background: var(--primary);
+                    background: var(--primary-gradient);
                     border-radius: 6px 6px 0 0;
                     position: relative;
                     min-height: 4px;
-                    transition: height 0.3s ease;
+                    transition: all 0.2s ease;
+                    opacity: 0.9;
                 }
-                .bar:hover { opacity: 0.9; }
-                .bar-label { font-size: 0.7rem; margin-top: 8px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 100px; }
-                .bar-value { font-size: 0.75rem; margin-bottom: 5px; font-weight: bold; color: #333; }
+                .bar:hover { opacity: 1; transform: scaleY(1.02); transform-origin: bottom; }
+                
+                /* Tooltip-ish label on hover could be added here, but simple titles are used for now */
+                
+                .bar-label { font-size: 0.75rem; margin-top: 8px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; font-weight: 500; }
+                .bar-value { font-size: 0.8rem; margin-bottom: 5px; font-weight: bold; color: #333; }
                 
                 /* Table */
                 table { width: 100%; border-collapse: collapse; margin-top: 10px; }
-                th { text-align: left; padding: 12px; border-bottom: 2px solid var(--border); font-size: 0.85rem; color: #555; font-weight: 700; }
-                td { text-align: left; padding: 12px; border-bottom: 1px solid var(--border); font-family: 'SF Mono', Consolas, monospace; font-size: 0.9rem; }
+                th { text-align: left; padding: 12px; border-bottom: 2px solid var(--border); font-size: 0.85rem; color: #555; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
+                td { text-align: left; padding: 12px; border-bottom: 1px solid var(--border); font-family: 'SF Mono', Consolas, monospace; font-size: 0.9rem; color: #444; }
                 tr:last-child td { border-bottom: none; }
+                tr:hover td { background-color: #fafbfc; }
+                
+                /* Numeric Columns */
+                .num { text-align: right; font-variant-numeric: tabular-nums; }
                 
                 /* Pie Chart */
                 .pie-container { display: flex; align-items: center; gap: 30px; }
                 .pie-chart {
                     width: 140px; height: 140px;
                     border-radius: 50%;
-                    background: var(--primary); /* Fallback */
+                    background: var(--primary);
                     position: relative;
                 }
                 .pie-center {
@@ -149,6 +161,10 @@ public class HtmlReportRenderer {
                 }
                 .legend-item { display: flex; align-items: center; gap: 8px; margin-bottom: 8px; font-size: 0.9rem; color: #555; }
                 .dot { width: 12px; height: 12px; border-radius: 4px; }
+                
+                .footer { margin-top: 40px; text-align: center; color: #999; font-size: 0.85rem; padding-bottom: 20px; }
+                .footer a { color: #999; text-decoration: none; }
+                .footer a:hover { text-decoration: underline; }
             </style>
             """;
     }
@@ -159,8 +175,11 @@ public class HtmlReportRenderer {
             
         return """
             <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
-                <h1 style="margin:0;">Lyocell Report</h1>
-                <div style="color: #888; font-size: 0.9rem; background: #fff; padding: 8px 16px; border-radius: 20px; border: 1px solid #eee;">
+                <div style="display: flex; align-items: center; gap: 15px;">
+                    <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #0061ff, #00a2ff); border-radius: 8px;"></div>
+                    <h1 style="margin:0;">Lyocell Report</h1>
+                </div>
+                <div style="color: #666; font-size: 0.9rem; background: #fff; padding: 8px 16px; border-radius: 20px; border: 1px solid #e1e4e8; font-weight: 500;">
                     Generated: %s
                 </div>
             </header>
@@ -176,8 +195,7 @@ public class HtmlReportRenderer {
         long totalChecks = checksPass + checksFail;
         double passRate = totalChecks > 0 ? (double)checksPass / totalChecks * 100 : 0;
         
-        // Pass rate for gradient (avoiding double % escape issues by using string format directly)
-        String gradient = String.format("conic-gradient(var(--success) 0%% %.1f%%, var(--error) 0%% 100%%)", passRate);
+        String gradient = String.format(Locale.US, "conic-gradient(var(--success) 0%% %.1f%%, var(--error) 0%% 100%%)", passRate);
 
         return """
             <div class="grid">
@@ -205,7 +223,7 @@ public class HtmlReportRenderer {
             </div>
             """.formatted(
                 iterations,
-                failedIterations > 0 ? "var(--error)" : "#ccc",
+                failedIterations > 0 ? "var(--error)" : "#aaa",
                 failedIterations > 0 ? failedIterations + " Failed" : "All Successful",
                 gradient,
                 passRate,
@@ -226,8 +244,7 @@ public class HtmlReportRenderer {
         double maxP95 = trendSummaries.stream().mapToDouble(MetricSummary::p95).max().orElse(1.0);
         
         StringBuilder bars = new StringBuilder();
-        // Re-iterate registry to match names (inefficient but safe for simple CLI tool)
-        // Better: Store pairs
+        // Re-iterate (simple approach)
          List<Meter> sortedMeters = collector.getRegistry().getMeters().stream()
                 .filter(m -> m.getId().getType() == Meter.Type.DISTRIBUTION_SUMMARY)
                 .sorted((m1, m2) -> Double.compare(
@@ -242,12 +259,12 @@ public class HtmlReportRenderer {
             MetricSummary s = collector.getTrendSummary(name);
             double heightPct = (s.p95() / maxP95) * 100;
             
-            bars.append(String.format(
+            bars.append(String.format(Locale.US,
                 """
-                <div class=\"bar-group\">
-                    <div class=\"bar-value\">%.0f</div>
-                    <div class=\"bar\" style=\"height: %.1f%%;\"></div>
-                    <div class=\"bar-label\" title=\"%s\">%s</div>
+                <div class="bar-group">
+                    <div class="bar-value">%.0f</div>
+                    <div class="bar" style="height: %.1f%%;"></div>
+                    <div class="bar-label" title="%s">%s</div>
                 </div>
                 """, s.p95(), Math.max(heightPct, 2), name, name));
         }
@@ -270,15 +287,15 @@ public class HtmlReportRenderer {
              if (meter.getId().getType() == Meter.Type.DISTRIBUTION_SUMMARY) {
                 String name = meter.getId().getName();
                 MetricSummary s = collector.getTrendSummary(name);
-                rows.append(String.format(
+                rows.append(String.format(Locale.US,
                     """
                     <tr>
-                        <td style=\"font-weight: 600;\">%s</td>
-                        <td>%.2f</td>
-                        <td>%.2f</td>
-                        <td>%.2f</td>
-                        <td>%.2f</td>
-                        <td>%d</td>
+                        <td style="font-weight: 600;">%s</td>
+                        <td class="num">%.2f</td>
+                        <td class="num">%.2f</td>
+                        <td class="num">%.2f</td>
+                        <td class="num">%.2f</td>
+                        <td class="num">%d</td>
                     </tr>
                     """, name, s.avg(), s.max(), s.p95(), s.p99(), s.count()));
             }
@@ -291,11 +308,11 @@ public class HtmlReportRenderer {
                 <thead>
                     <tr>
                         <th>Metric Name</th>
-                        <th>Avg (ms)</th>
-                        <th>Max (ms)</th>
-                        <th>p95 (ms)</th>
-                        <th>p99 (ms)</th>
-                        <th>Count</th>
+                        <th class="num">Avg</th>
+                        <th class="num">Max</th>
+                        <th class="num">p95</th>
+                        <th class="num">p99</th>
+                        <th class="num">Count</th>
                     </tr>
                 </thead>
                 <tbody>
@@ -304,5 +321,13 @@ public class HtmlReportRenderer {
             </table>
             </div>
             """.formatted(rows.toString());
+    }
+    
+    private String renderFooter() {
+        return """
+            <div class="footer">
+                Generated by <strong>Lyocell</strong> - <a href="https://github.com/wilhg/lyocell">View on GitHub</a>
+            </div>
+            """;
     }
 }

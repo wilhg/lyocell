@@ -60,37 +60,22 @@ We inject Java objects into the `globalThis` scope of every Context.
 
 ## 4. Observability Architecture
 
-
-
-Lyocell uses **Micrometer** as its metrics engine, enabling zero-dependency exports to modern observability stacks.
-
-
+Lyocell uses **Micrometer** as its metrics engine and generates static HTML reports.
 
 ### A. Micrometer Integration
 
-*   **Core**: Uses `io.micrometer.core.instrument.CompositeMeterRegistry` to manage multiple outputs.
-
-*   **Polymorphism**: `MetricsCollector` delegates to the registry, decoupling recording from exporting.
-
+*   **Core**: Uses `io.micrometer.core.instrument.CompositeMeterRegistry` to manage internal metrics.
+*   **Polymorphism**: `MetricsCollector` delegates to the registry.
 *   **Efficiency**: Utilizes **HdrHistogram** (via Micrometer) for accurate, memory-bounded percentiles (p95, p99).
 
+### B. Reporting
 
-
-### B. Lightweight Networking
-
-*   **Implementation**: `JdkHttpSender` wraps Java 25's `java.net.http.HttpClient`.
-
-*   **Constraint**: Zero external network dependencies (no OkHttp or Apache Client) to keep the native binary lean.
-
-
+*   **Console**: A text-based summary is printed to stdout at the end of the test.
+*   **HTML**: A standalone HTML5 report is generated via `HtmlReportRenderer`, containing charts and detailed tables.
 
 ### C. Configuration
 
 *   **Source**: Configuration is read from `options.lyocell.outputs` (JS) or CLI flags (`-o`).
-
-*   **Push**: A background Virtual Thread flushes metrics periodically (e.g. for Prometheus Pushgateway).
-
-*   **Pull (Prometheus)**: An embedded `com.sun.net.httpserver.HttpServer` serves metrics at `/metrics`.
 
 
 

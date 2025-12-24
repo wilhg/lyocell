@@ -10,12 +10,9 @@ and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0
 ### Added
 - **Observability (Phase 6):**
     - **Micrometer Integration:** Decoupled metrics recording from reporting using a `CompositeMeterRegistry`.
-    - **Prometheus Support:** 
-        - **Pull Model:** Embedded HTTP server (default port 9090) for scraping `/metrics`.
-        - **Push Model:** Support for Prometheus Pushgateway.
-    - **Zero-Dependency HTTP Sender:** Custom `JdkHttpSender` using Java 25's `HttpClient` for lean builds.
+    - **HTML Reports:** Zero-dependency, static HTML5 report generation with CSS charts.
     - **Configuration:** New `-o` / `--out` CLI flag and `options.lyocell.outputs` support in scripts.
-- **Graceful Shutdown:** Ensures all external metrics are flushed before the process exits.
+- **Graceful Shutdown:** Ensures all metrics are flushed before the process exits.
 
 ## [0.2.0] - 2025-12-23
 

@@ -11,7 +11,7 @@
 *   **Native Image:** Compiles to a native binary for instant startup.
 
 ## Development Status
-*   **Phase 1-8 Complete:** Core engine, basic modules, observability (Micrometer), standard library expansion, and advanced scenarios are implemented.
+*   **Phase 1-8 Complete:** Core engine, basic modules, observability (HTML Report), standard library expansion, and advanced scenarios are implemented.
 *   **Detailed Docs:** Technical design, plan, and reference manuals are located in the `prompts/` directory.
 *   **Tests:** 100% integration test coverage for core features (`http`, `metrics`, `cli`, `examples`, `scenarios`).
 *   **Examples:** `examples/` folder contains tested scripts (`basic-get.js`, `post-json.js`) that run against `sharat87/httpbun`.
@@ -35,7 +35,7 @@
 *   **Engine:** `TestEngine` manages the `StructuredTaskScope` and various `WorkloadExecutor` implementations (e.g., `RampingVusExecutor`).
 *   **JS Runtime:** Uses a strict "Context-per-VU" model with `JsEngine` handling Graal `Context` creation and script evaluation.
 *   **Modules:** Standard k6 modules are implemented as Java modules and injected via `LyocellFileSystem`.
-*   **Metrics:** Uses **Micrometer** for high-performance, polymorphic metrics aggregation and export (Prometheus).
+*   **Metrics:** Uses **Micrometer** for high-performance metrics aggregation and generates HTML reports.
 
 ## Development Conventions
 *   **Strict Java 25:** Must use `--enable-preview`.

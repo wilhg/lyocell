@@ -44,8 +44,7 @@ We adopted an **MVP-first approach**, focusing on getting a "walking skeleton" r
 ### ✅ Phase 6: The Observatory (Observability)
 **Goal:** Real-time visualization via Grafana and standard metrics exports.
 *   **Architecture:** Adopted **Micrometer** as the polymorphic metrics engine.
-*   **Optimization:** Implemented `JdkHttpSender` using Java 25 HttpClient for zero-dependency push.
-*   **Outputs:** Supports **Prometheus** (Pull/Push) out of the box.
+*   **Outputs:** Supports **HTML Reports** out of the box.
 *   **Configuration:** Configurable via CLI flags (`--out`) and JS `options` (`options.lyocell.outputs`).
 
 ### ✅ Phase 7: Standard Library Expansion

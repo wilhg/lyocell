@@ -25,13 +25,12 @@ The foundation is now solid, supporting multi-executor scenarios and pluggable m
 **Objective:** Add Micrometer and support external outputs.
 
 **Steps:**
-1.  **Dependencies:** Added `micrometer-core` and `micrometer-registry-prometheus` to `build.gradle`.
+1.  **Dependencies:** Added `micrometer-core` to `build.gradle`.
 2.  **Refactor Metrics (as above):** Deleted custom accumulation logic; delegated to Micrometer.
-3.  **JdkHttpSender:**
-    *   Implemented a `HttpSender` compatible with Micrometer's `PushRegistry` that uses Java 25 `HttpClient`.
+3.  **HTML Reports:**
+    *   Implemented `HtmlReportRenderer` to generate standalone HTML5 reports.
 4.  **Configuration:**
-    *   Parse `options.lyocell.outputs` (e.g., `["influxdb=http://localhost:8086"]`).
-    *   Initialize the correct `MeterRegistry` implementation based on config.
+    *   Parse `options.lyocell.outputs` (e.g., `html=report.html`).
 
 ---
 

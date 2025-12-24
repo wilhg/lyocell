@@ -156,9 +156,7 @@ Features specific to Lyocell, designed to be compatible with k6's philosophy.
 
 ### Observability
 
-Lyocell supports real-time metrics export to external backends. You can configure outputs directly in the script `options` or via the CLI `-o` flag.
-
-
+Lyocell supports generating static HTML reports. You can configure outputs directly in the script `options` or via the CLI `-o` flag.
 
 ```javascript
 
@@ -168,7 +166,7 @@ export const options = {
 
     outputs: [
 
-      { type: 'prometheus', port: 9090 }
+      { type: 'html', target: 'report.html' }
 
     ]
 
