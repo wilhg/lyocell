@@ -22,41 +22,40 @@ Running on **GraalVM**, Lyocell compiles to a standalone native binary that star
 <summary><strong>macOS</strong> (Homebrew)</summary>
 
 ```bash
-brew tap get-lyocell/homebrew-tap
+brew tap wilhg/lyocell-tap
 brew install lyocell
 ```
 </details>
 
 <details>
-<summary><strong>Linux</strong> (Homebrew, APT, or RPM)</summary>
+<summary><strong>Linux</strong> (Homebrew or Manual)</summary>
 
 **Homebrew:**
 ```bash
-brew tap get-lyocell/homebrew-tap
+brew tap wilhg/lyocell-tap
 brew install lyocell
 ```
 
-**Debian / Ubuntu (APT):**
-```bash
-curl -1sLf 'https://dl.cloudsmith.io/public/get-lyocell/lyocell/setup.deb.sh' | sudo -E bash
-sudo apt-get install lyocell
-```
-
-**RHEL / Fedora / CentOS (RPM):**
-```bash
-curl -1sLf 'https://dl.cloudsmith.io/public/get-lyocell/lyocell/setup.rpm.sh' | sudo -E bash
-sudo yum install lyocell
-```
-
 **Manual:**
-Download the standalone binary from the [Releases](https://github.com/wilhg/lyocell/releases) page.
+Download the standalone binary from the [Releases](https://github.com/wilhg/lyocell/releases) page:
+
+```bash
+# Download the latest version
+wget https://github.com/wilhg/lyocell/releases/latest/download/lyocell-linux-amd64
+
+# Make it executable
+chmod +x lyocell-linux-amd64
+
+# Move to a directory in your PATH (optional)
+sudo mv lyocell-linux-amd64 /usr/local/bin/lyocell
+```
 </details>
 
 <details>
 <summary><strong>Windows</strong> (Scoop)</summary>
 
 ```powershell
-scoop bucket add lyocell https://github.com/get-lyocell/scoop-bucket
+scoop bucket add lyocell https://github.com/wilhg/lyocell-scoop
 scoop install lyocell
 ```
 </details>

@@ -1,0 +1,296 @@
+name: Release
+
+on:
+    push:
+        tags:
+            - "v*" # Triggers on version tags like v0.2.21, v0.3.0, etc.
+
+permissions:
+    contents: write # Required to create releases
+
+jobs:
+    build-native-binaries:
+        strategy:
+            matrix:
+                include:
+                    - os: ubuntu-latest
+                      platform: linux-amd64
+                      binary_name: lyocell
+                      artifact_name: lyocell-linux-amd64
+                    - os: macos-latest
+                      platform: macos-aarch64
+                      binary_name: lyocell
+                      artifact_name: lyocell-macos-aarch64
+                    - os: windows-latest
+                      platform: windows-amd64
+                      binary_name: lyocell.exe
+                      artifact_name: lyocell-windows-amd64.exe
+
+        runs-on: ${{ matrix.os }}
+
+        steps:
+            - uses: actions/checkout@v6
+
+            - name: Setup Oracle GraalVM
+              uses: graalvm/setup-graalvm@v1
+              with:
+                  distribution: "graalvm"
+                  java-version: "25"
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
+                  native-image-job-reports: "true"
+
+            - name: Verify GraalVM installation
+              run: |
+                  java -version
+                  native-image --version
+
+            - name: Grant execute permission for gradlew (Unix)
+              if: runner.os != 'Windows'
+              run: chmod +x gradlew
+
+            - name: Build with Gradle
+              run: ./gradlew build
+
+            - name: Build Native Image
+              run: ./gradlew nativeCompile
+
+            - name: Rename binary (Unix)
+              if: runner.os != 'Windows'
+              run: |
+                  cp build/native/nativeCompile/${{ matrix.binary_name }} ${{ matrix.artifact_name }}
+                  chmod +x ${{ matrix.artifact_name }}
+
+            - name: Rename binary (Windows)
+              if: runner.os == 'Windows'
+              run: |
+                  copy build\native\nativeCompile\${{ matrix.binary_name }} ${{ matrix.artifact_name }}
+
+            - name: Upload artifact
+              uses: actions/upload-artifact@v6
+              with:
+                  name: ${{ matrix.artifact_name }}
+                  path: ${{ matrix.artifact_name }}
+
+    create-release:
+        needs: build-native-binaries
+        runs-on: ubuntu-latest
+        outputs:
+            upload_url: ${{ steps.create_release.outputs.upload_url }}
+            version: ${{ steps.get_version.outputs.version }}
+
+        steps:
+            - uses: actions/checkout@v6
+              with:
+                  fetch-depth: 0 # Required for changelog generation
+
+            - name: Get version from tag
+              id: get_version
+              run: echo "version=${GITHUB_REF#refs/tags/v}" >> $GITHUB_OUTPUT
+
+            - name: Extract changelog for this version
+              id: changelog
+              run: |
+                  VERSION=${{ steps.get_version.outputs.version }}
+                  # Extract changelog section for this version
+                  CHANGELOG=$(sed -n "/## \[$VERSION\]/,/## \[/p" CHANGELOG.md | sed '$ d' | tail -n +2)
+                  echo "changelog<<EOF" >> $GITHUB_OUTPUT
+                  echo "$CHANGELOG" >> $GITHUB_OUTPUT
+                  echo "EOF" >> $GITHUB_OUTPUT
+
+            - name: Create Release
+              id: create_release
+              uses: actions/create-release@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  tag_name: ${{ github.ref }}
+                  release_name: Lyocell ${{ steps.get_version.outputs.version }}
+                  body: |
+                      ## Lyocell ${{ steps.get_version.outputs.version }}
+
+                      ${{ steps.changelog.outputs.changelog }}
+
+                      ### Installation
+
+                      **macOS (Homebrew):**
+                      ```bash
+                      brew tap wilhg/lyocell-tap
+                      brew install lyocell
+                      ```
+
+                      **Windows (Scoop):**
+                      ```powershell
+                      scoop bucket add lyocell https://github.com/wilhg/lyocell-scoop
+                      scoop install lyocell
+                      ```
+
+                      **Linux:**
+                      Download the binary for your platform below.
+                  draft: false
+                  prerelease: false
+
+    upload-release-assets:
+        needs: create-release
+        runs-on: ubuntu-latest
+        strategy:
+            matrix:
+                artifact:
+                    - lyocell-linux-amd64
+                    - lyocell-macos-aarch64
+                    - lyocell-windows-amd64.exe
+
+        steps:
+            - name: Download artifact
+              uses: actions/download-artifact@v6
+              with:
+                  name: ${{ matrix.artifact }}
+
+            - name: Upload Release Asset
+              uses: actions/upload-release-asset@v1
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
+              with:
+                  upload_url: ${{ needs.create-release.outputs.upload_url }}
+                  asset_path: ./${{ matrix.artifact }}
+                  asset_name: ${{ matrix.artifact }}
+                  asset_content_type: application/octet-stream
+
+    update-homebrew-tap:
+        needs: [create-release, upload-release-assets]
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout lyocell-tap repo
+              uses: actions/checkout@v6
+              with:
+                  repository: wilhg/lyocell-tap
+                  token: ${{ secrets.JRELEASER_GITHUB_TOKEN }}
+                  path: tap-repo
+
+            - name: Download macOS binary
+              uses: actions/download-artifact@v6
+              with:
+                  name: lyocell-macos-aarch64
+                  path: artifacts
+
+            - name: Download Linux binary
+              uses: actions/download-artifact@v6
+              with:
+                  name: lyocell-linux-amd64
+                  path: artifacts
+
+            - name: Calculate SHA256 checksums
+              id: checksums
+              run: |
+                  MACOS_SHA256=$(sha256sum artifacts/lyocell-macos-aarch64 | awk '{print $1}')
+                  LINUX_SHA256=$(sha256sum artifacts/lyocell-linux-amd64 | awk '{print $1}')
+                  echo "macos_sha256=$MACOS_SHA256" >> $GITHUB_OUTPUT
+                  echo "linux_sha256=$LINUX_SHA256" >> $GITHUB_OUTPUT
+
+            - name: Get download URLs
+              id: urls
+              run: |
+                  VERSION=${{ needs.create-release.outputs.version }}
+                  echo "macos_url=https://github.com/wilhg/lyocell/releases/download/v${VERSION}/lyocell-macos-aarch64" >> $GITHUB_OUTPUT
+                  echo "linux_url=https://github.com/wilhg/lyocell/releases/download/v${VERSION}/lyocell-linux-amd64" >> $GITHUB_OUTPUT
+
+            - name: Create/Update Homebrew Formula
+              run: |
+                  mkdir -p tap-repo/Formula
+                  cat > tap-repo/Formula/lyocell.rb << 'EOF'
+                  class Lyocell < Formula
+                    desc "High-performance load testing tool (k6 clone) on Java 25 & GraalVM"
+                    homepage "https://github.com/wilhg/lyocell"
+                    version "${{ needs.create-release.outputs.version }}"
+                    license "MIT"
+
+                    if OS.mac? && Hardware::CPU.arm?
+                      url "${{ steps.urls.outputs.macos_url }}"
+                      sha256 "${{ steps.checksums.outputs.macos_sha256 }}"
+                    elsif OS.linux?
+                      url "${{ steps.urls.outputs.linux_url }}"
+                      sha256 "${{ steps.checksums.outputs.linux_sha256 }}"
+                    end
+
+                    def install
+                      if OS.mac? && Hardware::CPU.arm?
+                        bin.install "lyocell-macos-aarch64" => "lyocell"
+                      elsif OS.linux?
+                        bin.install "lyocell-linux-amd64" => "lyocell"
+                      end
+                    end
+
+                    test do
+                      system "#{bin}/lyocell", "--version"
+                    end
+                  end
+                  EOF
+
+            - name: Commit and push changes
+              run: |
+                  cd tap-repo
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git add Formula/lyocell.rb
+                  git commit -m "Update lyocell to ${{ needs.create-release.outputs.version }}"
+                  git push
+
+    update-scoop-bucket:
+        needs: [create-release, upload-release-assets]
+        runs-on: ubuntu-latest
+
+        steps:
+            - name: Checkout lyocell-scoop repo
+              uses: actions/checkout@v6
+              with:
+                  repository: wilhg/lyocell-scoop
+                  token: ${{ secrets.JRELEASER_GITHUB_TOKEN }}
+                  path: scoop-repo
+
+            - name: Download Windows binary
+              uses: actions/download-artifact@v6
+              with:
+                  name: lyocell-windows-amd64.exe
+                  path: artifacts
+
+            - name: Calculate SHA256 checksum
+              id: checksum
+              run: |
+                  WINDOWS_SHA256=$(sha256sum artifacts/lyocell-windows-amd64.exe | awk '{print $1}')
+                  echo "windows_sha256=$WINDOWS_SHA256" >> $GITHUB_OUTPUT
+
+            - name: Get download URL
+              id: url
+              run: |
+                  VERSION=${{ needs.create-release.outputs.version }}
+                  echo "windows_url=https://github.com/wilhg/lyocell/releases/download/v${VERSION}/lyocell-windows-amd64.exe" >> $GITHUB_OUTPUT
+
+            - name: Create/Update Scoop Manifest
+              run: |
+                  mkdir -p scoop-repo/bucket
+                  cat > scoop-repo/bucket/lyocell.json << 'EOF'
+                  {
+                    "version": "${{ needs.create-release.outputs.version }}",
+                    "description": "High-performance load testing tool (k6 clone) on Java 25 & GraalVM",
+                    "homepage": "https://github.com/wilhg/lyocell",
+                    "license": "MIT",
+                    "url": "${{ steps.url.outputs.windows_url }}",
+                    "hash": "${{ steps.checksum.outputs.windows_sha256 }}",
+                    "bin": "lyocell-windows-amd64.exe",
+                    "checkver": {
+                      "github": "https://github.com/wilhg/lyocell"
+                    },
+                    "autoupdate": {
+                      "url": "https://github.com/wilhg/lyocell/releases/download/v$version/lyocell-windows-amd64.exe"
+                    }
+                  }
+                  EOF
+
+            - name: Commit and push changes
+              run: |
+                  cd scoop-repo
+                  git config user.name "github-actions[bot]"
+                  git config user.email "github-actions[bot]@users.noreply.github.com"
+                  git add bucket/lyocell.json
+                  git commit -m "Update lyocell to ${{ needs.create-release.outputs.version }}"
+                  git push
