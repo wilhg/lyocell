@@ -2,12 +2,8 @@ package com.wilhg.lyocell.engine;
 
 import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
-import java.util.ArrayList;
-import java.util.Collections;
-import java.util.LinkedHashSet;
-import java.util.List;
-import java.util.Map;
-import java.util.SequencedCollection;
+import java.util.*;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.StructuredTaskScope;
 import java.util.concurrent.StructuredTaskScope.Joiner;
@@ -178,7 +174,7 @@ public class TestEngine {
             // 2. Execution Phase (Parallel Scenarios)
             try (CliAnimation animation = new CliAnimation("Running test...")) {
                 animation.start();
-                java.util.Set<String> activeScenarios = Collections.synchronizedSet(new LinkedHashSet<>());
+                Set<String> activeScenarios = ConcurrentHashMap.newKeySet();
                 try (var scope = StructuredTaskScope.open(Joiner.awaitAllSuccessfulOrThrow())) {
                     for (Scenario scenario : config.scenarios().values()) {
                         scope.fork(() -> {
