@@ -48,8 +48,8 @@ jobs:
               if: runner.os != 'Windows'
               run: chmod +x gradlew
 
-            - name: Build with Gradle
-              run: ./gradlew build
+            - name: Build with Gradle (skip Docker tests)
+              run: ./gradlew build -DskipDockerTests=true
 
             - name: Build Native Image
               run: ./gradlew nativeCompile

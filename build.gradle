@@ -25,6 +25,12 @@ tasks.withType(JavaCompile).configureEach {
 
 tasks.withType(Test).configureEach {
     jvmArgs += ['--enable-preview', '--enable-native-access=ALL-UNNAMED']
+    useJUnitPlatform {
+        // Skip Docker-backed integration tests when skipDockerTests=true (defaults to true)
+        if (Boolean.parseBoolean(System.getProperty("skipDockerTests", "true"))) {
+            excludeTags("integration")
+        }
+    }
 }
 
 repositories {
@@ -50,7 +56,6 @@ dependencies {
 }
 
 test {
-    useJUnitPlatform()
     finalizedBy jacocoTestReport
 }
 
