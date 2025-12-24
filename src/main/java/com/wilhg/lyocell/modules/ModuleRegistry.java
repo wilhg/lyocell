@@ -36,13 +36,15 @@ public class ModuleRegistry {
 
     public static String getModuleJs(String name, MetricsCollector metricsCollector) {
         ensureInitialized(metricsCollector);
-        
+
+        // Normalize path separators to support Windows paths
+        String normalizedName = normalizeModuleName(name);
+
         // Normalize name: k6/http -> lyocell/http, k6 -> lyocell
-        String normalizedName = name;
-        if (name.equals("k6")) {
+        if (normalizedName.equals("k6")) {
             normalizedName = "lyocell";
-        } else if (name.startsWith("k6/")) {
-            normalizedName = "lyocell/" + name.substring(3);
+        } else if (normalizedName.startsWith("k6/")) {
+            normalizedName = "lyocell/" + normalizedName.substring(3);
         }
 
         // Match lyocell/http even if name is full path
@@ -52,6 +54,10 @@ public class ModuleRegistry {
             }
         }
         return null;
+    }
+
+    private static String normalizeModuleName(String name) {
+        return name.replace('\\', '/');
     }
 
     public static List<LyocellModule> getAllModules(MetricsCollector metricsCollector) {

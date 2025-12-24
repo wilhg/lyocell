@@ -13,7 +13,6 @@ import java.util.Set;
 
 public class LyocellFileSystem implements FileSystem {
     private final FileSystem delegate = FileSystem.newDefaultFileSystem();
-    private static final String LYOCELL_PREFIX = "lyocell/";
     private final MetricsCollector metricsCollector;
 
     public LyocellFileSystem() {
@@ -52,11 +51,16 @@ public class LyocellFileSystem implements FileSystem {
         return delegate.newByteChannel(path, options, attrs);
     }
 
-    private boolean isVirtualModule(String path) {
-        return path.equals("lyocell") || path.startsWith("lyocell/") || 
+    private boolean isVirtualModule(String rawPath) {
+        String path = normalize(rawPath);
+        return path.equals("lyocell") || path.startsWith("lyocell/") ||
                path.endsWith("/lyocell") || path.contains("/lyocell/") ||
-               path.equals("k6") || path.startsWith("k6/") || 
+               path.equals("k6") || path.startsWith("k6/") ||
                path.endsWith("/k6") || path.contains("/k6/");
+    }
+
+    private String normalize(String path) {
+        return path.replace('\\', '/');
     }
 
     @Override
