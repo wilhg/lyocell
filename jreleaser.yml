@@ -35,10 +35,3 @@ packagers:
     repository:
       owner: get-lyocell
       name: scoop-bucket
-
-upload:
-  cloudsmith:
-    lyocell:
-      active: ALWAYS
-      organization: get-lyocell
-      repository: lyocell
