@@ -163,7 +163,7 @@ public class HtmlReportRenderer {
                     flex-direction: column;
                     flex: 1;
                     min-width: 4px;
-                    max-width: 40px;
+                    /* Removed max-width to allow bars to fill the chart width and align with the SVG visualization */
                     height: 100%;
                     min-height: 150px;
                     position: relative;
@@ -405,8 +405,10 @@ public class HtmlReportRenderer {
         StringBuilder failurePath = new StringBuilder("M 0 100 ");
         
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneId.of("UTC"));
-        int labelInterval = Math.max(1, timelineData.size() / 10);
         int n = timelineData.size();
+        // Dynamic label interval based on number of points to avoid overlap while showing enough detail
+        // Assuming a label is ~70px wide and container is ~944px wide, we can fit about 13 labels
+        int labelInterval = Math.max(1, (int) Math.ceil(n / 13.0));
 
         for (int i = 0; i < n; i++) {
             TimeSeriesData data = timelineData.get(i);
