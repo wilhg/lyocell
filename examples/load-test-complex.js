@@ -15,24 +15,24 @@ import execution from 'lyocell/execution';
  */
 export const options = {
     scenarios: {
-        stage_1: {
-            executor: 'shared-iterations',
-            vus: 100,
-            iterations: 20000,
-            startTime: '0s',
-        },
+        // stage_1: {
+        //     executor: 'shared-iterations',
+        //     vus: 500,
+        //     iterations: 200000,
+        //     startTime: '0s',
+        // },
         stage_2: {
             executor: 'shared-iterations',
-            vus: 100,
-            iterations: 30000,
-            startTime: '7s', // 5s duration + 2s wait
+            vus: 50,
+            iterations: 100,
+            startTime: '1s', // 5s duration + 2s wait
         },
-        stage_3: {
-            executor: 'shared-iterations',
-            vus: 100,
-            iterations: 50000,
-            startTime: '10s', // 7s + 3s wait (assuming stage 2 finishes or just starting then)
-        },
+        // stage_3: {
+        //     executor: 'shared-iterations',
+        //     vus: 500,
+        //     iterations: 50000,
+        //     startTime: '3s', // 7s + 3s wait (assuming stage 2 finishes or just starting then)
+        // },
     },
     thresholds: {
         'http_req_duration': ['p(95)<500'],
@@ -60,10 +60,11 @@ export default function () {
         headers: {
             'Content-Type': 'application/json',
             'X-VU-ID': vuId.toString()
-        }
+        },
+        timeout: '1s'
     };
 
-    const res = http.post(`${baseUrl}/post`, payload, params);
+    const res = http.post(`${baseUrl}/post1`, payload, params);
 
     check(res, {
         'status is 200': (r) => r.status === 200,

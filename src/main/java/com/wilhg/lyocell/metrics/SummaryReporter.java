@@ -12,7 +12,10 @@ public class SummaryReporter {
 
         System.out.println("\n[Execution]");
         long iterations = collector.getCounterValue("iterations");
-        System.out.printf("  iterations................: %d\n", iterations);
+        long iterationsFailed = collector.getCounterValue("iterations_failed");
+        long iterationsPassed = iterations - iterationsFailed;
+        double iterationSuccessRate = iterations > 0 ? (double) iterationsPassed / iterations * 100 : 0;
+        System.out.printf("  iterations................: %.2f%% (%d pass, %d fail)\n", iterationSuccessRate, iterationsPassed, iterationsFailed);
 
         System.out.println("\n[Checks]");
         long pass = collector.getCounterValue("checks.pass");

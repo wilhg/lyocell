@@ -5,6 +5,7 @@ public class ExecutionContext {
 
     private final int vuId;
     private final int iteration;
+    private boolean failed = false;
 
     public ExecutionContext(int vuId) {
         this(vuId, 0);
@@ -33,5 +34,13 @@ public class ExecutionContext {
 
     public int getIteration() {
         return iteration;
+    }
+
+    public void markFailed() {
+        this.failed = true;
+    }
+
+    public boolean isFailed() {
+        return failed;
     }
 }

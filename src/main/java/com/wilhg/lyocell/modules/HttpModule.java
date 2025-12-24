@@ -1,9 +1,5 @@
 package com.wilhg.lyocell.modules;
 
-import com.wilhg.lyocell.metrics.MetricsCollector;
-import org.graalvm.polyglot.Context;
-import org.graalvm.polyglot.HostAccess;
-import org.graalvm.polyglot.Value;
 import java.net.URI;
 import java.net.http.HttpClient;
 import java.net.http.HttpRequest;
@@ -13,6 +9,12 @@ import java.time.Instant;
 import java.util.HashMap;
 import java.util.List;
 import java.util.Map;
+
+import org.graalvm.polyglot.Context;
+import org.graalvm.polyglot.HostAccess;
+import org.graalvm.polyglot.Value;
+
+import com.wilhg.lyocell.metrics.MetricsCollector;
 
 public class HttpModule implements LyocellModule {
     private final HttpClient client = HttpClient.newBuilder()
@@ -86,6 +88,15 @@ public class HttpModule implements LyocellModule {
             HttpRequest.Builder builder = HttpRequest.newBuilder()
                     .uri(URI.create(url));
 
+            // Set timeout
+            if (params != null && params.hasMember("timeout")) {
+                Value timeoutVal = params.getMember("timeout");
+                Duration timeout = parseDuration(timeoutVal);
+                if (!timeout.isZero()) {
+                    builder.timeout(timeout);
+                }
+            }
+
             // Set headers
             if (params != null && params.hasMember("headers")) {
                 Value headers = params.getMember("headers");
@@ -116,6 +127,25 @@ public class HttpModule implements LyocellModule {
             }
             return new HttpResponseWrapper(e.getMessage(), duration, context);
         }
+    }
+
+    private Duration parseDuration(Value value) {
+        if (value.isNumber()) {
+            return Duration.ofMillis(value.asLong());
+        }
+        if (value.isString()) {
+            String s = value.asString();
+            if (s.endsWith("ms")) return Duration.ofMillis(Long.parseLong(s.substring(0, s.length() - 2)));
+            if (s.endsWith("s")) return Duration.ofSeconds(Long.parseLong(s.substring(0, s.length() - 1)));
+            if (s.endsWith("m")) return Duration.ofMinutes(Long.parseLong(s.substring(0, s.length() - 1)));
+            if (s.endsWith("h")) return Duration.ofHours(Long.parseLong(s.substring(0, s.length() - 1)));
+            try {
+                return Duration.ofMillis(Long.parseLong(s));
+            } catch (NumberFormatException e) {
+                return Duration.ZERO;
+            }
+        }
+        return Duration.ZERO;
     }
 
     public static class HttpResponseWrapper {

@@ -1,14 +1,5 @@
 package com.wilhg.lyocell.engine;
 
-import com.wilhg.lyocell.engine.scenario.Scenario;
-import com.wilhg.lyocell.metrics.MetricsCollector;
-import com.wilhg.lyocell.metrics.SummaryReporter;
-import com.wilhg.lyocell.metrics.TimeSeriesData;
-import com.wilhg.lyocell.report.HtmlReportRenderer;
-import org.graalvm.polyglot.Value;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
-
 import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
 import java.util.Collections;
@@ -17,6 +8,17 @@ import java.util.Map;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.StructuredTaskScope;
 import java.util.concurrent.StructuredTaskScope.Joiner;
+
+import org.graalvm.polyglot.Value;
+
+import com.wilhg.lyocell.engine.scenario.Scenario;
+import com.wilhg.lyocell.metrics.MetricsCollector;
+import com.wilhg.lyocell.metrics.SummaryReporter;
+import com.wilhg.lyocell.metrics.TimeSeriesData;
+import com.wilhg.lyocell.report.HtmlReportRenderer;
+
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
 
 public class TestEngine {
     private final Map<String, Object> extraBindings;

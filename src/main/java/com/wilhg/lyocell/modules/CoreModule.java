@@ -69,15 +69,21 @@ public class CoreModule implements LyocellModule {
             Value checkFn = sets.getMember(name);
             try {
                 boolean passed = checkFn.execute(val).asBoolean();
-                if (passed) {
-                    collector.addCounter("checks.pass", 1);
-                } else {
-                    collector.addCounter("checks.fail", 1);
+                if (!passed) {
                     allPass = false;
                 }
             } catch (Exception e) {
-                collector.addCounter("checks.fail", 1);
                 allPass = false;
+            }
+        }
+
+        if (allPass) {
+            collector.addCounter("checks.pass", 1);
+        } else {
+            collector.addCounter("checks.fail", 1);
+            com.wilhg.lyocell.engine.ExecutionContext ctx = com.wilhg.lyocell.engine.ExecutionContext.get();
+            if (ctx != null) {
+                ctx.markFailed();
             }
         }
         return allPass;

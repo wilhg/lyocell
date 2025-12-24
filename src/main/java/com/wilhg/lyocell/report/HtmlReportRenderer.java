@@ -1,10 +1,5 @@
 package com.wilhg.lyocell.report;
 
-import com.wilhg.lyocell.metrics.MetricSummary;
-import com.wilhg.lyocell.metrics.MetricsCollector;
-import com.wilhg.lyocell.metrics.TimeSeriesData;
-import io.micrometer.core.instrument.Meter;
-
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
@@ -15,6 +10,12 @@ import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
 import java.util.stream.Collectors;
+
+import com.wilhg.lyocell.metrics.MetricSummary;
+import com.wilhg.lyocell.metrics.MetricsCollector;
+import com.wilhg.lyocell.metrics.TimeSeriesData;
+
+import io.micrometer.core.instrument.Meter;
 
 public class HtmlReportRenderer {
 
@@ -131,30 +132,63 @@ public class HtmlReportRenderer {
                 /* Timeline Chart (new) */
                 .timeline-chart {
                     display: flex;
-                    align-items: flex-end;
+                    align-items: stretch;
                     height: 250px;
-                    gap: 2px;
-                    padding-top: 10px;
+                    gap: 0;
+                    padding-top: 60px;
                     border-bottom: 1px solid var(--border);
                     position: relative;
-                    overflow-x: auto;
-                    padding-bottom: 30px; /* Space for labels */
+                    overflow: visible;
+                    padding-bottom: 30px;
+                    padding-left: 40px;
+                    padding-right: 40px;
+                    box-sizing: border-box;
                 }
+                .timeline-chart * { box-sizing: border-box; }
+                .timeline-svg {
+                    position: absolute;
+                    top: 60px;
+                    left: 40px;
+                    right: 40px;
+                    height: calc(100% - 90px);
+                    width: calc(100% - 80px);
+                    z-index: 1;
+                    pointer-events: none;
+                }
+                .area-success { fill: var(--success); fill-opacity: 0.2; stroke: var(--success); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+                .area-failure { fill: var(--error); fill-opacity: 0.5; stroke: var(--error); stroke-width: 2; vector-effect: non-scaling-stroke; }
+
                 .timeline-bar-wrapper {
                     display: flex;
-                    flex-direction: column-reverse; /* Stack bars from bottom up */
-                    width: 15px; /* Fixed width for each time bucket */
+                    flex-direction: column;
+                    flex: 1;
+                    min-width: 4px;
+                    max-width: 40px;
+                    height: 100%;
+                    min-height: 150px;
                     position: relative;
-                    justify-content: flex-start;
+                    z-index: 10;
+                    cursor: pointer;
+                    background: transparent; /* Needed for some browsers to capture hover */
                 }
                 .timeline-bar {
                     width: 100%;
                     position: relative;
                     min-height: 1px;
                 }
-                .timeline-bar.success { background: var(--success); opacity: 0.8; }
-                .timeline-bar.failure { background: var(--error); opacity: 0.8; }
-                .timeline-bar:hover { opacity: 1; }
+                /* No background for area chart hitboxes, just a highlight on hover */
+                .timeline-bar-wrapper:hover {
+                    background: rgba(0,0,0,0.05);
+                }
+                .timeline-bar-wrapper:hover::after {
+                    content: '';
+                    position: absolute;
+                    top: 0; bottom: 0; left: 50%;
+                    width: 1px;
+                    background: rgba(0,0,0,0.2);
+                    pointer-events: none;
+                    z-index: 15;
+                }
                 
                 .timeline-label {
                     position: absolute;
@@ -164,22 +198,34 @@ public class HtmlReportRenderer {
                     font-size: 0.7rem;
                     color: #777;
                     white-space: nowrap;
+                    z-index: 3;
                 }
                 .timeline-tooltip {
                     position: absolute;
-                    bottom: 100%; /* Above the bar */
+                    top: -50px; /* Positioned in the padding-top area of .timeline-chart */
                     left: 50%;
                     transform: translateX(-50%);
-                    background: rgba(0,0,0,0.8);
+                    background: rgba(0,0,0,0.85);
                     color: #fff;
-                    padding: 4px 8px;
+                    padding: 6px 10px;
                     border-radius: 4px;
-                    font-size: 0.7rem;
+                    font-size: 0.75rem;
                     white-space: nowrap;
                     visibility: hidden;
                     opacity: 0;
-                    transition: opacity 0.2s, visibility 0.2s;
-                    z-index: 10;
+                    transition: opacity 0.1s;
+                    z-index: 20;
+                    pointer-events: none;
+                    box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+                }
+                .timeline-tooltip::after {
+                    content: '';
+                    position: absolute;
+                    top: 100%;
+                    left: 50%;
+                    transform: translateX(-50%);
+                    border: 5px solid transparent;
+                    border-top-color: rgba(0,0,0,0.85);
                 }
                 .timeline-bar-wrapper:hover .timeline-tooltip {
                     visibility: visible;
@@ -236,7 +282,6 @@ public class HtmlReportRenderer {
         return """
             <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
                 <div style="display: flex; align-items: center; gap: 15px;">
-                    <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #0061ff, #00a2ff); border-radius: 8px;"></div>
                     <h1 style="margin:0;">Lyocell Report</h1>
                 </div>
                 <div style="color: #666; font-size: 0.9rem; background: #fff; padding: 8px 16px; border-radius: 20px; border: 1px solid #e1e4e8; font-weight: 500;">
@@ -248,7 +293,6 @@ public class HtmlReportRenderer {
 
     private String renderSummaryCards(MetricsCollector collector) {
         long iterations = collector.getCounterValue("iterations");
-        long failedIterations = collector.getCounterValue("iterations_failed");
         long checksPass = collector.getCounterValue("checks.pass");
         long checksFail = collector.getCounterValue("checks.fail");
         
@@ -283,8 +327,8 @@ public class HtmlReportRenderer {
             </div>
             """.formatted(
                 iterations,
-                failedIterations > 0 ? "var(--error)" : "#aaa",
-                failedIterations > 0 ? failedIterations + " Failed" : "All Successful",
+                ' ',
+                ' ',
                 gradient,
                 passRate,
                 checksPass, checksFail
@@ -357,45 +401,53 @@ public class HtmlReportRenderer {
                 .orElse(1L);
 
         StringBuilder barsHtml = new StringBuilder();
+        StringBuilder successPath = new StringBuilder("M 0 100 ");
+        StringBuilder failurePath = new StringBuilder("M 0 100 ");
+        
         DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneId.of("UTC"));
+        int labelInterval = Math.max(1, timelineData.size() / 10);
+        int n = timelineData.size();
 
-        for (int i = 0; i < timelineData.size(); i++) {
+        for (int i = 0; i < n; i++) {
             TimeSeriesData data = timelineData.get(i);
-            long totalRequests = data.successfulRequests() + data.failedRequests();
             double successfulHeightPct = (double) data.successfulRequests() / maxRequestsPerBucket * 100;
             double failedHeightPct = (double) data.failedRequests() / maxRequestsPerBucket * 100;
             
-            String tooltip = String.format(Locale.US, 
-                "Time: %s<br>Success: %d<br>Failed: %d", 
-                timeFormatter.format(Instant.ofEpochMilli(data.timestamp())),
-                data.successfulRequests(), data.failedRequests()
-            );
+            double x = i + 0.5;
+            successPath.append(String.format(Locale.US, "L %.2f %.1f ", x, 100 - successfulHeightPct));
+            failurePath.append(String.format(Locale.US, "L %.2f %.1f ", x, 100 - failedHeightPct));
 
-            barsHtml.append(String.format(Locale.US,
-                """
-                <div class="timeline-bar-wrapper">
-                    <div class="timeline-tooltip">%s</div>
-                    <div class="timeline-bar failure" style="height: %.1f%%;" title="Failed: %d"></div>
-                    <div class="timeline-bar success" style="height: %.1f%%;" title="Success: %d"></div>
-                    %s
-                </div>
-                """,
-                tooltip,
-                Math.max(failedHeightPct, data.failedRequests() > 0 ? 1 : 0), data.failedRequests(), // Ensure at least 1px for visibility if > 0
-                Math.max(successfulHeightPct, data.successfulRequests() > 0 ? 1 : 0), data.successfulRequests(), // Ensure at least 1px for visibility if > 0
-                (i % 10 == 0) ? String.format(Locale.US, "<div class=\"timeline-label\">%s</div>", timeFormatter.format(Instant.ofEpochMilli(data.timestamp()))) : ""
-            ));
+            String tooltipContent = "Success: " + data.successfulRequests() + "<br>Failed: " + data.failedRequests();
+            String labelHtml = (i % labelInterval == 0) ? 
+                String.format(Locale.US, "<div class=\"timeline-label\">%s</div>", timeFormatter.format(Instant.ofEpochMilli(data.timestamp()))) : "";
+
+            barsHtml.append("<div class=\"timeline-bar-wrapper\">");
+            barsHtml.append("<div class=\"timeline-tooltip\">").append(tooltipContent).append("</div>");
+            barsHtml.append(labelHtml);
+            barsHtml.append("</div>");
         }
+        
+        successPath.append(String.format(Locale.US, "L %d 100 Z", n));
+        failurePath.append(String.format(Locale.US, "L %d 100 Z", n));
+
+        String svg = String.format(Locale.US,
+            """
+            <svg class="timeline-svg" viewBox="0 0 %d 100" preserveAspectRatio="none">
+                <path class="area-success" d="%s" />
+                <path class="area-failure" d="%s" />
+            </svg>
+            """, n, successPath.toString(), failurePath.toString());
 
         return """
             <div class="card">
                 <h2>Request Volume Timeline (Reqs/Sec)</h2>
                 <div class="timeline-chart">
                     %s
+                    %s
                 </div>
             </div>
             <br>
-            """.formatted(barsHtml.toString());
+            """.formatted(svg, barsHtml.toString());
     }
 
     private String renderDetailedTable(MetricsCollector collector) {

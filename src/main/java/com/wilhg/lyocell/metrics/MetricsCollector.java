@@ -22,10 +22,10 @@ import java.util.stream.Collectors;
 public class MetricsCollector {
     private final CompositeMeterRegistry registry;
     private final ConcurrentHashMap<String, AtomicReference<Double>> gaugeValues = new ConcurrentHashMap<>();
-    private final ConcurrentLinkedQueue<IterationEvent> iterationEvents = new ConcurrentLinkedQueue<>();
+    private final ConcurrentLinkedQueue<TimelineEvent> timelineEvents = new ConcurrentLinkedQueue<>();
 
-    // Internal record to capture iteration events with timestamp
-    private record IterationEvent(long timestamp, boolean success) {
+    // Internal record to capture timeline events with timestamp
+    private record TimelineEvent(long timestamp, boolean success) {
     }
 
     public MetricsCollector() {
@@ -93,29 +93,45 @@ public class MetricsCollector {
     public void recordIteration(long duration, boolean success) {
         addTrend("iteration_duration", duration);
         addCounter("iterations", 1);
-        if (!success) {
+        
+        boolean finalSuccess = success;
+        com.wilhg.lyocell.engine.ExecutionContext ctx = com.wilhg.lyocell.engine.ExecutionContext.get();
+        if (ctx != null && ctx.isFailed()) {
+            finalSuccess = false;
+        }
+
+        if (!finalSuccess) {
             addCounter("iterations_failed", 1);
         }
-        iterationEvents.offer(new IterationEvent(System.currentTimeMillis(), success));
+        recordTimelineEvent(finalSuccess);
     }
 
     /**
-     * Aggregates raw iteration events into time-series data based on specified bucket duration.
+     * Records a generic event for the timeline (e.g., a check or an HTTP request).
+     *
+     * @param success True if the event was successful, false otherwise.
+     */
+    public void recordTimelineEvent(boolean success) {
+        timelineEvents.offer(new TimelineEvent(System.currentTimeMillis(), success));
+    }
+
+    /**
+     * Aggregates raw timeline events into time-series data based on specified bucket duration.
      *
      * @param bucketDurationMillis The duration of each time bucket in milliseconds.
      * @return A list of TimeSeriesData, sorted by timestamp.
      */
     public List<TimeSeriesData> getIterationTimeline(long bucketDurationMillis) {
-        if (iterationEvents.isEmpty()) {
+        if (timelineEvents.isEmpty()) {
             return List.of();
         }
 
-        long startTime = iterationEvents.stream()
-                .mapToLong(IterationEvent::timestamp)
+        long startTime = timelineEvents.stream()
+                .mapToLong(TimelineEvent::timestamp)
                 .min()
                 .orElse(System.currentTimeMillis());
 
-        Map<Long, List<IterationEvent>> groupedByBucket = iterationEvents.stream()
+        Map<Long, List<TimelineEvent>> groupedByBucket = timelineEvents.stream()
                 .collect(Collectors.groupingBy(event -> {
                     long relativeTime = event.timestamp() - startTime;
                     return (relativeTime / bucketDurationMillis) * bucketDurationMillis;
@@ -124,8 +140,15 @@ public class MetricsCollector {
         return groupedByBucket.entrySet().stream()
                 .map(entry -> {
                     long bucketStartRelativeTime = entry.getKey();
-                    long successful = entry.getValue().stream().filter(IterationEvent::success).count();
-                    long failed = entry.getValue().stream().filter(event -> !event.success()).count();
+                    long successful = 0;
+                    long failed = 0;
+                    for (TimelineEvent event : entry.getValue()) {
+                        if (event.success()) {
+                            successful++;
+                        } else {
+                            failed++;
+                        }
+                    }
                     return new TimeSeriesData(startTime + bucketStartRelativeTime, successful, failed);
                 })
                 .sorted(Comparator.comparing(TimeSeriesData::timestamp))

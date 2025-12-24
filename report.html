@@ -75,30 +75,63 @@
     /* Timeline Chart (new) */
     .timeline-chart {
         display: flex;
-        align-items: flex-end;
+        align-items: stretch;
         height: 250px;
-        gap: 2px;
-        padding-top: 10px;
+        gap: 0;
+        padding-top: 60px;
         border-bottom: 1px solid var(--border);
         position: relative;
-        overflow-x: auto;
-        padding-bottom: 30px; /* Space for labels */
+        overflow: visible;
+        padding-bottom: 30px;
+        padding-left: 40px;
+        padding-right: 40px;
+        box-sizing: border-box;
     }
+    .timeline-chart * { box-sizing: border-box; }
+    .timeline-svg {
+        position: absolute;
+        top: 60px;
+        left: 40px;
+        right: 40px;
+        height: calc(100% - 90px);
+        width: calc(100% - 80px);
+        z-index: 1;
+        pointer-events: none;
+    }
+    .area-success { fill: var(--success); fill-opacity: 0.2; stroke: var(--success); stroke-width: 1.5; vector-effect: non-scaling-stroke; }
+    .area-failure { fill: var(--error); fill-opacity: 0.5; stroke: var(--error); stroke-width: 2; vector-effect: non-scaling-stroke; }
+
     .timeline-bar-wrapper {
         display: flex;
-        flex-direction: column-reverse; /* Stack bars from bottom up */
-        width: 15px; /* Fixed width for each time bucket */
+        flex-direction: column;
+        flex: 1;
+        min-width: 4px;
+        max-width: 40px;
+        height: 100%;
+        min-height: 150px;
         position: relative;
-        justify-content: flex-start;
+        z-index: 10;
+        cursor: pointer;
+        background: transparent; /* Needed for some browsers to capture hover */
     }
     .timeline-bar {
         width: 100%;
         position: relative;
         min-height: 1px;
     }
-    .timeline-bar.success { background: var(--success); opacity: 0.8; }
-    .timeline-bar.failure { background: var(--error); opacity: 0.8; }
-    .timeline-bar:hover { opacity: 1; }
+    /* No background for area chart hitboxes, just a highlight on hover */
+    .timeline-bar-wrapper:hover {
+        background: rgba(0,0,0,0.05);
+    }
+    .timeline-bar-wrapper:hover::after {
+        content: '';
+        position: absolute;
+        top: 0; bottom: 0; left: 50%;
+        width: 1px;
+        background: rgba(0,0,0,0.2);
+        pointer-events: none;
+        z-index: 15;
+    }
 
     .timeline-label {
         position: absolute;
@@ -108,22 +141,34 @@
         font-size: 0.7rem;
         color: #777;
         white-space: nowrap;
+        z-index: 3;
     }
     .timeline-tooltip {
         position: absolute;
-        bottom: 100%; /* Above the bar */
+        top: -50px; /* Positioned in the padding-top area of .timeline-chart */
         left: 50%;
         transform: translateX(-50%);
-        background: rgba(0,0,0,0.8);
+        background: rgba(0,0,0,0.85);
         color: #fff;
-        padding: 4px 8px;
+        padding: 6px 10px;
         border-radius: 4px;
-        font-size: 0.7rem;
+        font-size: 0.75rem;
         white-space: nowrap;
         visibility: hidden;
         opacity: 0;
-        transition: opacity 0.2s, visibility 0.2s;
-        z-index: 10;
+        transition: opacity 0.1s;
+        z-index: 20;
+        pointer-events: none;
+        box-shadow: 0 2px 4px rgba(0,0,0,0.2);
+    }
+    .timeline-tooltip::after {
+        content: '';
+        position: absolute;
+        top: 100%;
+        left: 50%;
+        transform: translateX(-50%);
+        border: 5px solid transparent;
+        border-top-color: rgba(0,0,0,0.85);
     }
     .timeline-bar-wrapper:hover .timeline-tooltip {
         visibility: visible;
@@ -176,11 +221,10 @@
     <div class="container">
         <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
     <div style="display: flex; align-items: center; gap: 15px;">
-        <div style="width: 40px; height: 40px; background: linear-gradient(135deg, #0061ff, #00a2ff); border-radius: 8px;"></div>
         <h1 style="margin:0;">Lyocell Report</h1>
     </div>
     <div style="color: #666; font-size: 0.9rem; background: #fff; padding: 8px 16px; border-radius: 20px; border: 1px solid #e1e4e8; font-weight: 500;">
-        Generated: 2025-12-24 13:01:49 UTC
+        Generated: 2025-12-24 14:25:11 UTC
     </div>
 </header>
 
@@ -188,8 +232,8 @@
     <div class="card">
         <h2>Iterations</h2>
         <div style="display: flex; align-items: baseline; gap: 10px;">
-            <div class="metric-big">100000</div>
-            <div style="color: #aaa; font-weight: bold;">All Successful</div>
+            <div class="metric-big">100</div>
+            <div style="color:  ; font-weight: bold;"> </div>
         </div>
         <div class="metric-label">Total Executions</div>
     </div>
@@ -197,12 +241,12 @@
     <div class="card">
         <h2>Checks & Assertions</h2>
         <div class="pie-container">
-            <div class="pie-chart" style="background: conic-gradient(var(--success) 0% 100.0%, var(--error) 0% 100%)">
-                 <div class="pie-center">100%</div>
+            <div class="pie-chart" style="background: conic-gradient(var(--success) 0% 0.0%, var(--error) 0% 100%)">
+                 <div class="pie-center">0%</div>
             </div>
             <div class="legend">
-                <div class="legend-item"><span class="dot" style="background: var(--success)"></span> <strong>200000</strong> Passed</div>
-                <div class="legend-item"><span class="dot" style="background: var(--error)"></span> <strong>0</strong> Failed</div>
+                <div class="legend-item"><span class="dot" style="background: var(--success)"></span> <strong>0</strong> Passed</div>
+                <div class="legend-item"><span class="dot" style="background: var(--error)"></span> <strong>100</strong> Failed</div>
             </div>
         </div>
     </div>
@@ -211,205 +255,12 @@
         <div class="card">
     <h2>Request Volume Timeline (Reqs/Sec)</h2>
     <div class="timeline-chart">
-        <div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:17<br>Success: 1060<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 21.5%;" title="Success: 1060"></div>
-    <div class="timeline-label">13:01:17</div>
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:18<br>Success: 1507<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 30.5%;" title="Success: 1507"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:19<br>Success: 1965<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 39.8%;" title="Success: 1965"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:20<br>Success: 1816<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 36.8%;" title="Success: 1816"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:21<br>Success: 2113<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 42.8%;" title="Success: 2113"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:22<br>Success: 2620<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 53.0%;" title="Success: 2620"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:23<br>Success: 1321<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 26.7%;" title="Success: 1321"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:24<br>Success: 1061<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 21.5%;" title="Success: 1061"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:25<br>Success: 1941<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 39.3%;" title="Success: 1941"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:26<br>Success: 1266<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 25.6%;" title="Success: 1266"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:27<br>Success: 1506<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 30.5%;" title="Success: 1506"></div>
-    <div class="timeline-label">13:01:27</div>
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:28<br>Success: 2470<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 50.0%;" title="Success: 2470"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:29<br>Success: 3751<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 75.9%;" title="Success: 3751"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:30<br>Success: 3232<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 65.4%;" title="Success: 3232"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:31<br>Success: 3636<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 73.6%;" title="Success: 3636"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:32<br>Success: 3723<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 75.4%;" title="Success: 3723"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:33<br>Success: 3185<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 64.5%;" title="Success: 3185"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:34<br>Success: 2503<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 50.7%;" title="Success: 2503"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:35<br>Success: 3935<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 79.7%;" title="Success: 3935"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:36<br>Success: 4536<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 91.8%;" title="Success: 4536"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:37<br>Success: 3902<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 79.0%;" title="Success: 3902"></div>
-    <div class="timeline-label">13:01:37</div>
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:38<br>Success: 4534<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 91.8%;" title="Success: 4534"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:39<br>Success: 3235<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 65.5%;" title="Success: 3235"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:40<br>Success: 4480<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 90.7%;" title="Success: 4480"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:41<br>Success: 4940<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 100.0%;" title="Success: 4940"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:42<br>Success: 4459<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 90.3%;" title="Success: 4459"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:43<br>Success: 3614<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 73.2%;" title="Success: 3614"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:44<br>Success: 4510<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 91.3%;" title="Success: 4510"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:45<br>Success: 4672<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 94.6%;" title="Success: 4672"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:46<br>Success: 4315<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 87.3%;" title="Success: 4315"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:47<br>Success: 4189<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 84.8%;" title="Success: 4189"></div>
-    <div class="timeline-label">13:01:47</div>
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:48<br>Success: 3652<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 73.9%;" title="Success: 3652"></div>
-    
-</div>
-<div class="timeline-bar-wrapper">
-    <div class="timeline-tooltip">Time: 13:01:49<br>Success: 351<br>Failed: 0</div>
-    <div class="timeline-bar failure" style="height: 0.0%;" title="Failed: 0"></div>
-    <div class="timeline-bar success" style="height: 7.1%;" title="Success: 351"></div>
-    
-</div>
+        <svg class="timeline-svg" viewBox="0 0 1 100" preserveAspectRatio="none">
+    <path class="area-success" d="M 0 100 L 0.50 100.0 L 1 100 Z" />
+    <path class="area-failure" d="M 0 100 L 0.50 0.0 L 1 100 Z" />
+</svg>
 
+        <div class="timeline-bar-wrapper"><div class="timeline-tooltip">Success: 0<br>Failed: 100</div><div class="timeline-label">14:25:10</div></div>
     </div>
 </div>
 <br>
@@ -417,13 +268,13 @@
     <h2>Response Time Overview (p95 ms)</h2>
     <div class="bar-chart">
         <div class="bar-group">
-    <div class="bar-value">240</div>
+    <div class="bar-value">464</div>
     <div class="bar" style="height: 100.0%;"></div>
     <div class="bar-label" title="iteration_duration">iteration_duration</div>
 </div>
 <div class="bar-group">
-    <div class="bar-value">232</div>
-    <div class="bar" style="height: 96.7%;"></div>
+    <div class="bar-value">124</div>
+    <div class="bar" style="height: 26.7%;"></div>
     <div class="bar-label" title="http_req_duration">http_req_duration</div>
 </div>
 
@@ -446,19 +297,19 @@
     <tbody>
         <tr>
     <td style="font-weight: 600;">iteration_duration</td>
-    <td class="num">57.22</td>
-    <td class="num">21299.00</td>
-    <td class="num">239.94</td>
-    <td class="num">639.94</td>
-    <td class="num">100000</td>
+    <td class="num">162.16</td>
+    <td class="num">489.00</td>
+    <td class="num">463.50</td>
+    <td class="num">495.50</td>
+    <td class="num">100</td>
 </tr>
 <tr>
     <td style="font-weight: 600;">http_req_duration</td>
-    <td class="num">55.45</td>
-    <td class="num">21296.00</td>
-    <td class="num">231.94</td>
-    <td class="num">639.94</td>
-    <td class="num">100000</td>
+    <td class="num">43.09</td>
+    <td class="num">147.00</td>
+    <td class="num">123.88</td>
+    <td class="num">151.88</td>
+    <td class="num">100</td>
 </tr>
 
     </tbody>
