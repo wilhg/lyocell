@@ -1,0 +1,19 @@
+name: Renovate Auto Approve
+
+on:
+  pull_request:
+    types:
+      - opened
+      - reopened
+      - synchronized
+
+jobs:
+  approve:
+    runs-on: ubuntu-latest
+    if: github.actor == 'renovate[bot]'
+    steps:
+      - name: Approve Renovate PR
+        uses: hmarr/auto-approve-action@v4
+        with:
+          github-token: ${{ secrets.GITHUB_TOKEN }}
+
