@@ -54,7 +54,9 @@ public class LyocellFileSystem implements FileSystem {
 
     private boolean isVirtualModule(String path) {
         return path.equals("lyocell") || path.startsWith("lyocell/") || 
-               path.endsWith("/lyocell") || path.contains("/lyocell/");
+               path.endsWith("/lyocell") || path.contains("/lyocell/") ||
+               path.equals("k6") || path.startsWith("k6/") || 
+               path.endsWith("/k6") || path.contains("/k6/");
     }
 
     @Override

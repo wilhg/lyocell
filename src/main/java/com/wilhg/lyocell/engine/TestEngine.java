@@ -129,6 +129,11 @@ public class TestEngine {
                              Map<String, Object> scenariosMap = (Map<String, Object>) options.get("scenarios");
                              Map<String, Scenario> scenarios = ScenarioParser.parse(scenariosMap);
                              config = updateConfigWithScenarios(config, scenarios);
+                        } else if (options.containsKey("stages")) {
+                            Map<String, Object> rampingConfig = new java.util.HashMap<>(options);
+                            rampingConfig.put("executor", "ramping-vus");
+                            Scenario scenario = ScenarioParser.parse(Map.of("default", rampingConfig)).get("default");
+                            config = updateConfigWithScenarios(config, Map.of("default", scenario));
                         }
                     }
                 }

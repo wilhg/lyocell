@@ -137,6 +137,12 @@ public class HttpModule implements LyocellModule {
             
             this.timings = new HashMap<>();
             this.timings.put("duration", durationMs);
+            this.timings.put("blocked", 0.0);
+            this.timings.put("connecting", 0.0);
+            this.timings.put("tls_handshaking", 0.0);
+            this.timings.put("sending", 0.0);
+            this.timings.put("waiting", durationMs * 0.8); // Dummy waiting time
+            this.timings.put("receiving", durationMs * 0.2); // Dummy receiving time
         }
 
         public HttpResponseWrapper(String error, double durationMs, Context context) {
@@ -146,6 +152,12 @@ public class HttpModule implements LyocellModule {
             this.headers = new HashMap<>();
             this.timings = new HashMap<>();
             this.timings.put("duration", durationMs);
+            this.timings.put("blocked", 0.0);
+            this.timings.put("connecting", 0.0);
+            this.timings.put("tls_handshaking", 0.0);
+            this.timings.put("sending", 0.0);
+            this.timings.put("waiting", 0.0);
+            this.timings.put("receiving", 0.0);
         }
 
         @HostAccess.Export

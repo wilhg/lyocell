@@ -38,9 +38,17 @@ public class ModuleRegistry {
     public static String getModuleJs(String name, MetricsCollector metricsCollector) {
         ensureInitialized(metricsCollector);
         
+        // Normalize name: k6/http -> lyocell/http, k6 -> lyocell
+        String normalizedName = name;
+        if (name.equals("k6")) {
+            normalizedName = "lyocell";
+        } else if (name.startsWith("k6/")) {
+            normalizedName = "lyocell/" + name.substring(3);
+        }
+
         // Match lyocell/http even if name is full path
         for (Map.Entry<String, LyocellModule> entry : modulesByName.entrySet()) {
-            if (name.equals(entry.getKey()) || name.endsWith("/" + entry.getKey())) {
+            if (normalizedName.equals(entry.getKey()) || normalizedName.endsWith("/" + entry.getKey())) {
                 return entry.getValue().getJsSource();
             }
         }
