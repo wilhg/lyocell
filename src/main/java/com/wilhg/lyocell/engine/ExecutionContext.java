@@ -1,46 +1,27 @@
 package com.wilhg.lyocell.engine;
 
-public class ExecutionContext {
-    private static final ThreadLocal<ExecutionContext> CURRENT = new ThreadLocal<>();
+import java.util.concurrent.atomic.AtomicBoolean;
 
-    private final int vuId;
-    private final int iteration;
-    private boolean failed = false;
+public record ExecutionContext(int vuId, int iteration, AtomicBoolean failed) {
+    public static final ScopedValue<ExecutionContext> CURRENT = ScopedValue.newInstance();
 
     public ExecutionContext(int vuId) {
-        this(vuId, 0);
+        this(vuId, 0, new AtomicBoolean(false));
     }
 
     public ExecutionContext(int vuId, int iteration) {
-        this.vuId = vuId;
-        this.iteration = iteration;
-    }
-
-    public static void set(ExecutionContext context) {
-        CURRENT.set(context);
+        this(vuId, iteration, new AtomicBoolean(false));
     }
 
     public static ExecutionContext get() {
-        return CURRENT.get();
-    }
-
-    public static void remove() {
-        CURRENT.remove();
-    }
-
-    public int getVuId() {
-        return vuId;
-    }
-
-    public int getIteration() {
-        return iteration;
+        return CURRENT.isBound() ? CURRENT.get() : null;
     }
 
     public void markFailed() {
-        this.failed = true;
+        this.failed.set(true);
     }
 
     public boolean isFailed() {
-        return failed;
+        return failed.get();
     }
 }

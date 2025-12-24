@@ -42,18 +42,18 @@ public class ConstantVusExecutor implements WorkloadExecutor {
                         int iteration = 0;
                         while (System.currentTimeMillis() < endTime && !testEngine.isAborted()) {
                             iteration++;
-                            ExecutionContext.set(new ExecutionContext(vuId + 1, iteration));
-                            long start = System.currentTimeMillis();
-                            try {
-                                engine.executeFunction(scenario.exec(), data);
-                                metricsCollector.recordIteration(System.currentTimeMillis() - start, true);
-                            } catch (Exception e) {
-                                metricsCollector.recordIteration(System.currentTimeMillis() - start, false);
-                                System.err.println("Iteration failed for VU " + vuId + ": " + e.getMessage());
-                            }
+                            final int currentIteration = iteration;
+                            ScopedValue.where(ExecutionContext.CURRENT, new ExecutionContext(vuId + 1, currentIteration)).run(() -> {
+                                long start = System.currentTimeMillis();
+                                try {
+                                    engine.executeFunction(scenario.exec(), data);
+                                    metricsCollector.recordIteration(System.currentTimeMillis() - start, true);
+                                } catch (Exception e) {
+                                    metricsCollector.recordIteration(System.currentTimeMillis() - start, false);
+                                    System.err.println("Iteration failed for VU " + vuId + ": " + e.getMessage());
+                                }
+                            });
                         }
-                    } finally {
-                        ExecutionContext.remove();
                     }
                     return null;
                 });

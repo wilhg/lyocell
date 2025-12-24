@@ -58,7 +58,7 @@ public class ModuleRegistry {
         ensureInitialized(metricsCollector);
         
         // Always create fresh instances for default modules to ensure thread safety (Context-per-VU)
-        List<LyocellModule> modules = getDefaultModules(metricsCollector);
+        List<LyocellModule> modules = new java.util.ArrayList<>(getDefaultModules(metricsCollector));
         
         // For discovered modules (from ServiceLoader), we must also create new instances.
         // The prototypes in modulesByName are only for getModuleJs/metadata.
@@ -90,16 +90,16 @@ public class ModuleRegistry {
      * @return A list of Lyocell modules.
      */
     public static List<LyocellModule> getDefaultModules(MetricsCollector metricsCollector) {
-        List<LyocellModule> modules = new ArrayList<>();
-        modules.add(new HttpModule(metricsCollector));
-        modules.add(new CoreModule(metricsCollector));
-        modules.add(new MetricsModule(metricsCollector));
-        modules.add(new ConsoleModule());
-        modules.add(new EncodingModule());
-        modules.add(new CryptoModule());
-        modules.add(new ExecutionModule());
-        modules.add(new DataModule());
-        return modules;
+        return List.of(
+            new HttpModule(metricsCollector),
+            new CoreModule(metricsCollector),
+            new MetricsModule(metricsCollector),
+            new ConsoleModule(),
+            new EncodingModule(),
+            new CryptoModule(),
+            new ExecutionModule(),
+            new DataModule()
+        );
     }
 
     /**

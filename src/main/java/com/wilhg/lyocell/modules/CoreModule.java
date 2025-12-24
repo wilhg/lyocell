@@ -4,6 +4,7 @@ import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Value;
 
+import com.wilhg.lyocell.engine.ExecutionContext;
 import com.wilhg.lyocell.metrics.MetricsCollector;
 
 public class CoreModule implements LyocellModule {
@@ -82,7 +83,7 @@ public class CoreModule implements LyocellModule {
             collector.addCounter("checks.pass", 1);
         } else {
             collector.addCounter("checks.fail", 1);
-            com.wilhg.lyocell.engine.ExecutionContext ctx = com.wilhg.lyocell.engine.ExecutionContext.get();
+            ExecutionContext ctx = ExecutionContext.get();
             if (ctx != null) {
                 ctx.markFailed();
             }

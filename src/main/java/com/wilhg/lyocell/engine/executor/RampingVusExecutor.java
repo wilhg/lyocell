@@ -74,20 +74,21 @@ public class RampingVusExecutor implements WorkloadExecutor {
                         int iteration = 0;
                         while (activeVus.get() <= targetVus.get() && running.get() && !testEngine.isAborted()) {
                             iteration++;
-                            ExecutionContext.set(new ExecutionContext(vuId + 1, iteration));
-                            long start = System.currentTimeMillis();
-                            try {
-                                engine.executeFunction(scenario.exec(), data);
-                                metricsCollector.recordIteration(System.currentTimeMillis() - start, true);
-                            } catch (Exception e) {
-                                metricsCollector.recordIteration(System.currentTimeMillis() - start, false);
-                            }
+                            final int currentIteration = iteration;
+                            ScopedValue.where(ExecutionContext.CURRENT, new ExecutionContext(vuId + 1, currentIteration)).run(() -> {
+                                long start = System.currentTimeMillis();
+                                try {
+                                    engine.executeFunction(scenario.exec(), data);
+                                    metricsCollector.recordIteration(System.currentTimeMillis() - start, true);
+                                } catch (Exception e) {
+                                    metricsCollector.recordIteration(System.currentTimeMillis() - start, false);
+                                }
+                            });
                         }
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
                         activeVus.decrementAndGet();
-                        ExecutionContext.remove();
                     }
                 });
                 vuThreads.add(t);

@@ -52,26 +52,25 @@ public class VuWorker implements Runnable {
             engine.runScript(scriptPath);
             Object data = engine.parseJsonData(setupDataJson);
 
-            ExecutionContext.set(new ExecutionContext(vuId + 1, 0));
+            ScopedValue.where(ExecutionContext.CURRENT, new ExecutionContext(vuId + 1, 0)).run(() -> {
+                for (int i = 0; i < iterations; i++) {
+                    if (testEngine.isAborted()) break;
 
-            for (int i = 0; i < iterations; i++) {
-                if (testEngine.isAborted()) break;
-                
-                ExecutionContext.set(new ExecutionContext(vuId + 1, i + 1));
-                
-                long start = System.currentTimeMillis();
-                try {
-                    executeFunction(engine, exec, data);
-                    metricsCollector.recordIteration(System.currentTimeMillis() - start, true);
-                } catch (Exception e) {
-                    metricsCollector.recordIteration(System.currentTimeMillis() - start, false);
-                    System.err.println("Iteration failed for VU " + vuId + ": " + e.getMessage());
+                    final int currentIteration = i + 1;
+                    ScopedValue.where(ExecutionContext.CURRENT, new ExecutionContext(vuId + 1, currentIteration)).run(() -> {
+                        long start = System.currentTimeMillis();
+                        try {
+                            executeFunction(engine, exec, data);
+                            metricsCollector.recordIteration(System.currentTimeMillis() - start, true);
+                        } catch (Exception e) {
+                            metricsCollector.recordIteration(System.currentTimeMillis() - start, false);
+                            System.err.println("Iteration failed for VU " + vuId + ": " + e.getMessage());
+                        }
+                    });
                 }
-            }
+            });
         } catch (Exception e) {
             System.err.println("VU " + vuId + " failed to initialize: " + e.getMessage());
-        } finally {
-            ExecutionContext.remove();
         }
     }
 

@@ -15,11 +15,6 @@ import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class ExecutionModuleTest {
     
-    @AfterEach
-    void tearDown() {
-        ExecutionContext.remove();
-    }
-
     @Test
     public void testExecutionModule() throws Exception {
         String script = """
@@ -37,13 +32,16 @@ public class ExecutionModuleTest {
         Files.writeString(scriptPath, script);
         
         MetricsCollector collector = new MetricsCollector();
-        ExecutionContext.set(new ExecutionContext(42));
         
         TestEngine testEngine = new TestEngine(Collections.emptyList());
-        try (JsEngine engine = new JsEngine(Collections.emptyMap(), collector, testEngine)) {
-            engine.runScript(scriptPath);
-            engine.executeDefault(null);
-        }
+        ScopedValue.where(ExecutionContext.CURRENT, new ExecutionContext(42)).run(() -> {
+            try (JsEngine engine = new JsEngine(Collections.emptyMap(), collector, testEngine)) {
+                engine.runScript(scriptPath);
+                engine.executeDefault(null);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
         
         assertTrue(collector.getCounterValue("checks.pass") == 1);
     }

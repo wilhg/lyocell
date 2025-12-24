@@ -37,20 +37,25 @@ public class DataModuleTest {
         
         MetricsCollector collector = new MetricsCollector();
         
-        ExecutionContext.set(new ExecutionContext(42));
-        
         TestEngine testEngine = new TestEngine(Collections.emptyList());
-        // VU 1
-        try (JsEngine engine = new JsEngine(Collections.emptyMap(), collector, testEngine)) {
-            engine.runScript(scriptPath);
-            engine.executeDefault(null);
-        }
         
-        // VU 2 (Should use cached data)
-        try (JsEngine engine = new JsEngine(Collections.emptyMap(), collector, testEngine)) {
-            engine.runScript(scriptPath);
-            engine.executeDefault(null);
-        }
+        ScopedValue.where(ExecutionContext.CURRENT, new ExecutionContext(42)).run(() -> {
+            // VU 1
+            try (JsEngine engine = new JsEngine(Collections.emptyMap(), collector, testEngine)) {
+                engine.runScript(scriptPath);
+                engine.executeDefault(null);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+            
+            // VU 2 (Should use cached data)
+            try (JsEngine engine = new JsEngine(Collections.emptyMap(), collector, testEngine)) {
+                engine.runScript(scriptPath);
+                engine.executeDefault(null);
+            } catch (Exception e) {
+                throw new RuntimeException(e);
+            }
+        });
         
         assertEquals(2L, collector.getCounterValue("checks.pass"));
     }

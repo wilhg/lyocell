@@ -9,7 +9,6 @@ import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
-import java.util.stream.Collectors;
 
 import com.wilhg.lyocell.metrics.MetricSummary;
 import com.wilhg.lyocell.metrics.MetricsCollector;
@@ -19,7 +18,7 @@ import io.micrometer.core.instrument.Meter;
 
 public class HtmlReportRenderer {
 
-    public void generate(MetricsCollector collector, List<TimeSeriesData> timelineData, String outputPath) {
+    public void generate(MetricsCollector collector, java.util.SequencedCollection<TimeSeriesData> timelineData, String outputPath) {
         String html = renderHtml(collector, timelineData);
         try {
             Files.writeString(Paths.get(outputPath), html);
@@ -29,7 +28,7 @@ public class HtmlReportRenderer {
         }
     }
 
-    private String renderHtml(MetricsCollector collector, List<TimeSeriesData> timelineData) {
+    private String renderHtml(MetricsCollector collector, java.util.SequencedCollection<TimeSeriesData> timelineData) {
         return """
             <!DOCTYPE html>
             <html lang="en">
@@ -335,13 +334,13 @@ public class HtmlReportRenderer {
             );
     }
 
-    private String renderCharts(MetricsCollector collector, List<TimeSeriesData> timelineData) {
+    private String renderCharts(MetricsCollector collector, java.util.SequencedCollection<TimeSeriesData> timelineData) {
         List<MetricSummary> trendSummaries = collector.getRegistry().getMeters().stream()
                 .filter(m -> m.getId().getType() == Meter.Type.DISTRIBUTION_SUMMARY)
                 .map(m -> collector.getTrendSummary(m.getId().getName()))
                 .sorted(Comparator.comparingDouble(MetricSummary::p95).reversed())
                 .limit(6)
-                .collect(Collectors.toList());
+                .toList();
 
         StringBuilder chartHtml = new StringBuilder();
 
@@ -390,7 +389,7 @@ public class HtmlReportRenderer {
         return chartHtml.toString();
     }
 
-    private String renderTimelineChart(List<TimeSeriesData> timelineData) {
+    private String renderTimelineChart(java.util.SequencedCollection<TimeSeriesData> timelineData) {
         if (timelineData.isEmpty()) {
             return "";
         }
@@ -410,8 +409,8 @@ public class HtmlReportRenderer {
         // Assuming a label is ~70px wide and container is ~944px wide, we can fit about 13 labels
         int labelInterval = Math.max(1, (int) Math.ceil(n / 13.0));
 
-        for (int i = 0; i < n; i++) {
-            TimeSeriesData data = timelineData.get(i);
+        int i = 0;
+        for (TimeSeriesData data : timelineData) {
             double successfulHeightPct = (double) data.successfulRequests() / maxRequestsPerBucket * 100;
             double failedHeightPct = (double) data.failedRequests() / maxRequestsPerBucket * 100;
             
@@ -427,6 +426,7 @@ public class HtmlReportRenderer {
             barsHtml.append("<div class=\"timeline-tooltip\">").append(tooltipContent).append("</div>");
             barsHtml.append(labelHtml);
             barsHtml.append("</div>");
+            i++;
         }
         
         successPath.append(String.format(Locale.US, "L %d 100 Z", n));

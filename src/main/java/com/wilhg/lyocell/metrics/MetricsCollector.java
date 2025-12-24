@@ -7,6 +7,9 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
+import com.wilhg.lyocell.engine.ExecutionContext;
+import com.wilhg.lyocell.metrics.MetricSummary;
+
 import java.util.Comparator;
 import java.util.List;
 import java.util.Map;
@@ -95,7 +98,7 @@ public class MetricsCollector {
         addCounter("iterations", 1);
         
         boolean finalSuccess = success;
-        com.wilhg.lyocell.engine.ExecutionContext ctx = com.wilhg.lyocell.engine.ExecutionContext.get();
+        ExecutionContext ctx = ExecutionContext.get();
         if (ctx != null && ctx.isFailed()) {
             finalSuccess = false;
         }
@@ -121,9 +124,9 @@ public class MetricsCollector {
      * @param bucketDurationMillis The duration of each time bucket in milliseconds.
      * @return A list of TimeSeriesData, sorted by timestamp.
      */
-    public List<TimeSeriesData> getIterationTimeline(long bucketDurationMillis) {
+    public java.util.SequencedCollection<TimeSeriesData> getIterationTimeline(long bucketDurationMillis) {
         if (timelineEvents.isEmpty()) {
-            return List.of();
+            return java.util.List.of();
         }
 
         long startTime = timelineEvents.stream()
@@ -152,7 +155,7 @@ public class MetricsCollector {
                     return new TimeSeriesData(startTime + bucketStartRelativeTime, successful, failed);
                 })
                 .sorted(Comparator.comparing(TimeSeriesData::timestamp))
-                .collect(Collectors.toList());
+                .toList();
     }
 
 

@@ -2,16 +2,30 @@ package com.wilhg.lyocell.engine;
 
 import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
+import java.util.ArrayList;
 import java.util.Collections;
+import java.util.LinkedHashSet;
 import java.util.List;
 import java.util.Map;
+import java.util.SequencedCollection;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.StructuredTaskScope;
 import java.util.concurrent.StructuredTaskScope.Joiner;
 
 import org.graalvm.polyglot.Value;
 
+import com.wilhg.lyocell.cli.CliAnimation;
+import com.wilhg.lyocell.engine.executor.ConstantArrivalRateExecutor;
+import com.wilhg.lyocell.engine.executor.ConstantVusExecutor;
+import com.wilhg.lyocell.engine.executor.PerVuIterationsExecutor;
+import com.wilhg.lyocell.engine.executor.RampingVusExecutor;
+import com.wilhg.lyocell.engine.executor.SharedIterationsExecutor;
+import com.wilhg.lyocell.engine.scenario.ConstantArrivalRateConfig;
+import com.wilhg.lyocell.engine.scenario.ConstantVusConfig;
+import com.wilhg.lyocell.engine.scenario.PerVuIterationsConfig;
+import com.wilhg.lyocell.engine.scenario.RampingVusConfig;
 import com.wilhg.lyocell.engine.scenario.Scenario;
+import com.wilhg.lyocell.engine.scenario.SharedIterationsConfig;
 import com.wilhg.lyocell.metrics.MetricsCollector;
 import com.wilhg.lyocell.metrics.SummaryReporter;
 import com.wilhg.lyocell.metrics.TimeSeriesData;
@@ -69,7 +83,7 @@ public class TestEngine {
         }
     }
 
-    private final java.util.List<String> htmlReportPaths = java.util.Collections.synchronizedList(new java.util.ArrayList<>());
+    private final SequencedCollection<String> htmlReportPaths = Collections.synchronizedList(new ArrayList<>());
 
     private void registerOutput(OutputConfig output) {
         if ("html".equals(output.type())) {
@@ -94,7 +108,7 @@ public class TestEngine {
     private TestConfig createDefaultScenario(TestConfig config) {
         Scenario defaultScenario = new Scenario(
             "default",
-            new com.wilhg.lyocell.engine.scenario.PerVuIterationsConfig(
+            new PerVuIterationsConfig(
                 config.vus(),
                 config.iterations(),
                 java.time.Duration.ZERO,
@@ -106,11 +120,11 @@ public class TestEngine {
 
     private WorkloadExecutor getExecutor(Scenario scenario) {
         return switch (scenario.executor()) {
-            case com.wilhg.lyocell.engine.scenario.PerVuIterationsConfig _ -> new com.wilhg.lyocell.engine.executor.PerVuIterationsExecutor();
-            case com.wilhg.lyocell.engine.scenario.SharedIterationsConfig _ -> new com.wilhg.lyocell.engine.executor.SharedIterationsExecutor();
-            case com.wilhg.lyocell.engine.scenario.ConstantVusConfig _ -> new com.wilhg.lyocell.engine.executor.ConstantVusExecutor();
-            case com.wilhg.lyocell.engine.scenario.RampingVusConfig _ -> new com.wilhg.lyocell.engine.executor.RampingVusExecutor();
-            case com.wilhg.lyocell.engine.scenario.ConstantArrivalRateConfig _ -> new com.wilhg.lyocell.engine.executor.ConstantArrivalRateExecutor();
+            case PerVuIterationsConfig _ -> new PerVuIterationsExecutor();
+            case SharedIterationsConfig _ -> new SharedIterationsExecutor();
+            case ConstantVusConfig _ -> new ConstantVusExecutor();
+            case RampingVusConfig _ -> new RampingVusExecutor();
+            case ConstantArrivalRateConfig _ -> new ConstantArrivalRateExecutor();
         };
     }
 
@@ -162,9 +176,9 @@ public class TestEngine {
             final String finalSetupDataJson = setupDataJson;
 
             // 2. Execution Phase (Parallel Scenarios)
-            try (com.wilhg.lyocell.cli.CliAnimation animation = new com.wilhg.lyocell.cli.CliAnimation("Running test...")) {
+            try (CliAnimation animation = new CliAnimation("Running test...")) {
                 animation.start();
-                java.util.Set<String> activeScenarios = java.util.Collections.synchronizedSet(new java.util.HashSet<>());
+                java.util.Set<String> activeScenarios = Collections.synchronizedSet(new LinkedHashSet<>());
                 try (var scope = StructuredTaskScope.open(Joiner.awaitAllSuccessfulOrThrow())) {
                     for (Scenario scenario : config.scenarios().values()) {
                         scope.fork(() -> {
@@ -214,7 +228,7 @@ public class TestEngine {
         
         // 6. Generate HTML Reports
         if (!htmlReportPaths.isEmpty()) {
-            List<TimeSeriesData> timelineData = metricsCollector.getIterationTimeline(1000); // 1-second buckets
+            SequencedCollection<TimeSeriesData> timelineData = metricsCollector.getIterationTimeline(1000); // 1-second buckets
             for (String pathString : htmlReportPaths) {
                 Path targetPath = java.nio.file.Paths.get(pathString);
                 if (pathString.isEmpty() || java.nio.file.Files.isDirectory(targetPath)) {
@@ -259,7 +273,7 @@ public class TestEngine {
         }
     }
 
-    void updateAnimationMessage(com.wilhg.lyocell.cli.CliAnimation animation, java.util.Set<String> activeScenarios) {
+    void updateAnimationMessage(CliAnimation animation, java.util.Set<String> activeScenarios) {
         if (activeScenarios.isEmpty()) {
             animation.setMessage("Finalizing...");
         } else {

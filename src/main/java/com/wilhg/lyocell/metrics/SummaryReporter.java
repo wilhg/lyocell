@@ -1,9 +1,5 @@
 package com.wilhg.lyocell.metrics;
 
-import io.micrometer.core.instrument.Meter;
-
-import java.util.stream.Collectors;
-
 public class SummaryReporter {
     public void report(MetricsCollector collector) {
         System.out.println("\n" + "=".repeat(40));
@@ -26,9 +22,9 @@ public class SummaryReporter {
 
         System.out.println("\n[Trends]");
         var trendNames = collector.getRegistry().getMeters().stream()
-                .filter(m -> m.getId().getType() == Meter.Type.DISTRIBUTION_SUMMARY)
+                .filter(m -> m.getId().getType() == io.micrometer.core.instrument.Meter.Type.DISTRIBUTION_SUMMARY)
                 .map(m -> m.getId().getName())
-                .collect(Collectors.toSet());
+                .collect(java.util.stream.Collectors.toCollection(java.util.LinkedHashSet::new));
 
         for (String name : trendNames) {
             MetricSummary summary = collector.getTrendSummary(name);

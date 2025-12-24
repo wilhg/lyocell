@@ -44,12 +44,12 @@ public class ExecutionModule implements LyocellModule {
     @HostAccess.Export
     public int getVuId() {
         ExecutionContext ctx = ExecutionContext.get();
-        return ctx != null ? ctx.getVuId() : 0;
+        return ctx != null ? ctx.vuId() : 0;
     }
 
     @HostAccess.Export
     public int getIteration() {
         ExecutionContext ctx = ExecutionContext.get();
-        return ctx != null ? ctx.getIteration() : 0;
+        return ctx != null ? ctx.iteration() : 0;
     }
 }

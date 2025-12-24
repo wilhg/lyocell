@@ -56,19 +56,19 @@ public class ConstantArrivalRateExecutor implements WorkloadExecutor {
                         engine.runScript(scriptPath);
                         Object data = engine.parseJsonData(setupDataJson);
                         
-                        ExecutionContext.set(new ExecutionContext(0, iterationId));
-                        long start = System.currentTimeMillis();
-                        try {
-                            engine.executeFunction(scenario.exec(), data);
-                            metricsCollector.recordIteration(System.currentTimeMillis() - start, true);
-                        } catch (Exception e) {
-                            metricsCollector.recordIteration(System.currentTimeMillis() - start, false);
-                        }
+                        ScopedValue.where(ExecutionContext.CURRENT, new ExecutionContext(0, iterationId)).run(() -> {
+                            long start = System.currentTimeMillis();
+                            try {
+                                engine.executeFunction(scenario.exec(), data);
+                                metricsCollector.recordIteration(System.currentTimeMillis() - start, true);
+                            } catch (Exception e) {
+                                metricsCollector.recordIteration(System.currentTimeMillis() - start, false);
+                            }
+                        });
                     } catch (Exception e) {
                         e.printStackTrace();
                     } finally {
                         activeIterations.decrementAndGet();
-                        ExecutionContext.remove();
                     }
                 });
             }

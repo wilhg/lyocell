@@ -1,9 +1,12 @@
 package com.wilhg.lyocell;
 
+import com.wilhg.lyocell.engine.OutputConfig;
 import com.wilhg.lyocell.engine.TestConfig;
 import com.wilhg.lyocell.engine.TestEngine;
 import java.nio.file.Path;
 import java.nio.file.Paths;
+import java.util.ArrayList;
+import java.util.List;
 
 public class Main {
     public static void main(String[] args) {
@@ -20,7 +23,7 @@ public class Main {
         String scriptArg = null;
         int vus = 1;
         int iterations = 1;
-        java.util.List<com.wilhg.lyocell.engine.OutputConfig> outputs = new java.util.ArrayList<>();
+        List<OutputConfig> outputs = new ArrayList<>();
 
         for (int i = 0; i < args.length; i++) {
             String arg = args[i];
@@ -44,7 +47,7 @@ public class Main {
                     String[] parts = outputArg.split("=", 2);
                     String type = parts[0];
                     String target = parts.length > 1 ? parts[1] : "";
-                    outputs.add(new com.wilhg.lyocell.engine.OutputConfig(type, target));
+                    outputs.add(new OutputConfig(type, target));
                 } else {
                     System.err.println("Missing value for --out");
                     return 1;
