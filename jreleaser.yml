@@ -35,9 +35,6 @@ packagers:
     repository:
       owner: get-lyocell
       name: scoop-bucket
-  nfpm:
-    active: ALWAYS
-    formats: [ DEB, RPM ]
 
 upload:
   cloudsmith:
