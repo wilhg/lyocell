@@ -33,7 +33,7 @@ repositories {
 
 dependencies {
     implementation 'tools.jackson.core:jackson-databind:3.0.3'
-    implementation 'org.yaml:snakeyaml:2.3'
+    implementation 'org.yaml:snakeyaml:2.5'
 
     // GraalVM Polyglot & JS
     implementation 'org.graalvm.polyglot:polyglot:25.0.1'
