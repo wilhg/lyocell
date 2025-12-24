@@ -1,9 +1,10 @@
 package com.wilhg.lyocell.modules;
 
-import com.wilhg.lyocell.metrics.MetricsCollector;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Value;
+
+import com.wilhg.lyocell.metrics.MetricsCollector;
 
 public class CoreModule implements LyocellModule {
     private MetricsCollector collector;

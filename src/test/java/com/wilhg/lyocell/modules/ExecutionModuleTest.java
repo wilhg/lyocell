@@ -45,6 +45,6 @@ public class ExecutionModuleTest {
             engine.executeDefault(null);
         }
         
-        assertTrue(collector.getCounterValue("checks.pass") == 2);
+        assertTrue(collector.getCounterValue("checks.pass") == 1);
     }
 }

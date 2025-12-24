@@ -41,7 +41,7 @@ public class HttpVerbsTest {
             engine.executeDefault(null);
         }
         
-        assertTrue(collector.getCounterValue("checks.pass") >= 5);
+        assertTrue(collector.getCounterValue("checks.pass") == 1);
         assertTrue(collector.getCounterValue("checks.fail") == 0);
     }
 }

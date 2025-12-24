@@ -58,7 +58,7 @@ public class HttpTimeoutIntegrationTest {
         long passed = engine.getMetricsCollector().getCounterValue("checks.pass");
         long failed = engine.getMetricsCollector().getCounterValue("checks.fail");
 
-        assertEquals(2, passed, "Both checks should pass (the request should have timed out)");
+        assertEquals(1, passed, "The check should pass (the request should have timed out)");
         assertEquals(0, failed, "No checks should fail");
     }
 

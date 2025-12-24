@@ -34,9 +34,8 @@ class CoreToolkitTest {
         engine.run(script, new TestConfig(1, 1, null));
 
         MetricsCollector collector = engine.getMetricsCollector();
-        // In k6, 'checks' is a rate metric. For now, we'll track total passes/fails.
-        // We'll verify that the collector saw these.
-        assertEquals(2, collector.getCounterValue("checks.pass"));
+        // In Lyocell, 'check' records one pass if all assertions pass, or one fail if any fail.
+        assertEquals(1, collector.getCounterValue("checks.pass"));
         assertEquals(1, collector.getCounterValue("checks.fail"));
     }
 

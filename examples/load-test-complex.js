@@ -64,7 +64,7 @@ export default function () {
         timeout: '1s'
     };
 
-    const res = http.post(`${baseUrl}/post1`, payload, params);
+    const res = http.post(`${baseUrl}/post`, payload, params);
 
     check(res, {
         'status is 200': (r) => r.status === 200,

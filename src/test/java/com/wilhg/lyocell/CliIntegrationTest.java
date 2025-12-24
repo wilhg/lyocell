@@ -37,6 +37,6 @@ class CliIntegrationTest {
         System.setOut(System.out);
         
         assertEquals(0, exitCode, "Exit code should be 0");
-        assertTrue(output.contains("iterations................: 5"), "Output should show 5 iterations");
+        assertTrue(output.contains("(5 pass, 0 fail)"), "Output should show 5 passing iterations");
     }
 }
