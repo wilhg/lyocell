@@ -74,7 +74,7 @@ jobs:
           mv build/native/nativeCompile/${{ matrix.binary_name }} build/native/nativeCompile/lyocell-${{ matrix.platform }}${{ matrix.artifact_ext }}
 
       - name: Upload binary
-        uses: actions/upload-artifact@v4
+        uses: actions/upload-artifact@v6
         with:
           name: lyocell-${{ matrix.platform }}
           path: build/native/nativeCompile/lyocell-${{ matrix.platform }}${{ matrix.artifact_ext }}
@@ -101,7 +101,7 @@ jobs:
         run: go install github.com/goreleaser/goreleaser-cloudsmith@latest
 
       - name: Download all artifacts
-        uses: actions/download-artifact@v4
+        uses: actions/download-artifact@v7
         with:
           path: artifacts
 
