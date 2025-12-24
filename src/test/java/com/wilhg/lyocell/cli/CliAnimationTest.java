@@ -242,7 +242,7 @@ public class CliAnimationTest {
         
         animation.stop();
         
-        String output = outputStream.toString();
+        String output = outputStream.toString().replace("\r\n", "\n"); // Normalize for Windows
         assertTrue(output.contains("Log message 1\n"), "Should contain first log message followed by newline");
         assertTrue(output.contains("Log message 2\n"), "Should contain second log message followed by newline");
         assertTrue(output.contains("Animation"), "Should still contain the animation message");
