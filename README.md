@@ -120,7 +120,7 @@ The binary will be generated at `build/native/nativeCompile/lyocell`.
 
 ## 🤝 Contributing
 
-Contributions are welcome! Please follow our [Test-Driven Development](GEMINI.md) process and ensure all new features are covered by integration tests.
+Contributions are welcome! Please follow our [Test-Driven Development](AGENTS.md) process and ensure all new features are covered by integration tests.
 
 ## 📄 License
 
