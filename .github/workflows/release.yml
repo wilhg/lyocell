@@ -114,7 +114,7 @@ jobs:
 
                       **macOS (Homebrew):**
                       ```bash
-                      brew tap wilhg/lyocell-tap
+                      brew tap wilhg/lyocell
                       brew install lyocell
                       ```
 
@@ -160,10 +160,10 @@ jobs:
         runs-on: ubuntu-latest
 
         steps:
-            - name: Checkout lyocell-tap repo
+            - name: Checkout lyocell repo
               uses: actions/checkout@v6
               with:
-                  repository: wilhg/lyocell-tap
+                  repository: wilhg/homebrew-lyocell
                   token: ${{ secrets.JRELEASER_GITHUB_TOKEN }}
                   path: tap-repo
 
