@@ -84,6 +84,6 @@ public class Main {
         System.err.println("Options:");
         System.err.println("  -u, --vus <n>          Number of virtual users (default: 1)");
         System.err.println("  -i, --iterations <n>   Total iterations (per VU for now) (default: 1)");
-        System.err.println("  -o, --out <type=file>  Output metrics to a file (e.g. html=report.html)");
+        System.err.println("  -o, --out <type=path>  Output metrics (e.g. html=reports/ or html=report.html)");
     }
 }

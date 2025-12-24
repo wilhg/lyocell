@@ -186,8 +186,14 @@ public class TestEngine {
         
         // 6. Generate HTML Reports
         com.wilhg.lyocell.report.HtmlReportRenderer htmlRenderer = new com.wilhg.lyocell.report.HtmlReportRenderer();
-        for (String path : htmlReportPaths) {
-            htmlRenderer.generate(metricsCollector, path);
+        for (String pathString : htmlReportPaths) {
+            Path targetPath = java.nio.file.Paths.get(pathString);
+            if (java.nio.file.Files.isDirectory(targetPath)) {
+                String scriptName = scriptPath.getFileName().toString().replace(".js", "");
+                String timestamp = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss"));
+                targetPath = targetPath.resolve("lyocell-report-" + scriptName + "-" + timestamp + ".html");
+            }
+            htmlRenderer.generate(metricsCollector, targetPath.toString());
         }
     }
 
