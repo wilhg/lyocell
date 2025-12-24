@@ -54,6 +54,26 @@ jobs:
             - name: Build Native Image (skip tests)
               run: ./gradlew nativeCompile -x test
 
+            - name: Install UPX (Linux/Windows)
+              if: runner.os != 'macOS'
+              run: |
+                  if [ "$RUNNER_OS" == "Linux" ]; then
+                      sudo apt-get update && sudo apt-get install -y upx
+                  elif [ "$RUNNER_OS" == "Windows" ]; then
+                      choco install upx
+                  fi
+              shell: bash
+
+            - name: Compress binary with UPX (Linux/Windows)
+              if: runner.os != 'macOS'
+              run: |
+                  if [ "$RUNNER_OS" == "Linux" ]; then
+                      upx --best build/native/nativeCompile/lyocell
+                  elif [ "$RUNNER_OS" == "Windows" ]; then
+                      upx --best build/native/nativeCompile/lyocell.exe
+                  fi
+              shell: bash
+
             - name: Rename binary (Unix)
               if: runner.os != 'Windows'
               run: |
