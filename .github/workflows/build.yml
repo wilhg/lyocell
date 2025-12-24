@@ -8,10 +8,7 @@ on:
 
 jobs:
   build:
-    strategy:
-      matrix:
-        os: [ubuntu-latest, windows-latest]
-    runs-on: ${{ matrix.os }}
+    runs-on: ubuntu-latest
 
     steps:
       - uses: actions/checkout@v6
@@ -30,42 +27,20 @@ jobs:
           native-image --version
 
       - name: Grant execute permission for gradlew
-        if: runner.os != 'Windows'
         run: chmod +x gradlew
 
       - name: Build with Gradle
         run: ./gradlew build
 
-      - name: Build Native Image
-        run: ./gradlew nativeCompile -x test
-
-      - name: Install UPX
-        run: |
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            sudo apt-get update && sudo apt-get install -y upx
-          elif [ "$RUNNER_OS" == "Windows" ]; then
-            choco install upx
-          fi
-        shell: bash
-
-      - name: Compress binary with UPX
-        run: |
-          if [ "$RUNNER_OS" == "Linux" ]; then
-            upx --best build/native/nativeCompile/lyocell
-          elif [ "$RUNNER_OS" == "Windows" ]; then
-            upx --best build/native/nativeCompile/lyocell.exe
-          fi
-        shell: bash
-
       - name: Upload test results
         if: always()
         uses: actions/upload-artifact@v6
         with:
-          name: test-results-${{ matrix.os }}
+          name: test-results
           path: build/reports/tests/test/
 
       - name: Upload coverage report
-        if: always() && matrix.os == 'ubuntu-latest'
+        if: always()
         uses: actions/upload-artifact@v6
         with:
           name: coverage-report
