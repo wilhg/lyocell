@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.wilhg'
-version = '0.2.21'
+version = '0.2.22'
 
 application {
     mainClass = 'com.wilhg.lyocell.Main'
