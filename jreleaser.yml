@@ -1,5 +1,6 @@
 project:
   name: lyocell
+  version: 0.2.18
   description: High-performance load testing tool (k6 clone) on Java 25 & GraalVM
   links:
     homepage: https://github.com/wilhg/lyocell
