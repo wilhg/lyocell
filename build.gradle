@@ -33,7 +33,7 @@ repositories {
 
 dependencies {
     implementation 'tools.jackson.core:jackson-databind:3.0.3'
-    implementation 'org.yaml:snakeyaml:2.3'
+    implementation 'org.yaml:snakeyaml:2.5'
 
     // GraalVM Polyglot & JS
     implementation 'org.graalvm.polyglot:polyglot:25.0.1'
@@ -43,7 +43,7 @@ dependencies {
     implementation 'io.micrometer:micrometer-core:1.16.1'
     implementation 'io.micrometer:micrometer-registry-prometheus:1.16.1'
 
-    testImplementation platform('org.junit:junit-bom:5.14.1')
+    testImplementation platform('org.junit:junit-bom:6.0.1')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
     testImplementation 'org.testcontainers:testcontainers:2.0.3'
