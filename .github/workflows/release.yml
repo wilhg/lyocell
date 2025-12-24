@@ -117,7 +117,7 @@ jobs:
           ls -lh release-files/
 
       - name: Run GoReleaser
-        uses: goreleaser/goreleaser-action@v5
+        uses: goreleaser/goreleaser-action@v6
         with:
           # We use the 'release' command to execute the release process.
           # The '--clean' flag ensures any previous GoReleaser artifacts are removed.
