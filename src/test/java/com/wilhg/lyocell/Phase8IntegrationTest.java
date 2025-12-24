@@ -5,9 +5,11 @@ import com.wilhg.lyocell.engine.TestEngine;
 import org.graalvm.polyglot.HostAccess;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.ConcurrentHashMap;
 
@@ -52,7 +54,7 @@ class Phase8IntegrationTest {
             """);
 
         TestHelper helper = new TestHelper();
-        TestEngine engine = new TestEngine(Map.of("TestHelper", helper));
+        TestEngine engine = new TestEngine(Map.of("TestHelper", helper), Collections.emptyList());
         
         // vus and iterations are defaults if no scenarios, but here we have scenarios
         TestConfig config = new TestConfig(1, 1);
@@ -88,7 +90,7 @@ class Phase8IntegrationTest {
             """);
 
         TestHelper helper = new TestHelper();
-        TestEngine engine = new TestEngine(Map.of("TestHelper", helper));
+        TestEngine engine = new TestEngine(Map.of("TestHelper", helper), Collections.emptyList());
         
         engine.run(script, new TestConfig(1, 1));
 

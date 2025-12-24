@@ -3,9 +3,11 @@ package com.wilhg.lyocell.engine;
 import org.graalvm.polyglot.HostAccess;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -38,12 +40,12 @@ class LifecycleTest {
             """);
 
         TestLifecycleHelper helper = new TestLifecycleHelper();
-        TestEngine engine = new TestEngine(Map.of("TestHelper", helper));
+        TestEngine testEngine = new TestEngine(Map.of("TestHelper", helper), Collections.emptyList());
         
         // 5 VUs, 1 iteration each
         TestConfig config = new TestConfig(5, 1, null);
         
-        engine.run(script, config);
+        testEngine.run(script, config);
 
         assertEquals(6, helper.initCount.get(), "Init should run once per VU + once for Setup");
         assertEquals(1, helper.setupCount.get(), "Setup should run exactly once");

@@ -2,25 +2,34 @@ package com.wilhg.lyocell.modules;
 
 import com.wilhg.lyocell.engine.TestConfig;
 import com.wilhg.lyocell.engine.TestEngine;
+import com.wilhg.lyocell.engine.JsEngine;
+import com.wilhg.lyocell.metrics.MetricsCollector;
 import org.junit.jupiter.api.Test;
+import org.junit.jupiter.api.BeforeEach;
+import org.junit.jupiter.api.AfterEach;
+import org.junit.jupiter.api.DisplayName;
 import org.junit.jupiter.api.io.TempDir;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
 import org.testcontainers.utility.DockerImageName;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Collections;
 import java.util.concurrent.atomic.AtomicInteger;
 import java.util.concurrent.atomic.AtomicReference;
 import org.graalvm.polyglot.HostAccess;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 @Testcontainers
 class HttpResponseTest {
 
     @Container
-    public GenericContainer<?> httpbin = new GenericContainer<>(DockerImageName.parse("sharat87/httpbun"))
+    public GenericContainer<?> httpbun = new GenericContainer<>(DockerImageName.parse("sharat87/httpbun"))
             .withExposedPorts(80);
 
     @TempDir
@@ -28,7 +37,7 @@ class HttpResponseTest {
 
     @Test
     void testHttpResponseJson() throws Exception {
-        String url = "http://" + httpbin.getHost() + ":" + httpbin.getMappedPort(80) + "/get";
+        String url = "http://" + httpbun.getHost() + ":" + httpbun.getMappedPort(80) + "/get";
         
         Path script = tempDir.resolve("http_json_test.js");
         Files.writeString(script, """
@@ -43,15 +52,20 @@ class HttpResponseTest {
         AtomicReference<String> result = new AtomicReference<>();
         TestResultBridge bridge = new TestResultBridge(result);
         
-        TestEngine engine = new TestEngine(Map.of("TestResult", bridge));
-        engine.run(script, new TestConfig(1, 1, null));
+        TestEngine testEngine = new TestEngine(Collections.emptyList());
+        MetricsCollector collector = new MetricsCollector(); // Needed for JsEngine
+        
+        try (JsEngine engine = new JsEngine(Map.of("TestResult", bridge), collector, testEngine)) {
+            engine.runScript(script);
+            engine.executeDefault(null);
+        }
 
         assertEquals("200", result.get());
     }
 
     @Test
     void testHttpStatusAndBody() throws Exception {
-        String url = "http://" + httpbin.getHost() + ":" + httpbin.getMappedPort(80) + "/status/418";
+        String url = "http://" + httpbun.getHost() + ":" + httpbun.getMappedPort(80) + "/status/418";
         
         Path script = tempDir.resolve("http_status_test.js");
         Files.writeString(script, """
@@ -65,15 +79,20 @@ class HttpResponseTest {
         AtomicInteger status = new AtomicInteger(0);
         TestStatusBridge bridge = new TestStatusBridge(status);
         
-        TestEngine engine = new TestEngine(Map.of("StatusResult", bridge));
-        engine.run(script, new TestConfig(1, 1, null));
+        TestEngine testEngine = new TestEngine(Collections.emptyList());
+        MetricsCollector collector = new MetricsCollector(); // Needed for JsEngine
+
+        try (JsEngine engine = new JsEngine(Map.of("StatusResult", bridge), collector, testEngine)) {
+            engine.runScript(script);
+            engine.executeDefault(null);
+        }
 
         assertEquals(418, status.get());
     }
 
     @Test
     void testHttpResponsePost() throws Exception {
-        String url = "http://" + httpbin.getHost() + ":" + httpbin.getMappedPort(80) + "/post";
+        String url = "http://" + httpbun.getHost() + ":" + httpbun.getMappedPort(80) + "/post";
         
         Path script = tempDir.resolve("http_post_test.js");
         Files.writeString(script, """
@@ -90,15 +109,20 @@ class HttpResponseTest {
         AtomicReference<String> result = new AtomicReference<>();
         TestResultBridge bridge = new TestResultBridge(result);
         
-        TestEngine engine = new TestEngine(Map.of("PostResult", bridge));
-        engine.run(script, new TestConfig(1, 1, null));
+        TestEngine testEngine = new TestEngine(Collections.emptyList());
+        MetricsCollector collector = new MetricsCollector(); // Needed for JsEngine
+
+        try (JsEngine engine = new JsEngine(Map.of("PostResult", bridge), collector, testEngine)) {
+            engine.runScript(script);
+            engine.executeDefault(null);
+        }
 
         assertEquals("lyocell", result.get());
     }
 
     @Test
     void testHttpResponseHeadersAndTimings() throws Exception {
-        String url = "http://" + httpbin.getHost() + ":" + httpbin.getMappedPort(80) + "/get";
+        String url = "http://" + httpbun.getHost() + ":" + httpbun.getMappedPort(80) + "/get";
         
         Path script = tempDir.resolve("http_headers_test.js");
         Files.writeString(script, """
@@ -116,11 +140,17 @@ class HttpResponseTest {
         AtomicReference<Double> duration = new AtomicReference<>();
         TestTimingBridge timingBridge = new TestTimingBridge(duration);
         
-        TestEngine engine = new TestEngine(Map.of(
+        TestEngine testEngine = new TestEngine(Collections.emptyList());
+        MetricsCollector collector = new MetricsCollector(); // Needed for JsEngine
+
+        Map<String, Object> bindings = Map.of(
             "HeaderResult", headerBridge,
             "TimingResult", timingBridge
-        ));
-        engine.run(script, new TestConfig(1, 1, null));
+        );
+        try (JsEngine engine = new JsEngine(bindings, collector, testEngine)) {
+            engine.runScript(script);
+            engine.executeDefault(null);
+        }
 
         assertEquals("application/json", contentType.get());
         assertTrue(duration.get() >= 0, "Duration should be non-negative");

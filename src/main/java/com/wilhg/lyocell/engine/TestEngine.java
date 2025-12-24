@@ -1,12 +1,16 @@
 package com.wilhg.lyocell.engine;
 
 import com.wilhg.lyocell.engine.scenario.Scenario;
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
 import com.wilhg.lyocell.metrics.MetricsCollector;
 import com.wilhg.lyocell.metrics.SummaryReporter;
+import com.wilhg.lyocell.metrics.TimeSeriesData;
+import com.wilhg.lyocell.report.HtmlReportRenderer;
 import org.graalvm.polyglot.Value;
+import tools.jackson.core.type.TypeReference;
+import tools.jackson.databind.ObjectMapper;
+
 import java.nio.file.Path;
+import java.time.format.DateTimeFormatter;
 import java.util.Collections;
 import java.util.List;
 import java.util.Map;
@@ -19,9 +23,16 @@ public class TestEngine {
     private final MetricsCollector metricsCollector = new MetricsCollector();
     private final ObjectMapper mapper = new ObjectMapper();
     private volatile boolean aborted = false;
+    private final List<OutputConfig> initialOutputs;
+    private final HtmlReportRenderer htmlReportRenderer = new HtmlReportRenderer();
 
-    public TestEngine() {
-        this(Collections.emptyMap());
+    public TestEngine(List<OutputConfig> initialOutputs) {
+        this(Collections.emptyMap(), initialOutputs);
+    }
+
+    public TestEngine(Map<String, Object> extraBindings, List<OutputConfig> initialOutputs) {
+        this.extraBindings = extraBindings;
+        this.initialOutputs = initialOutputs;
     }
 
     public void abort() {
@@ -32,14 +43,9 @@ public class TestEngine {
         return aborted;
     }
 
-    public TestEngine(Map<String, Object> extraBindings) {
-        this.extraBindings = extraBindings;
-    }
-
-    private void configureOutputs(TestConfig config) {
-        if (config.outputs() == null) return;
-
-        for (OutputConfig output : config.outputs()) {
+    private void configureOutputs(List<OutputConfig> outputs) {
+        if (outputs == null) return;
+        for (OutputConfig output : outputs) {
             registerOutput(output);
         }
     }
@@ -107,8 +113,8 @@ public class TestEngine {
     }
 
     public void run(Path scriptPath, TestConfig config) throws InterruptedException, ExecutionException {
-        // Configure Outputs
-        configureOutputs(config);
+        // Configure Outputs from initial config
+        configureOutputs(initialOutputs);
 
         String setupDataJson = null;
         Map<String, Object> options = null;
@@ -121,7 +127,7 @@ public class TestEngine {
                 if (optionsValue != null) {
                     String json = setupEngine.toJson(optionsValue);
                     if (json != null) {
-                        options = mapper.readValue(json, new TypeReference<Map<String, Object>>() {});
+                        options = mapper.readValue(json, new TypeReference<>() {});
                         configureOutputsFromOptions(options);
                         
                         if (options.containsKey("scenarios")) {
@@ -175,8 +181,8 @@ public class TestEngine {
                  throw new RuntimeException("Teardown failed", e);
             }
         } catch (Exception e) {
-            if (e instanceof InterruptedException) throw (InterruptedException) e;
-            if (e instanceof ExecutionException) throw (ExecutionException) e;
+            if (e instanceof InterruptedException) throw e;
+            if (e instanceof ExecutionException) throw e;
             throw new RuntimeException("Test execution failed", e);
         } finally {
             // Close registries to flush metrics
@@ -190,15 +196,17 @@ public class TestEngine {
         new SummaryReporter().report(metricsCollector);
         
         // 6. Generate HTML Reports
-        com.wilhg.lyocell.report.HtmlReportRenderer htmlRenderer = new com.wilhg.lyocell.report.HtmlReportRenderer();
-        for (String pathString : htmlReportPaths) {
-            Path targetPath = java.nio.file.Paths.get(pathString);
-            if (java.nio.file.Files.isDirectory(targetPath)) {
-                String scriptName = scriptPath.getFileName().toString().replace(".js", "");
-                String timestamp = java.time.LocalDateTime.now().format(java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss"));
-                targetPath = targetPath.resolve("lyocell-report-" + scriptName + "-" + timestamp + ".html");
+        if (!htmlReportPaths.isEmpty()) {
+            List<TimeSeriesData> timelineData = metricsCollector.getIterationTimeline(1000); // 1-second buckets
+            for (String pathString : htmlReportPaths) {
+                Path targetPath = java.nio.file.Paths.get(pathString);
+                if (pathString.isEmpty() || java.nio.file.Files.isDirectory(targetPath)) {
+                    String scriptName = scriptPath.getFileName().toString().replace(".js", "");
+                    String timestamp = java.time.LocalDateTime.now().format(DateTimeFormatter.ofPattern("yyyy-MM-dd-HH-mm-ss"));
+                    targetPath = targetPath.resolve("lyocell-report-" + scriptName + "-" + timestamp + ".html");
+                }
+                htmlReportRenderer.generate(metricsCollector, timelineData, targetPath.toString());
             }
-            htmlRenderer.generate(metricsCollector, targetPath.toString());
         }
     }
 

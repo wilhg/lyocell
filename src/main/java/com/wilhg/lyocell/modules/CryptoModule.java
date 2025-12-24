@@ -39,7 +39,7 @@ public class CryptoModule implements LyocellModule {
     }
 
     // Temporary storage for incremental hashing (simplistic implementation for MVP)
-    private final java.util.Map<String, MessageDigest> activeDigests = new java.util.concurrent.ConcurrentHashMap<>();
+    private final java.util.Map<String, MessageDigest> activeDigests = new java.util.HashMap<>();
 
     @HostAccess.Export
     public void updateHash(String algo, String data) {

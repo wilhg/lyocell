@@ -21,7 +21,7 @@ class WorkloadExecutorTest {
         };
 
         Scenario dummyScenario = new Scenario("test", new com.wilhg.lyocell.engine.scenario.PerVuIterationsConfig(1, 1, java.time.Duration.ZERO, java.time.Duration.ZERO));
-        mockExecutor.execute(dummyScenario, Paths.get("test.js"), Collections.emptyMap(), null, new MetricsCollector(), new TestEngine());
+        mockExecutor.execute(dummyScenario, Paths.get("test.js"), Collections.emptyMap(), null, new MetricsCollector(), new TestEngine(Collections.emptyList()));
         
         assertTrue(executed.get(), "Executor should have been called");
     }

@@ -1,14 +1,16 @@
 package com.wilhg.lyocell;
 
+import com.wilhg.lyocell.engine.OutputConfig;
 import com.wilhg.lyocell.engine.TestConfig;
 import com.wilhg.lyocell.engine.TestEngine;
 import com.wilhg.lyocell.metrics.MetricsCollector;
 import org.junit.jupiter.api.Test;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
-import static org.junit.jupiter.api.Assertions.assertTrue;
-import static org.junit.jupiter.api.Assertions.assertEquals;
+import java.util.Collections;
+import static org.junit.jupiter.api.Assertions.*;
 
 public class Phase7IntegrationTest {
     @Test
@@ -60,7 +62,7 @@ public class Phase7IntegrationTest {
         Path scriptPath = Files.createTempFile("phase7-full", ".js");
         Files.writeString(scriptPath, script);
         
-        TestEngine engine = new TestEngine();
+        TestEngine engine = new TestEngine(Collections.emptyList());
         TestConfig config = new TestConfig(2, 20, java.time.Duration.ofSeconds(10), java.util.Collections.emptyList());
         
         engine.run(scriptPath, config);
@@ -82,7 +84,7 @@ public class Phase7IntegrationTest {
         Path scriptPath = Files.createTempFile("test-fail", ".js");
         Files.writeString(scriptPath, script);
         
-        TestEngine engine = new TestEngine();
+        TestEngine engine = new TestEngine(Collections.emptyList());
         TestConfig config = new TestConfig(1, 1, java.time.Duration.ofSeconds(1), java.util.Collections.emptyList());
         
         try {

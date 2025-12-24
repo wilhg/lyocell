@@ -2,10 +2,13 @@ package com.wilhg.lyocell.modules;
 
 import com.wilhg.lyocell.engine.JsEngine;
 import com.wilhg.lyocell.metrics.MetricsCollector;
+import com.wilhg.lyocell.engine.TestEngine;
 import org.junit.jupiter.api.Test;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
 import java.util.Map;
+import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertTrue;
 
 public class HttpVerbsTest {
@@ -31,7 +34,9 @@ public class HttpVerbsTest {
         Files.writeString(scriptPath, script);
         
         MetricsCollector collector = new MetricsCollector();
-        try (JsEngine engine = new JsEngine(Map.of(), collector)) {
+        TestEngine testEngine = new TestEngine(Collections.emptyList());
+        
+        try (JsEngine engine = new JsEngine(Collections.emptyMap(), collector, testEngine)) {
             engine.runScript(scriptPath);
             engine.executeDefault(null);
         }

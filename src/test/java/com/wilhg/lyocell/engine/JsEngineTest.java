@@ -5,6 +5,10 @@ import org.junit.jupiter.api.io.TempDir;
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Map;
+import com.wilhg.lyocell.metrics.MetricsCollector;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class JsEngineTest {
@@ -17,7 +21,8 @@ class JsEngineTest {
         Path script = tempDir.resolve("test.js");
         Files.writeString(script, "console.log('test');");
 
-        try (JsEngine engine = new JsEngine()) {
+        TestEngine testEngine = new TestEngine(Collections.emptyList());
+        try (JsEngine engine = new JsEngine(Collections.emptyMap(), new MetricsCollector(), testEngine)) {
             assertDoesNotThrow(() -> engine.runScript(script));
         }
     }
@@ -33,7 +38,8 @@ class JsEngineTest {
             }
             """);
 
-        try (JsEngine engine = new JsEngine()) {
+        TestEngine testEngine = new TestEngine(Collections.emptyList());
+        try (JsEngine engine = new JsEngine(Collections.emptyMap(), new MetricsCollector(), testEngine)) {
             assertDoesNotThrow(() -> engine.runScript(script));
         }
     }
@@ -46,7 +52,8 @@ class JsEngineTest {
             sleep(0.1);
             """);
 
-        try (JsEngine engine = new JsEngine()) {
+        TestEngine testEngine = new TestEngine(Collections.emptyList());
+        try (JsEngine engine = new JsEngine(Collections.emptyMap(), new MetricsCollector(), testEngine)) {
             long start = System.currentTimeMillis();
             engine.runScript(script);
             long duration = System.currentTimeMillis() - start;

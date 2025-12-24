@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
@@ -31,11 +32,11 @@ class ThresholdTest {
             }
             """);
 
-        TestEngine engine = new TestEngine();
+        TestEngine testEngine = new TestEngine(Collections.emptyList());
         
         // Use a wrapper/exception to assert failure
         RuntimeException exception = assertThrows(RuntimeException.class, () -> {
-            engine.run(script, new TestConfig(1, 1, null));
+            testEngine.run(script, new TestConfig(1, 1, null));
         });
         
         assertTrue(exception.getMessage().contains("Thresholds failed"), "Should throw on threshold failure");

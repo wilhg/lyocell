@@ -68,7 +68,7 @@ public class Main {
         System.out.println("Starting Lyocell (compatible with k6)...");
         
         try {
-            TestEngine engine = new TestEngine();
+            TestEngine engine = new TestEngine(outputs);
             TestConfig config = new TestConfig(vus, iterations, null, outputs);
             engine.run(scriptPath, config);
             return 0;

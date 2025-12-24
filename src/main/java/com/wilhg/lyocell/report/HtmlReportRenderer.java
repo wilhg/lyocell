@@ -2,12 +2,15 @@ package com.wilhg.lyocell.report;
 
 import com.wilhg.lyocell.metrics.MetricSummary;
 import com.wilhg.lyocell.metrics.MetricsCollector;
+import com.wilhg.lyocell.metrics.TimeSeriesData;
 import io.micrometer.core.instrument.Meter;
 
 import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Paths;
 import java.time.Instant;
+import java.time.ZoneId;
+import java.time.format.DateTimeFormatter;
 import java.util.Comparator;
 import java.util.List;
 import java.util.Locale;
@@ -15,8 +18,8 @@ import java.util.stream.Collectors;
 
 public class HtmlReportRenderer {
 
-    public void generate(MetricsCollector collector, String outputPath) {
-        String html = renderHtml(collector);
+    public void generate(MetricsCollector collector, List<TimeSeriesData> timelineData, String outputPath) {
+        String html = renderHtml(collector, timelineData);
         try {
             Files.writeString(Paths.get(outputPath), html);
             System.out.println("\nHTML Report generated at: " + outputPath);
@@ -25,7 +28,7 @@ public class HtmlReportRenderer {
         }
     }
 
-    private String renderHtml(MetricsCollector collector) {
+    private String renderHtml(MetricsCollector collector, List<TimeSeriesData> timelineData) {
         return """
             <!DOCTYPE html>
             <html lang="en">
@@ -49,7 +52,7 @@ public class HtmlReportRenderer {
                 renderStyles(),
                 renderHeader(),
                 renderSummaryCards(collector),
-                renderCharts(collector),
+                renderCharts(collector, timelineData),
                 renderDetailedTable(collector),
                 renderFooter()
         );
@@ -67,6 +70,7 @@ public class HtmlReportRenderer {
                     --border: #e1e4e8;
                     --success: #2ecc71;
                     --error: #e74c3c;
+                    --warning: #f39c12;
                 }
                 body {
                     font-family: -apple-system, BlinkMacSystemFont, "Segoe UI", Roboto, Helvetica, Arial, sans-serif;
@@ -107,7 +111,7 @@ public class HtmlReportRenderer {
                 .metric-big { font-size: 3rem; font-weight: 800; color: var(--primary); line-height: 1; }
                 .metric-label { font-size: 0.85rem; color: #888; text-transform: uppercase; letter-spacing: 1px; margin-top: 5px; font-weight: 600; }
 
-                /* Bar Chart */
+                /* Bar Chart (old, for response times) */
                 .bar-chart { display: flex; height: 220px; align-items: flex-end; gap: 16px; padding-top: 20px; }
                 .bar-group { flex: 1; display: flex; flex-direction: column; align-items: center; height: 100%; justify-content: flex-end; position: relative; }
                 .bar {
@@ -121,11 +125,67 @@ public class HtmlReportRenderer {
                 }
                 .bar:hover { opacity: 1; transform: scaleY(1.02); transform-origin: bottom; }
                 
-                /* Tooltip-ish label on hover could be added here, but simple titles are used for now */
-                
                 .bar-label { font-size: 0.75rem; margin-top: 8px; color: #666; white-space: nowrap; overflow: hidden; text-overflow: ellipsis; max-width: 120px; font-weight: 500; }
                 .bar-value { font-size: 0.8rem; margin-bottom: 5px; font-weight: bold; color: #333; }
                 
+                /* Timeline Chart (new) */
+                .timeline-chart {
+                    display: flex;
+                    align-items: flex-end;
+                    height: 250px;
+                    gap: 2px;
+                    padding-top: 10px;
+                    border-bottom: 1px solid var(--border);
+                    position: relative;
+                    overflow-x: auto;
+                    padding-bottom: 30px; /* Space for labels */
+                }
+                .timeline-bar-wrapper {
+                    display: flex;
+                    flex-direction: column-reverse; /* Stack bars from bottom up */
+                    width: 15px; /* Fixed width for each time bucket */
+                    position: relative;
+                    justify-content: flex-start;
+                }
+                .timeline-bar {
+                    width: 100%;
+                    position: relative;
+                    min-height: 1px;
+                }
+                .timeline-bar.success { background: var(--success); opacity: 0.8; }
+                .timeline-bar.failure { background: var(--error); opacity: 0.8; }
+                .timeline-bar:hover { opacity: 1; }
+                
+                .timeline-label {
+                    position: absolute;
+                    bottom: -25px; /* Below the bars */
+                    left: 50%;
+                    transform: translateX(-50%);
+                    font-size: 0.7rem;
+                    color: #777;
+                    white-space: nowrap;
+                }
+                .timeline-tooltip {
+                    position: absolute;
+                    bottom: 100%; /* Above the bar */
+                    left: 50%;
+                    transform: translateX(-50%);
+                    background: rgba(0,0,0,0.8);
+                    color: #fff;
+                    padding: 4px 8px;
+                    border-radius: 4px;
+                    font-size: 0.7rem;
+                    white-space: nowrap;
+                    visibility: hidden;
+                    opacity: 0;
+                    transition: opacity 0.2s, visibility 0.2s;
+                    z-index: 10;
+                }
+                .timeline-bar-wrapper:hover .timeline-tooltip {
+                    visibility: visible;
+                    opacity: 1;
+                }
+
                 /* Table */
                 table { width: 100%; border-collapse: collapse; margin-top: 10px; }
                 th { text-align: left; padding: 12px; border-bottom: 2px solid var(--border); font-size: 0.85rem; color: #555; font-weight: 700; text-transform: uppercase; letter-spacing: 0.5px; }
@@ -170,8 +230,8 @@ public class HtmlReportRenderer {
     }
 
     private String renderHeader() {
-        java.time.format.DateTimeFormatter formatter = java.time.format.DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'")
-            .withZone(java.time.ZoneId.of("UTC"));
+        DateTimeFormatter formatter = DateTimeFormatter.ofPattern("yyyy-MM-dd HH:mm:ss 'UTC'")
+            .withZone(ZoneId.of("UTC"));
             
         return """
             <header style="display: flex; justify-content: space-between; align-items: center; margin-bottom: 30px;">
@@ -231,7 +291,7 @@ public class HtmlReportRenderer {
             );
     }
 
-    private String renderCharts(MetricsCollector collector) {
+    private String renderCharts(MetricsCollector collector, List<TimeSeriesData> timelineData) {
         List<MetricSummary> trendSummaries = collector.getRegistry().getMeters().stream()
                 .filter(m -> m.getId().getType() == Meter.Type.DISTRIBUTION_SUMMARY)
                 .map(m -> collector.getTrendSummary(m.getId().getName()))
@@ -239,45 +299,103 @@ public class HtmlReportRenderer {
                 .limit(6)
                 .collect(Collectors.toList());
 
-        if (trendSummaries.isEmpty()) return "";
+        StringBuilder chartHtml = new StringBuilder();
 
-        double maxP95 = trendSummaries.stream().mapToDouble(MetricSummary::p95).max().orElse(1.0);
-        
-        StringBuilder bars = new StringBuilder();
-        // Re-iterate (simple approach)
-         List<Meter> sortedMeters = collector.getRegistry().getMeters().stream()
-                .filter(m -> m.getId().getType() == Meter.Type.DISTRIBUTION_SUMMARY)
-                .sorted((m1, m2) -> Double.compare(
-                        collector.getTrendSummary(m2.getId().getName()).p95(),
-                        collector.getTrendSummary(m1.getId().getName()).p95()
-                ))
-                .limit(6)
-                .toList();
+        if (!timelineData.isEmpty()) {
+            chartHtml.append(renderTimelineChart(timelineData));
+        }
 
-        for (Meter meter : sortedMeters) {
-            String name = meter.getId().getName();
-            MetricSummary s = collector.getTrendSummary(name);
-            double heightPct = (s.p95() / maxP95) * 100;
+        if (!trendSummaries.isEmpty()) {
+            double maxP95 = trendSummaries.stream().mapToDouble(MetricSummary::p95).max().orElse(1.0);
             
-            bars.append(String.format(Locale.US,
-                """
-                <div class="bar-group">
-                    <div class="bar-value">%.0f</div>
-                    <div class="bar" style="height: %.1f%%;"></div>
-                    <div class="bar-label" title="%s">%s</div>
+            StringBuilder bars = new StringBuilder();
+             List<Meter> sortedMeters = collector.getRegistry().getMeters().stream()
+                    .filter(m -> m.getId().getType() == Meter.Type.DISTRIBUTION_SUMMARY)
+                    .sorted((m1, m2) -> Double.compare(
+                            collector.getTrendSummary(m2.getId().getName()).p95(),
+                            collector.getTrendSummary(m1.getId().getName()).p95()
+                    ))
+                    .limit(6)
+                    .toList();
+
+            for (Meter meter : sortedMeters) {
+                String name = meter.getId().getName();
+                MetricSummary s = collector.getTrendSummary(name);
+                double heightPct = (s.p95() / maxP95) * 100;
+                
+                bars.append(String.format(Locale.US,
+                    """
+                    <div class="bar-group">
+                        <div class="bar-value">%.0f</div>
+                        <div class="bar" style="height: %.1f%%;"></div>
+                        <div class="bar-label" title="%s">%s</div>
+                    </div>
+                    """, s.p95(), Math.max(heightPct, 2), name, name));
+            }
+
+            chartHtml.append("""
+                <div class="card">
+                    <h2>Response Time Overview (p95 ms)</h2>
+                    <div class="bar-chart">
+                        %s
+                    </div>
                 </div>
-                """, s.p95(), Math.max(heightPct, 2), name, name));
+                """.formatted(bars.toString()));
+        }
+
+        return chartHtml.toString();
+    }
+
+    private String renderTimelineChart(List<TimeSeriesData> timelineData) {
+        if (timelineData.isEmpty()) {
+            return "";
+        }
+
+        long maxRequestsPerBucket = timelineData.stream()
+                .mapToLong(data -> data.successfulRequests() + data.failedRequests())
+                .max()
+                .orElse(1L);
+
+        StringBuilder barsHtml = new StringBuilder();
+        DateTimeFormatter timeFormatter = DateTimeFormatter.ofPattern("HH:mm:ss").withZone(ZoneId.of("UTC"));
+
+        for (int i = 0; i < timelineData.size(); i++) {
+            TimeSeriesData data = timelineData.get(i);
+            long totalRequests = data.successfulRequests() + data.failedRequests();
+            double successfulHeightPct = (double) data.successfulRequests() / maxRequestsPerBucket * 100;
+            double failedHeightPct = (double) data.failedRequests() / maxRequestsPerBucket * 100;
+            
+            String tooltip = String.format(Locale.US, 
+                "Time: %s<br>Success: %d<br>Failed: %d", 
+                timeFormatter.format(Instant.ofEpochMilli(data.timestamp())),
+                data.successfulRequests(), data.failedRequests()
+            );
+
+            barsHtml.append(String.format(Locale.US,
+                """
+                <div class="timeline-bar-wrapper">
+                    <div class="timeline-tooltip">%s</div>
+                    <div class="timeline-bar failure" style="height: %.1f%%;" title="Failed: %d"></div>
+                    <div class="timeline-bar success" style="height: %.1f%%;" title="Success: %d"></div>
+                    %s
+                </div>
+                """,
+                tooltip,
+                Math.max(failedHeightPct, data.failedRequests() > 0 ? 1 : 0), data.failedRequests(), // Ensure at least 1px for visibility if > 0
+                Math.max(successfulHeightPct, data.successfulRequests() > 0 ? 1 : 0), data.successfulRequests(), // Ensure at least 1px for visibility if > 0
+                (i % 10 == 0) ? String.format(Locale.US, "<div class=\"timeline-label\">%s</div>", timeFormatter.format(Instant.ofEpochMilli(data.timestamp()))) : ""
+            ));
         }
 
         return """
             <div class="card">
-                <h2>Response Time Overview (p95 ms)</h2>
-                <div class="bar-chart">
+                <h2>Request Volume Timeline (Reqs/Sec)</h2>
+                <div class="timeline-chart">
                     %s
                 </div>
             </div>
             <br>
-            """.formatted(bars.toString());
+            """.formatted(barsHtml.toString());
     }
 
     private String renderDetailedTable(MetricsCollector collector) {

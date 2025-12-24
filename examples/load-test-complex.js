@@ -6,7 +6,7 @@ import execution from 'lyocell/execution';
 /*
  * STAGED LOAD TEST CONFIGURATION
  * Total: 100,000 requests
- *
+ * 
  * Stage 1: 20,000 requests (20%) in 5s
  * Wait: 2s
  * Stage 2: 30,000 requests (30%) after 7s (5s + 2s)
@@ -42,7 +42,7 @@ export const options = {
 export default function () {
     const vuId = execution.vu.idInTest;
     const iter = execution.vu.iterationInInstance;
-    const baseUrl = __ENV.BASE_URL || 'http://localhost:8080';
+    const baseUrl = __ENV.BASE_URL || 'http://localhost:80';
 
     const payload = JSON.stringify({
         header: {

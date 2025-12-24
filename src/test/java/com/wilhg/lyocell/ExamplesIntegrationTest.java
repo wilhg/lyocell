@@ -7,17 +7,20 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @Testcontainers
 @Tag("integration")
-class ExamplesIntegrationTest {
+public class ExamplesIntegrationTest {
 
     @Container
-    static GenericContainer<?> httpbun = new GenericContainer<>("sharat87/httpbun:latest")
+    public static GenericContainer<?> httpbun = new GenericContainer<>("sharat87/httpbun:latest")
             .withExposedPorts(80);
 
     @Test
@@ -25,9 +28,7 @@ class ExamplesIntegrationTest {
         String baseUrl = "http://" + httpbun.getHost() + ":" + httpbun.getMappedPort(80);
         Path script = Paths.get("examples/basic-get.js");
         
-        TestEngine engine = new TestEngine(Map.of(
-            "__ENV", Map.of("BASE_URL", baseUrl)
-        ));
+        TestEngine engine = new TestEngine(Collections.emptyList());
         
         assertDoesNotThrow(() -> 
             engine.run(script, new TestConfig(1, 1, null))
@@ -39,9 +40,7 @@ class ExamplesIntegrationTest {
         String baseUrl = "http://" + httpbun.getHost() + ":" + httpbun.getMappedPort(80);
         Path script = Paths.get("examples/post-json.js");
 
-        TestEngine engine = new TestEngine(Map.of(
-            "__ENV", Map.of("BASE_URL", baseUrl)
-        ));
+        TestEngine engine = new TestEngine(Collections.emptyList());
 
         assertDoesNotThrow(() -> 
             engine.run(script, new TestConfig(1, 1, null))

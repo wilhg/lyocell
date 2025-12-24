@@ -5,6 +5,7 @@ import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
 import java.util.Map;
 import static org.junit.jupiter.api.Assertions.*;
 
@@ -29,7 +30,7 @@ class CoreToolkitTest {
             }
             """);
 
-        TestEngine engine = new TestEngine();
+        TestEngine engine = new TestEngine(Collections.emptyList());
         engine.run(script, new TestConfig(1, 1, null));
 
         MetricsCollector collector = engine.getMetricsCollector();
@@ -53,7 +54,7 @@ class CoreToolkitTest {
             }
             """);
 
-        TestEngine engine = new TestEngine();
+        TestEngine engine = new TestEngine(Collections.emptyList());
         engine.run(script, new TestConfig(1, 1, null));
 
         MetricsCollector collector = engine.getMetricsCollector();

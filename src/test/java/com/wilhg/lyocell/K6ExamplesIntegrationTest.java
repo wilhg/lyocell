@@ -7,9 +7,12 @@ import org.junit.jupiter.api.Test;
 import org.testcontainers.containers.GenericContainer;
 import org.testcontainers.junit.jupiter.Container;
 import org.testcontainers.junit.jupiter.Testcontainers;
+import java.io.IOException;
+import java.nio.file.Files;
 import java.nio.file.Path;
 import java.nio.file.Paths;
 import java.util.Map;
+import java.util.Collections;
 import static org.junit.jupiter.api.Assertions.assertDoesNotThrow;
 
 @Testcontainers
@@ -24,9 +27,7 @@ class K6ExamplesIntegrationTest {
         String baseUrl = "http://" + httpbun.getHost() + ":" + httpbun.getMappedPort(80);
         Path script = Paths.get(scriptPath);
         
-        TestEngine engine = new TestEngine(Map.of(
-            "__ENV", Map.of("BASE_URL", baseUrl)
-        ));
+        TestEngine engine = new TestEngine(Collections.emptyList());
         
         assertDoesNotThrow(() -> 
             engine.run(script, new TestConfig(1, 1, null))

@@ -7,8 +7,13 @@ import io.micrometer.core.instrument.MeterRegistry;
 import io.micrometer.core.instrument.composite.CompositeMeterRegistry;
 import io.micrometer.core.instrument.simple.SimpleMeterRegistry;
 
+import java.util.Comparator;
+import java.util.List;
+import java.util.Map;
 import java.util.concurrent.ConcurrentHashMap;
+import java.util.concurrent.ConcurrentLinkedQueue;
 import java.util.concurrent.atomic.AtomicReference;
+import java.util.stream.Collectors;
 
 /// A thread-safe collector for performance metrics using Micrometer.
 ///
@@ -17,6 +22,11 @@ import java.util.concurrent.atomic.AtomicReference;
 public class MetricsCollector {
     private final CompositeMeterRegistry registry;
     private final ConcurrentHashMap<String, AtomicReference<Double>> gaugeValues = new ConcurrentHashMap<>();
+    private final ConcurrentLinkedQueue<IterationEvent> iterationEvents = new ConcurrentLinkedQueue<>();
+
+    // Internal record to capture iteration events with timestamp
+    private record IterationEvent(long timestamp, boolean success) {
+    }
 
     public MetricsCollector() {
         this.registry = new CompositeMeterRegistry();
@@ -73,13 +83,55 @@ public class MetricsCollector {
         }
     }
 
+    /**
+     * Records an iteration event along with its success status and timestamp.
+     * Also updates cumulative iteration counters.
+     *
+     * @param duration The duration of the iteration in milliseconds.
+     * @param success True if the iteration was successful, false otherwise.
+     */
     public void recordIteration(long duration, boolean success) {
         addTrend("iteration_duration", duration);
         addCounter("iterations", 1);
         if (!success) {
             addCounter("iterations_failed", 1);
         }
+        iterationEvents.offer(new IterationEvent(System.currentTimeMillis(), success));
     }
+
+    /**
+     * Aggregates raw iteration events into time-series data based on specified bucket duration.
+     *
+     * @param bucketDurationMillis The duration of each time bucket in milliseconds.
+     * @return A list of TimeSeriesData, sorted by timestamp.
+     */
+    public List<TimeSeriesData> getIterationTimeline(long bucketDurationMillis) {
+        if (iterationEvents.isEmpty()) {
+            return List.of();
+        }
+
+        long startTime = iterationEvents.stream()
+                .mapToLong(IterationEvent::timestamp)
+                .min()
+                .orElse(System.currentTimeMillis());
+
+        Map<Long, List<IterationEvent>> groupedByBucket = iterationEvents.stream()
+                .collect(Collectors.groupingBy(event -> {
+                    long relativeTime = event.timestamp() - startTime;
+                    return (relativeTime / bucketDurationMillis) * bucketDurationMillis;
+                }));
+
+        return groupedByBucket.entrySet().stream()
+                .map(entry -> {
+                    long bucketStartRelativeTime = entry.getKey();
+                    long successful = entry.getValue().stream().filter(IterationEvent::success).count();
+                    long failed = entry.getValue().stream().filter(event -> !event.success()).count();
+                    return new TimeSeriesData(startTime + bucketStartRelativeTime, successful, failed);
+                })
+                .sorted(Comparator.comparing(TimeSeriesData::timestamp))
+                .collect(Collectors.toList());
+    }
+
 
     public long getCounterValue(String name) {
         Counter counter = registry.find(name).counter();

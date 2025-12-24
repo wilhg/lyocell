@@ -10,6 +10,7 @@ import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.io.IOAccess;
+
 import java.io.IOException;
 import java.nio.file.Path;
 import java.util.List;
@@ -19,12 +20,8 @@ public class JsEngine implements AutoCloseable {
     private final Context context;
     private final TestEngine testEngine;
 
-    public JsEngine() {
-        this(java.util.Collections.emptyMap(), new MetricsCollector(), new TestEngine());
-    }
-
-    public JsEngine(Map<String, Object> extraBindings, MetricsCollector metricsCollector) {
-        this(extraBindings, metricsCollector, new TestEngine());
+    public JsEngine(MetricsCollector metricsCollector, TestEngine testEngine) {
+        this(java.util.Collections.emptyMap(), metricsCollector, testEngine);
     }
 
     public JsEngine(Map<String, Object> extraBindings, MetricsCollector metricsCollector, TestEngine testEngine) {
@@ -135,6 +132,9 @@ public class JsEngine implements AutoCloseable {
         return jsonStringify.execute(value).asString();
     }
 
+    public Value eval(String js) {
+        return context.eval("js", js);
+    }
 
     public void close() {
         context.close();

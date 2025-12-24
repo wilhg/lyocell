@@ -4,8 +4,12 @@ import com.wilhg.lyocell.engine.TestConfig;
 import com.wilhg.lyocell.engine.TestEngine;
 import org.junit.jupiter.api.Test;
 import org.junit.jupiter.api.io.TempDir;
+import java.io.IOException;
 import java.nio.file.Files;
 import java.nio.file.Path;
+import java.util.Collections;
+import java.util.Map;
+
 import static org.junit.jupiter.api.Assertions.*;
 
 class JsMetricsIntegrationTest {
@@ -26,11 +30,12 @@ class JsMetricsIntegrationTest {
             }
             """);
 
-        TestEngine engine = new TestEngine();
+        TestEngine testEngine = new TestEngine(Collections.emptyList());
         // 5 VUs, 1 iteration
-        engine.run(script, new TestConfig(5, 1, null));
+        // Corrected: Use the 'testEngine' instance declared above
+        testEngine.run(script, new TestConfig(5, 1, null));
 
-        MetricsCollector collector = engine.getMetricsCollector();
+        MetricsCollector collector = testEngine.getMetricsCollector();
         assertEquals(5, collector.getCounterValue("js_counter"));
         assertEquals(100, collector.getTrendSummary("js_trend").avg());
     }
