@@ -1,0 +1,252 @@
+<!doctype html>
+<html lang="en">
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width,initial-scale=1">
+    <title>Lyocell Landscape</title>
+    <style>
+        :root {
+          --bg: #0b0c0f;
+          --panel: #11141a;
+          --text: #e6edf3;
+          --muted: #94a3b8;
+          --accent: #4ade80;
+          --accent2: #22d3ee;
+          --border: #1f2933;
+          --code: #0f1720;
+          --shadow: 0 20px 60px rgba(0,0,0,0.45);
+        }
+        * { box-sizing: border-box; }
+        body {
+          margin: 0;
+          font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+          background: radial-gradient(circle at 20% 20%, rgba(34,211,238,0.05), transparent 25%),
+                      radial-gradient(circle at 80% 30%, rgba(74,222,128,0.05), transparent 25%),
+                      var(--bg);
+          color: var(--text);
+          padding: 32px 16px 48px;
+          display: flex;
+          justify-content: center;
+        }
+        .container {
+          width: min(1200px, 100%);
+          display: grid;
+          gap: 16px;
+        }
+        .hero, .card {
+          background: var(--panel);
+          border: 1px solid var(--border);
+          border-radius: 12px;
+          padding: 20px;
+          box-shadow: var(--shadow);
+        }
+        .hero {
+          display: grid;
+          gap: 12px;
+        }
+        h1, h2, h3 {
+          margin: 0;
+          letter-spacing: -0.01em;
+        }
+        h1 {
+          font-size: 28px;
+          color: var(--accent);
+        }
+        h2 {
+          font-size: 18px;
+          color: var(--accent2);
+        }
+        p {
+          margin: 6px 0 0 0;
+          color: var(--muted);
+          line-height: 1.55;
+        }
+        .grid {
+          display: grid;
+          grid-template-columns: repeat(auto-fit, minmax(260px, 1fr));
+          gap: 16px;
+        }
+        .badge {
+          display: inline-flex;
+          align-items: center;
+          gap: 6px;
+          padding: 4px 10px;
+          border-radius: 999px;
+          background: rgba(34,211,238,0.12);
+          color: var(--accent2);
+          border: 1px solid var(--border);
+          font-size: 12px;
+          text-transform: uppercase;
+          letter-spacing: 0.08em;
+        }
+        .pill {
+          display: inline-flex;
+          padding: 2px 8px;
+          border-radius: 6px;
+          background: rgba(148,163,184,0.12);
+          color: var(--muted);
+          font-size: 12px;
+          margin-right: 6px;
+        }
+        pre {
+          background: var(--code);
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          padding: 12px;
+          overflow-x: auto;
+          margin: 10px 0 0 0;
+          color: var(--text);
+          font-size: 13px;
+          line-height: 1.4;
+        }
+        code { color: var(--text); }
+        a {
+          color: var(--accent2);
+          text-decoration: none;
+        }
+        a:hover { text-decoration: underline; }
+        .list {
+          display: grid;
+          gap: 6px;
+          margin-top: 8px;
+        }
+        .list li {
+          list-style: none;
+          color: var(--muted);
+        }
+        .footer {
+          text-align: center;
+          color: var(--muted);
+          margin-top: 12px;
+          font-size: 13px;
+        }
+        .divider {
+          height: 1px;
+          background: var(--border);
+          margin: 10px 0 6px;
+          border: 0;
+        }
+        .accent-box {
+          background: linear-gradient(120deg, rgba(34,211,238,0.14), rgba(74,222,128,0.12));
+          border: 1px solid var(--border);
+          border-radius: 10px;
+          padding: 12px;
+          margin-top: 12px;
+          color: var(--text);
+        }
+        .mono-label { color: var(--muted); font-size: 12px; text-transform: uppercase; letter-spacing: 0.08em; }
+    </style>
+</head>
+<body>
+<main class="container">
+    <section class="hero">
+        <div class="badge">CLI / Single Binary</div>
+        <h1>Lyocell — Load Testing in One Binary</h1>
+        <p>Run JavaScript, spawn thousands of virtual users, and export shareable HTML reports. Zero servers, zero
+            boilerplate—just a fast CLI.</p>
+        <div class="grid">
+            <div class="card">
+                <h2>Install</h2>
+                <p class="mono-label">macOS / Linux (Homebrew)</p>
+                <pre><code>brew tap wilhg/lyocell
+brew install lyocell</code></pre>
+                <p class="mono-label">Linux (direct)</p>
+                <pre><code>wget https://github.com/wilhg/lyocell/releases/latest/download/lyocell-linux-amd64
+chmod +x lyocell-linux-amd64
+sudo mv lyocell-linux-amd64 /usr/local/bin/lyocell</code></pre>
+                <p class="mono-label">Windows (Scoop)</p>
+                <pre><code>scoop bucket add lyocell https://github.com/wilhg/lyocell-scoop
+scoop install lyocell</code></pre>
+            </div>
+            <div class="card">
+                <h2>Run a Test</h2>
+                <pre><code>// test.js
+import http from 'lyocell/http';
+import { check, sleep } from 'lyocell';
+
+export const options = {
+  vus: 20,
+  duration: '30s',
+  thresholds: {
+    http_req_duration: ['p(95)<500'],
+    checks: ['rate>0.99'],
+  },
+  lyocell: {
+    outputs: [{ type: 'html', target: 'report.html' }],
+  },
+};
+
+export default function () {
+  const res = http.get('https://httpbun.com/get');
+  check(res, { 'status is 200': (r) => r.status === 200 });
+  sleep(1);
+}</code></pre>
+                <pre><code>lyocell test.js -o html=report.html</code></pre>
+                <div class="accent-box">Get a console summary and an offline HTML report—perfect for complex load tests
+                    and sharing results.
+                </div>
+            </div>
+        </div>
+    </section>
+
+    <section class="grid">
+        <div class="card">
+            <h2>Why Lyocell</h2>
+            <ul class="list">
+                <li><span class="pill">Familiar JS</span> Minimal learning curve for scripting.</li>
+                <li><span class="pill">Single binary</span> No runtimes or services to manage.</li>
+                <li><span class="pill">Fast start</span> Instant boot; great for CI and local dev.</li>
+                <li><span class="pill">HTML reports</span> Zero-dependency, shareable summaries.</li>
+            </ul>
+        </div>
+        <div class="card">
+            <h2>Scenarios (CLI-friendly)</h2>
+            <p class="mono-label">Ramping VUs</p>
+            <pre><code>export const options = {
+  scenarios: {
+    ramp: {
+      executor: 'ramping-vus',
+      stages: [
+        { duration: '30s', target: 50 },
+        { duration: '2m',  target: 50 },
+        { duration: '20s', target: 0 },
+      ],
+    },
+  },
+};</code></pre>
+            <p class="mono-label">Constant Arrival Rate</p>
+            <pre><code>export const options = {
+  scenarios: {
+    api: {
+      executor: 'constant-arrival-rate',
+      rate: 200,
+      timeUnit: '1s',
+      duration: '1m',
+      preAllocatedVUs: 50,
+      maxVUs: 200,
+    },
+  },
+};</code></pre>
+        </div>
+        <div class="card">
+            <h2>Outputs</h2>
+            <ul class="list">
+                <li><span class="pill">Console</span> Live summary as the test runs.</li>
+                <li><span class="pill">HTML</span> `-o html=report.html` for offline, shareable reports.</li>
+            </ul>
+            <hr class="divider">
+            <h3>Metrics & Checks</h3>
+            <ul class="list">
+                <li>HTTP durations (p95/p99), iterations, checks, custom counters/trends.</li>
+                <li>Thresholds fail fast when SLOs are missed.</li>
+            </ul>
+        </div>
+    </section>
+
+    <div class="footer">
+        Lyocell · CLI-first load testing · HTML reports
+    </div>
+</main>
+</body>
+</html>
+

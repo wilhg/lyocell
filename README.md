@@ -1,13 +1,13 @@
 # Lyocell
 
-**Lyocell** is a fast, k6-compatible load-testing tool that ships as a single binary. Write familiar k6-style JavaScript, run it locally, and get shareable reports—no servers or heavy setup required.
+**Lyocell** is a fast, single-binary load-testing tool. Write familiar JavaScript, run it locally, and get shareable reports—no servers or heavy setup required.
 
 ## 🚀 Why Lyocell?
 
-*   **Virtual Threads:** Uses Java 25's Project Loom to run every Virtual User (VU) on its own lightweight thread.
-*   **k6 Compatible:** Runs standard k6 scripts (`import http from 'lyocell/http'`).
-*   **Native Performance:** Compiles to a native executable (no JVM startup lag).
-*   **Ecosystem:** Leverages the robust Java ecosystem for networking and metrics (Micrometer).
+*   **Single binary:** Install and run with no extra runtimes.
+*   **Fast start:** Near-instant startup for local runs and CI.
+*   **Familiar JS:** Write tests in straightforward JavaScript.
+*   **HTML reports:** Generate shareable, offline summaries.
 
 ## 📋 Prerequisites
 
@@ -42,7 +42,7 @@ scoop install lyocell
 
 ## ⚡ Quick Start
 
-### 1) Write a test (k6-style JS)
+### 1) Write a test (familiar JS)
 Save this as `test.js`:
 ```javascript
 import http from 'lyocell/http';
