@@ -106,14 +106,16 @@ graalvmNative {
                     '-H:IncludeResources=.*\\.properties$'
             )
 
-            // G1 GC is better for multi-core/virtual threads, but Serial is smaller.
-            // Using G1 on Linux/Windows where it is well-supported.
-            if (!System.getProperty('os.name').toLowerCase().contains('mac')) {
+            // GC Selection: G1 for Linux (performance), Serial for others (size/compatibility)
+            if (System.getProperty('os.name').toLowerCase().contains('linux')) {
                 buildArgs.add('--gc=G1')
-                buildArgs.add('-H:+StripDebugInfo')
             } else {
-                // On macOS, default to Serial unless Oracle GraalVM is confirmed
                 buildArgs.add('--gc=serial')
+            }
+
+            // Strip debug info only on non-macOS platforms
+            if (!System.getProperty('os.name').toLowerCase().contains('mac')) {
+                buildArgs.add('-H:+StripDebugInfo')
             }
 
             // JVM arguments for build process
