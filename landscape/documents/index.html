@@ -1,0 +1,206 @@
+<!doctype html>
+<html lang="en">
+<head>
+  <meta charset="UTF-8">
+  <meta name="viewport" content="width=device-width, initial-scale=1">
+  <title>Lyocell API Docs</title>
+  <link rel="preconnect" href="https://cdn.jsdelivr.net">
+  <script src="https://cdn.jsdelivr.net/npm/marked/marked.min.js"></script>
+  <style>
+    :root {
+      --bg: #282c34;
+      --panel: #1f2329;
+      --border: #3a3f4b;
+      --text: #abb2bf;
+      --muted: #9da5b4;
+      --accent: #61afef;
+      --accent2: #98c379;
+      --shadow: 0 16px 40px rgba(0, 0, 0, 0.45);
+    }
+    * { box-sizing: border-box; }
+    body {
+      margin: 0;
+      font-family: "IBM Plex Mono", ui-monospace, SFMono-Regular, Menlo, Monaco, Consolas, "Liberation Mono", "Courier New", monospace;
+      background:
+        radial-gradient(circle at 14% 18%, rgba(97,175,239,0.10), transparent 24%),
+        radial-gradient(circle at 82% 25%, rgba(152,195,121,0.08), transparent 20%),
+        repeating-linear-gradient(0deg, rgba(255,255,255,0.025), rgba(255,255,255,0.025) 1px, transparent 1px, transparent 3px),
+        var(--bg);
+      color: var(--text);
+      display: grid;
+      grid-template-columns: 280px 1fr;
+      min-height: 100vh;
+    }
+    nav {
+      background: var(--panel);
+      border-right: 1px solid var(--border);
+      padding: 18px;
+      box-shadow: var(--shadow);
+      position: sticky;
+      top: 0;
+      height: 100vh;
+      overflow-y: auto;
+    }
+    nav h1 {
+      margin: 0 0 12px 0;
+      font-size: 20px;
+      color: var(--accent);
+      letter-spacing: -0.01em;
+      text-shadow: 0 0 12px rgba(97,175,239,0.22);
+    }
+    nav .muted { color: var(--muted); font-size: 12px; margin-bottom: 10px; }
+    nav ul {
+      list-style: none;
+      padding: 0;
+      margin: 0;
+      display: grid;
+      gap: 8px;
+    }
+    nav a {
+      color: var(--text);
+      text-decoration: none;
+      display: block;
+      padding: 8px 10px;
+      border: 1px solid transparent;
+      border-radius: 8px;
+    }
+    nav a:hover, nav a.active {
+      border-color: var(--border);
+      background: rgba(97,175,239,0.14);
+      color: var(--accent);
+      box-shadow: inset 0 0 0 1px rgba(97,175,239,0.12);
+    }
+    main {
+      padding: 24px;
+      max-width: 1000px;
+    }
+    .doc {
+      background: var(--panel);
+      border: 1px solid var(--border);
+      border-radius: 12px;
+      padding: 18px;
+      box-shadow: var(--shadow);
+      position: relative;
+      overflow: hidden;
+    }
+    .doc h1, .doc h2, .doc h3 {
+      color: var(--accent);
+      letter-spacing: -0.01em;
+      text-shadow: 0 0 12px rgba(97,175,239,0.18);
+    }
+    .doc h2 { color: var(--accent2); text-shadow: 0 0 12px rgba(152,195,121,0.18); }
+    .doc p, .doc li { color: var(--muted); line-height: 1.55; }
+    .doc code { color: var(--text); background: #1b1f27; padding: 2px 4px; border-radius: 4px; }
+    .doc pre {
+      background: #1b1f27;
+      border: 1px solid var(--border);
+      border-radius: 10px;
+      padding: 12px;
+      overflow-x: auto;
+      color: var(--text);
+    }
+    .doc table {
+      width: 100%;
+      border-collapse: collapse;
+      margin: 12px 0;
+      font-size: 14px;
+    }
+    .doc th, .doc td {
+      border: 1px solid var(--border);
+      padding: 8px;
+      text-align: left;
+      color: var(--muted);
+    }
+    .doc th { color: var(--text); }
+    .notice {
+      border-left: 3px solid var(--accent2);
+      padding: 8px 10px;
+      margin: 10px 0;
+      background: rgba(86,182,194,0.12);
+      color: var(--text);
+      border-radius: 6px;
+    }
+    .prompt {
+      display: inline-flex;
+      align-items: center;
+      gap: 6px;
+      padding: 6px 10px;
+      background: #1b1f27;
+      border: 1px solid var(--border);
+      border-radius: 8px;
+      color: var(--accent);
+      font-size: 13px;
+      box-shadow: inset 0 0 0 1px rgba(97,175,239,0.12);
+      margin-bottom: 12px;
+    }
+    @media (max-width: 900px) {
+      body { grid-template-columns: 1fr; }
+      nav { position: relative; height: auto; }
+    }
+  </style>
+</head>
+<body>
+  <nav>
+    <h1>Lyocell Docs</h1>
+    <div class="muted">CLI-first load testing</div>
+    <ul id="toc"></ul>
+  </nav>
+  <main>
+    <div class="doc">
+      <div class="prompt">docs@local:~$ cat <span id="current-doc">loading…</span></div>
+      <div id="content">Loading…</div>
+    </div>
+  </main>
+  <script>
+    const docs = [
+      { file: 'overview.md', label: 'Overview & Options' },
+      { file: 'http.md', label: 'HTTP Module' },
+      { file: 'core.md', label: 'Core (check, sleep, group)' },
+      { file: 'metrics.md', label: 'Metrics Module' },
+      { file: 'scenarios.md', label: 'Scenarios' },
+      { file: 'utility-modules.md', label: 'Data, Crypto, Encoding, Execution' },
+      { file: 'outputs.md', label: 'Outputs & Reports' },
+    ];
+
+    const toc = document.getElementById('toc');
+    const content = document.getElementById('content');
+
+    function setActive(file) {
+      [...toc.querySelectorAll('a')].forEach(a => {
+        a.classList.toggle('active', a.dataset.file === file);
+      });
+    }
+
+    async function loadDoc(file) {
+      try {
+        const url = new URL(file, location.href).toString();
+        const res = await fetch(url, { cache: 'no-cache' });
+        if (!res.ok) throw new Error('Not found');
+        const text = await res.text();
+        content.innerHTML = marked.parse(text);
+        setActive(file);
+        document.getElementById('current-doc').textContent = file;
+      } catch (err) {
+        const hint = location.protocol === 'file:' ? ' Tip: open via a local server (e.g., python -m http.server) or GitHub Pages.' : '';
+        content.innerHTML = `<div class="notice">Document not found.${hint}</div>`;
+        document.getElementById('current-doc').textContent = file;
+      }
+    }
+
+    docs.forEach(doc => {
+      const li = document.createElement('li');
+      const a = document.createElement('a');
+      a.href = `#${doc.file}`;
+      a.textContent = doc.label;
+      a.dataset.file = doc.file;
+      a.onclick = (e) => { e.preventDefault(); loadDoc(doc.file); history.replaceState(null, '', `#${doc.file}`); };
+      li.appendChild(a);
+      toc.appendChild(li);
+    });
+
+    const initial = location.hash ? location.hash.slice(1) : docs[0].file;
+    loadDoc(initial);
+  </script>
+</body>
+</html>
+
