@@ -2,12 +2,13 @@ package com.wilhg.lyocell.cli;
 
 import java.time.Duration;
 import java.util.concurrent.atomic.AtomicBoolean;
+import java.util.concurrent.atomic.AtomicInteger;
 
 public class CliAnimation implements AutoCloseable {
     private volatile String message;
     private final AtomicBoolean running = new AtomicBoolean(false);
     private Thread animationThread;
-    private int lastMessageLength = 0;
+    private final AtomicInteger lastMessageLength = new AtomicInteger(0);
 
     private static final char[] ANIM_CHARS = {'⣷', '⣯', '⣟', '⡿', '⢿', '⣻', '⣽', '⣾'};
 
@@ -21,7 +22,7 @@ public class CliAnimation implements AutoCloseable {
 
     public synchronized void printLog(String logMessage) {
         // Clear the current animation line
-        System.out.print("\r" + " ".repeat(lastMessageLength + 2) + "\r");
+        System.out.print("\r" + " ".repeat(lastMessageLength.get() + 2) + "\r");
         System.out.println(logMessage);
         // The animation thread will redraw on its next tick
     }
@@ -34,7 +35,7 @@ public class CliAnimation implements AutoCloseable {
                     while (running.get()) {
                         String currentMessage = message;
                         System.out.printf("\r%s %c", currentMessage, ANIM_CHARS[i % ANIM_CHARS.length]);
-                        lastMessageLength = currentMessage.length();
+                        lastMessageLength.set(currentMessage.length());
                         i++;
                         Thread.sleep(Duration.ofMillis(100));
                     }
@@ -42,7 +43,7 @@ public class CliAnimation implements AutoCloseable {
                     Thread.currentThread().interrupt();
                 } finally {
                     // Clear the line once animation stops
-                    System.out.print("\r" + " ".repeat(lastMessageLength + 2) + "\r");
+                    System.out.print("\r" + " ".repeat(lastMessageLength.get() + 2) + "\r");
                 }
             });
         }

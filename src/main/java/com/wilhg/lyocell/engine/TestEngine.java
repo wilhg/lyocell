@@ -2,7 +2,11 @@ package com.wilhg.lyocell.engine;
 
 import java.nio.file.Path;
 import java.time.format.DateTimeFormatter;
-import java.util.*;
+import java.util.Collections;
+import java.util.List;
+import java.util.Map;
+import java.util.SequencedCollection;
+import java.util.Set;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.StructuredTaskScope;
@@ -79,7 +83,7 @@ public class TestEngine {
         }
     }
 
-    private final SequencedCollection<String> htmlReportPaths = Collections.synchronizedList(new ArrayList<>());
+    private final List<String> htmlReportPaths = new java.util.concurrent.CopyOnWriteArrayList<>();
 
     private void registerOutput(OutputConfig output) {
         if ("html".equals(output.type())) {
@@ -93,23 +97,23 @@ public class TestEngine {
 
     private TestConfig updateConfigWithScenarios(TestConfig config, Map<String, Scenario> scenarios) {
         return new TestConfig(
-            config.vus(),
-            config.iterations(),
-            config.duration(),
-            config.outputs(),
-            scenarios
+                config.vus(),
+                config.iterations(),
+                config.duration(),
+                config.outputs(),
+                scenarios
         );
     }
 
     private TestConfig createDefaultScenario(TestConfig config) {
         Scenario defaultScenario = new Scenario(
-            "default",
-            new PerVuIterationsConfig(
-                config.vus(),
-                config.iterations(),
-                java.time.Duration.ZERO,
-                java.time.Duration.ofSeconds(30)
-            )
+                "default",
+                new PerVuIterationsConfig(
+                        config.vus(),
+                        config.iterations(),
+                        java.time.Duration.ZERO,
+                        java.time.Duration.ofSeconds(30)
+                )
         );
         return updateConfigWithScenarios(config, Map.of("default", defaultScenario));
     }
@@ -139,14 +143,15 @@ public class TestEngine {
                 if (optionsValue != null) {
                     String json = setupEngine.toJson(optionsValue);
                     if (json != null) {
-                        options = mapper.readValue(json, new TypeReference<>() {});
+                        options = mapper.readValue(json, new TypeReference<>() {
+                        });
                         configureOutputsFromOptions(options);
-                        
+
                         if (options.containsKey("scenarios")) {
-                             @SuppressWarnings("unchecked")
-                             Map<String, Object> scenariosMap = (Map<String, Object>) options.get("scenarios");
-                             Map<String, Scenario> scenarios = ScenarioParser.parse(scenariosMap);
-                             config = updateConfigWithScenarios(config, scenarios);
+                            @SuppressWarnings("unchecked")
+                            Map<String, Object> scenariosMap = (Map<String, Object>) options.get("scenarios");
+                            Map<String, Scenario> scenarios = ScenarioParser.parse(scenariosMap);
+                            config = updateConfigWithScenarios(config, scenarios);
                         } else if (options.containsKey("stages")) {
                             Map<String, Object> rampingConfig = new java.util.HashMap<>(options);
                             rampingConfig.put("executor", "ramping-vus");
@@ -155,7 +160,7 @@ public class TestEngine {
                         }
                     }
                 }
-                
+
                 // If no scenarios in options, and none in config, create default
                 if (config.scenarios().isEmpty()) {
                     config = createDefaultScenario(config);
@@ -168,7 +173,7 @@ public class TestEngine {
             } catch (Exception e) {
                 throw new RuntimeException("Setup failed", e);
             }
-        
+
             final String finalSetupDataJson = setupDataJson;
 
             // 2. Execution Phase (Parallel Scenarios)
@@ -180,7 +185,7 @@ public class TestEngine {
                         scope.fork(() -> {
                             activeScenarios.add(scenario.name());
                             updateAnimationMessage(animation, activeScenarios);
-                            
+
                             long start = System.currentTimeMillis();
                             try {
                                 WorkloadExecutor executor = getExecutor(scenario);
@@ -201,11 +206,11 @@ public class TestEngine {
             // 3. Teardown Phase
             try {
                 if (setupEngine.hasExport("teardown")) {
-                     Object data = setupEngine.parseJsonData(setupDataJson);
-                     setupEngine.executeTeardown(data);
+                    Object data = setupEngine.parseJsonData(setupDataJson);
+                    setupEngine.executeTeardown(data);
                 }
             } catch (Exception e) {
-                 throw new RuntimeException("Teardown failed", e);
+                throw new RuntimeException("Teardown failed", e);
             }
         } catch (Exception e) {
             if (e instanceof InterruptedException) throw e;
@@ -221,7 +226,7 @@ public class TestEngine {
 
         // 5. Final Report
         new SummaryReporter().report(metricsCollector);
-        
+
         // 6. Generate HTML Reports
         if (!htmlReportPaths.isEmpty()) {
             SequencedCollection<TimeSeriesData> timelineData = metricsCollector.getIterationTimeline(1000); // 1-second buckets
@@ -240,13 +245,13 @@ public class TestEngine {
     @SuppressWarnings("unchecked")
     private void checkThresholds(Map<String, Object> options) {
         if (options == null || !options.containsKey("thresholds")) return;
-        
+
         Map<String, Object> thresholds = (Map<String, Object>) options.get("thresholds");
-        
+
         for (Map.Entry<String, Object> entry : thresholds.entrySet()) {
             String metricName = entry.getKey();
             List<String> rules = (List<String>) entry.getValue();
-            
+
             for (String rule : rules) {
                 checkRule(metricName, rule);
             }
@@ -259,7 +264,7 @@ public class TestEngine {
             long pass = metricsCollector.getCounterValue("checks.pass");
             long fail = metricsCollector.getCounterValue("checks.fail");
             long total = pass + fail;
-            
+
             if (total > 0) {
                 double failureRate = (double) fail / total;
                 if (failureRate > limit) {

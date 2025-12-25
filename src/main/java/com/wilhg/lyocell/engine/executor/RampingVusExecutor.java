@@ -7,10 +7,12 @@ import com.wilhg.lyocell.engine.WorkloadExecutor;
 import com.wilhg.lyocell.engine.scenario.RampingVusConfig;
 import com.wilhg.lyocell.engine.scenario.Scenario;
 import com.wilhg.lyocell.metrics.MetricsCollector;
+
 import java.nio.file.Path;
 import java.util.ArrayList;
 import java.util.List;
 import java.util.Map;
+import java.util.concurrent.CopyOnWriteArrayList;
 import java.util.concurrent.ExecutionException;
 import java.util.concurrent.atomic.AtomicBoolean;
 import java.util.concurrent.atomic.AtomicInteger;
@@ -18,12 +20,12 @@ import java.util.concurrent.atomic.AtomicInteger;
 public class RampingVusExecutor implements WorkloadExecutor {
     @Override
     public void execute(
-        Scenario scenario,
-        Path scriptPath,
-        Map<String, Object> extraBindings,
-        String setupDataJson,
-        MetricsCollector metricsCollector,
-        TestEngine testEngine
+            Scenario scenario,
+            Path scriptPath,
+            Map<String, Object> extraBindings,
+            String setupDataJson,
+            MetricsCollector metricsCollector,
+            TestEngine testEngine
     ) throws InterruptedException, ExecutionException {
         RampingVusConfig config = (RampingVusConfig) scenario.executor();
 
@@ -33,7 +35,7 @@ public class RampingVusExecutor implements WorkloadExecutor {
 
         AtomicInteger targetVus = new AtomicInteger(config.startVUs());
         AtomicBoolean running = new AtomicBoolean(true);
-        List<Thread> vuThreads = new ArrayList<>();
+        List<Thread> vuThreads = new CopyOnWriteArrayList<>();
         AtomicInteger activeVus = new AtomicInteger(0);
 
         // Controller Thread: Adjusts targetVus based on stages
