@@ -97,6 +97,7 @@ graalvmNative {
 
                     // Size optimizations
                     '-H:+RemoveUnusedSymbols',               // Strip unused symbols
+                    '-H:+StripDebugSymbols',                 // Remove debug symbols to shrink binary
                     '-H:+UseServiceLoaderFeature',           // Enable ServiceLoader
 
                     // Exclude ICU4J (Reduces size by ~15MB, disables JS Intl API)

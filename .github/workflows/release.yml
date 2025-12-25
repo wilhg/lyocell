@@ -54,6 +54,25 @@ jobs:
             - name: Build Native Image (skip tests)
               run: ./gradlew nativeCompile -x test
 
+            - name: Strip symbols (Linux/macOS)
+              if: runner.os != 'Windows'
+              run: |
+                  if [ "$RUNNER_OS" == "Linux" ] || [ "$RUNNER_OS" == "macOS" ]; then
+                      strip build/native/nativeCompile/lyocell || true
+                  fi
+
+            - name: Strip symbols (Windows)
+              if: runner.os == 'Windows'
+              shell: pwsh
+              run: |
+                  $binary = "build/native/nativeCompile/lyocell.exe"
+                  $stripTool = (Get-Command "llvm-strip.exe" -ErrorAction SilentlyContinue) ?? (Get-Command "strip.exe" -ErrorAction SilentlyContinue)
+                  if ($stripTool) {
+                      & $stripTool --strip-debug $binary
+                  } else {
+                      Write-Host "No strip tool found; skipping strip step"
+                  }
+
             - name: Install UPX (Linux/Windows)
               if: runner.os != 'macOS'
               run: |
@@ -68,9 +87,9 @@ jobs:
               if: runner.os != 'macOS'
               run: |
                   if [ "$RUNNER_OS" == "Linux" ]; then
-                      upx --best build/native/nativeCompile/lyocell
+                      upx --ultra-brute build/native/nativeCompile/lyocell
                   elif [ "$RUNNER_OS" == "Windows" ]; then
-                      upx --best build/native/nativeCompile/lyocell.exe
+                      upx --ultra-brute build/native/nativeCompile/lyocell.exe
                   fi
               shell: bash
 
