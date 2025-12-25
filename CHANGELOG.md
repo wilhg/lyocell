@@ -5,6 +5,21 @@ All notable changes to this project will be documented in this file.
 The format is based on [Keep a Changelog](https://keepachangelog.com/en/1.0.0/),
 and this project adheres to [Semantic Versioning](https://semver.org/spec/v2.0.0.html).
 
+## [0.3.3] - 2025-12-25
+
+### Fixed
+- Stabilized flaky tests around time-series aggregation.
+
+## [0.3.2] - 2025-12-24
+
+### Fixed
+- Improved Windows compatibility in native packaging and workflow steps.
+
+## [0.3.1] - 2025-12-24
+
+### Changed
+- Enabled UPX compression for Linux/Windows release artifacts to reduce download size.
+
 ## [0.3.0] - 2025-12-23
 
 ### Added

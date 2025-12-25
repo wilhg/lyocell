@@ -85,7 +85,7 @@ Lyocell supports configuration via the exported `options` object.
 **Request `params` Object**:
 *   `headers`: `Map<String, String>` ✅
 *   `tags`: `Map<String, String>` (Custom metric tags) ⏳ Planned
-*   `timeout`: `string` ⏳ Planned
+*   `timeout`: `string` ✅
 *   `cookies`: `object` ⏳ Planned
 *   `auth`: `string` ⏳ Planned
 

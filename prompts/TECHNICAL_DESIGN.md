@@ -48,15 +48,17 @@ We inject Java objects into the `globalThis` scope of every Context.
     *   `LyocellCore`: Backed by `CoreModule.java`.
     *   `__ENV`: A map exposing environment variables.
 
-## 3. Metrics System (Current MVP)
+## 3. Metrics System
 
 ### A. Collection
-*   **`MetricsCollector`**: A thread-safe, central singleton passed to all VUs.
-*   **Counters**: Uses `java.util.concurrent.atomic.LongAdder` for high-throughput, lock-free counting.
-*   **Trends**: Uses `Collections.synchronizedList(new ArrayList<>())`.
+*   **`MetricsCollector`**: Facade over **Micrometer** with a `CompositeMeterRegistry` (default `SimpleMeterRegistry` + optional sinks).
+*   **Counters/Trends**: k6 metric types map to Micrometer counters and `DistributionSummary` (publishes p95/p99).
+*   **Rates/Gauges**: Boolean rates tracked as `<name>.true`/`<name>.total`; gauges backed by `AtomicReference`.
+*   **Timeline**: Iteration success/failure recorded into a time-series buffer for HTML report generation.
 
 ### B. Reporting
-*   **`SummaryReporter`**: Calculates aggregations (avg, min, max, p95, p99) at the end of the test and prints a k6-style ASCII table.
+*   **`SummaryReporter`**: Reads Micrometer snapshots to print k6-style ASCII summaries.
+*   **`HtmlReportRenderer`**: Consumes `TimeSeriesData` (1s buckets) to render static, shareable HTML without JS dependencies.
 
 ## 4. Observability Architecture
 
