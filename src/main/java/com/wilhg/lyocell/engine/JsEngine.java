@@ -123,7 +123,8 @@ public class JsEngine implements AutoCloseable {
     // Helper to "clone" data via JSON to ensure isolation between VUs
     public Object parseJsonData(String json) {
         if (json == null) return null;
-        return context.eval("js", "JSON.parse('" + json + "')");
+        Value jsonParse = context.eval("js", "JSON.parse");
+        return jsonParse.execute(json);
     }
 
     public String toJson(Value value) {

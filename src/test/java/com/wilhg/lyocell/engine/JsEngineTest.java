@@ -60,4 +60,32 @@ class JsEngineTest {
             assertTrue(duration >= 100, "Sleep should have lasted at least 100ms");
         }
     }
+
+    @Test
+    void testParseJsonWithSingleQuotes() {
+        TestEngine testEngine = new TestEngine(Collections.emptyList());
+        try (JsEngine engine = new JsEngine(Collections.emptyMap(), new MetricsCollector(), testEngine)) {
+            String json = "{\"name\": \"O'Reilly\"}";
+            Object result = engine.parseJsonData(json);
+            
+            assertNotNull(result);
+            org.graalvm.polyglot.Value val = org.graalvm.polyglot.Value.asValue(result);
+            assertEquals("O'Reilly", val.getMember("name").asString());
+        }
+    }
+
+    @Test
+    void testParseJsonComplex() {
+        TestEngine testEngine = new TestEngine(Collections.emptyList());
+        try (JsEngine engine = new JsEngine(Collections.emptyMap(), new MetricsCollector(), testEngine)) {
+            String json = "{\"id\": 1, \"tags\": [\"a\", \"b\"], \"meta\": {\"active\": true}}";
+            Object result = engine.parseJsonData(json);
+            
+            assertNotNull(result);
+            org.graalvm.polyglot.Value val = org.graalvm.polyglot.Value.asValue(result);
+            assertEquals(1, val.getMember("id").asInt());
+            assertEquals("a", val.getMember("tags").getArrayElement(0).asString());
+            assertTrue(val.getMember("meta").getMember("active").asBoolean());
+        }
+    }
 }
