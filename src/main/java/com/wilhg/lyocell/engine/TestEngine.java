@@ -31,13 +31,9 @@ import com.wilhg.lyocell.metrics.SummaryReporter;
 import com.wilhg.lyocell.metrics.TimeSeriesData;
 import com.wilhg.lyocell.report.HtmlReportRenderer;
 
-import tools.jackson.core.type.TypeReference;
-import tools.jackson.databind.ObjectMapper;
-
 public class TestEngine {
     private final Map<String, Object> extraBindings;
     private final MetricsCollector metricsCollector = new MetricsCollector();
-    private final ObjectMapper mapper = new ObjectMapper();
     private volatile boolean aborted = false;
     private final List<OutputConfig> initialOutputs;
     private final HtmlReportRenderer htmlReportRenderer = new HtmlReportRenderer();
@@ -141,23 +137,21 @@ public class TestEngine {
                 setupEngine.runScript(scriptPath);
                 Value optionsValue = setupEngine.getOptions();
                 if (optionsValue != null) {
-                    String json = setupEngine.toJson(optionsValue);
-                    if (json != null) {
-                        options = mapper.readValue(json, new TypeReference<>() {
-                        });
-                        configureOutputsFromOptions(options);
+                    @SuppressWarnings("unchecked")
+                    Map<String, Object> optionsMap = optionsValue.as(Map.class);
+                    options = optionsMap;
+                    configureOutputsFromOptions(options);
 
-                        if (options.containsKey("scenarios")) {
-                            @SuppressWarnings("unchecked")
-                            Map<String, Object> scenariosMap = (Map<String, Object>) options.get("scenarios");
-                            Map<String, Scenario> scenarios = ScenarioParser.parse(scenariosMap);
-                            config = updateConfigWithScenarios(config, scenarios);
-                        } else if (options.containsKey("stages")) {
-                            Map<String, Object> rampingConfig = new java.util.HashMap<>(options);
-                            rampingConfig.put("executor", "ramping-vus");
-                            Scenario scenario = ScenarioParser.parse(Map.of("default", rampingConfig)).get("default");
-                            config = updateConfigWithScenarios(config, Map.of("default", scenario));
-                        }
+                    if (options != null && options.containsKey("scenarios")) {
+                        @SuppressWarnings("unchecked")
+                        Map<String, Object> scenariosMap = (Map<String, Object>) options.get("scenarios");
+                        Map<String, Scenario> scenarios = ScenarioParser.parse(scenariosMap);
+                        config = updateConfigWithScenarios(config, scenarios);
+                    } else if (options != null && options.containsKey("stages")) {
+                        Map<String, Object> rampingConfig = new java.util.HashMap<>(options);
+                        rampingConfig.put("executor", "ramping-vus");
+                        Scenario scenario = ScenarioParser.parse(Map.of("default", rampingConfig)).get("default");
+                        config = updateConfigWithScenarios(config, Map.of("default", scenario));
                     }
                 }
 
@@ -212,6 +206,14 @@ public class TestEngine {
             } catch (Exception e) {
                 throw new RuntimeException("Teardown failed", e);
             }
+
+            // 4. Check Thresholds (while engine is still open)
+            checkThresholds(options);
+        } catch (RuntimeException e) {
+            if (e.getMessage() != null && e.getMessage().contains("Thresholds failed")) {
+                throw e;
+            }
+            throw new RuntimeException("Test execution failed", e);
         } catch (Exception e) {
             if (e instanceof InterruptedException) throw e;
             if (e instanceof ExecutionException) throw e;
@@ -220,9 +222,6 @@ public class TestEngine {
             // Close registries to flush metrics
             metricsCollector.getRegistry().close();
         }
-
-        // 4. Check Thresholds
-        checkThresholds(options);
 
         // 5. Final Report
         new SummaryReporter().report(metricsCollector);

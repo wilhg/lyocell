@@ -87,9 +87,9 @@ jobs:
               if: runner.os != 'macOS'
               run: |
                   if [ "$RUNNER_OS" == "Linux" ]; then
-                      upx --ultra-brute build/native/nativeCompile/lyocell
+                      upx --best build/native/nativeCompile/lyocell
                   elif [ "$RUNNER_OS" == "Windows" ]; then
-                      upx --ultra-brute build/native/nativeCompile/lyocell.exe
+                      upx --best build/native/nativeCompile/lyocell.exe
                   fi
               shell: bash
 
