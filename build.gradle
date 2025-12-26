@@ -95,13 +95,23 @@ graalvmNative {
             imageName = 'lyocell'
             mainClass = 'com.wilhg.lyocell.Main'
             buildArgs.addAll(
+                    '--verbose',
+                    '-H:+UnlockExperimentalVMOptions',
                     '--no-fallback',
+                    '-H:+ReportExceptionStackTraces',
                     '--enable-preview',
                     '--enable-native-access=ALL-UNNAMED',
                     '--enable-native-access=org.graalvm.truffle',
 
                     // Optimization flags
+                    '-O2',                                    // Balanced performance and size
                     '-march=native',                          // Optimize for current CPU
+
+                    // Size optimizations
+                    '-H:+RemoveUnusedSymbols',               // Strip unused symbols
+                    '-H:+UseServiceLoaderFeature',           // Enable ServiceLoader
+                    '-H:-IncludeAllLocales',                 // Exclude all locales
+                    '-H:-IncludeAllTimeZones',               // Exclude all timezones
 
                     // Exclude ICU4J (Reduces size by ~15MB, disables JS Intl API)
                     '-Dpolyglot.js.intl-402=false',
