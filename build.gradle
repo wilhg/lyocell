@@ -97,6 +97,7 @@ graalvmNative {
 
             // Most build arguments are moved to src/main/resources/META-INF/native-image/native-image.properties
             // to keep the command line short and avoid Windows limitations.
+            buildArgs.add('--verbose')
 
             // GC Selection: G1 for Linux (performance), Serial for others (size/compatibility)
             if (System.getProperty('os.name').toLowerCase().contains('linux')) {
