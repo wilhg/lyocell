@@ -84,10 +84,12 @@ Lyocell supports configuration via the exported `options` object.
 
 **Request `params` Object**:
 *   `headers`: `Map<String, String>` ✅
-*   `tags`: `Map<String, String>` (Custom metric tags) ⏳ Planned
+*   `tags`: `Map<String, String>` (Custom metric tags) ✅
 *   `timeout`: `string` ✅
-*   `cookies`: `object` ⏳ Planned
-*   `auth`: `string` ⏳ Planned
+*   `cookies`: `object` ✅
+*   `auth`: `string` (Basic or Digest) ✅
+*   `insecureSkipTLSVerify`: `boolean` ✅
+*   `maxRedirects`: `number` ✅
 
 **`Response` Object**:
 *   `status` (number): HTTP status code. ✅
@@ -95,7 +97,11 @@ Lyocell supports configuration via the exported `options` object.
 *   `headers` (object): Response headers. ✅
 *   `body` (string): Response body. ✅
 *   `timings` (object): `{ duration: float, blocked: float, connecting: float, ... }`. ✅
-*   `json([selector])` (function): Parse body as JSON. ✅
+*   `json()` (function): Parse body as JSON. ✅
+*   `html([selector])` (function): Parse body as HTML using Jsoup. ✅
+*   `proto` (string): HTTP version (e.g., `'HTTP_1_1'`, `'HTTP_2'`). ✅
+*   `tls_info` (object): `{ version: string, cipher_suite: string }`. ✅
+*   `ocsp` (object): `{ status: string }`. ✅
 *   `clickLink()`: ⏳ Planned
 *   `submitForm()`: ⏳ Planned
 
@@ -124,6 +130,12 @@ Lyocell supports configuration via the exported `options` object.
 ### D. Other Standard Modules
 These modules are standard in k6 and are fully supported by Lyocell.
 
+#### `lyocell/timers` ✅
+*   `setTimeout(callback, delay, ...args)`
+*   `setInterval(callback, delay, ...args)`
+*   `clearTimeout(id)`
+*   `clearInterval(id)`
+
 #### `lyocell/execution` ✅
 Exposes information about the current test execution state.
 *   `execution.vu.idInTest`: Unique ID of the VU (1 to N).
@@ -141,7 +153,33 @@ Exposes information about the current test execution state.
 #### `lyocell/data` ✅
 *   `SharedArray`: Memory-efficient way to share large data (e.g., JSON) between VUs.
 
-### E. Environment Variables
+### E. Protocol Modules
+
+#### `lyocell/ws` ✅
+WebSocket client mirroring k6 API.
+*   `ws.connect(url, params, callback)`
+
+#### `lyocell/net/grpc` ✅
+gRPC client for unary calls.
+*   `client.connect(addr, options)`
+*   `client.invoke(method, data, params)`
+
+#### `lyocell/mcp` ✅
+Model Context Protocol client (SSE transport).
+*   `mcp.connect(url, options)`
+*   `client.initialize(params)`
+*   `client.listTools()`, `client.callTool(name, args)`
+*   `client.onNotification(method, callback)`
+
+### F. Experimental Modules
+
+#### `lyocell/experimental/fs` ✅
+*   `open(path)`, `stat(path)`, `readFile(path)`
+
+#### `lyocell/experimental/csv` ✅
+*   `parse(data, options)`
+
+### G. Environment Variables
 *   **`__ENV`**: Global object containing environment variables.
     *   Usage: `__ENV.MY_VAR`
     *   System env vars are automatically injected.

@@ -29,15 +29,23 @@ export default function () {
 ```javascript
 import crypto from 'lyocell/crypto';
 
+// Hashing
 const sig = crypto.hmac('sha256', 'secret', 'message', 'hex');
 const hash = crypto.sha256('payload');
+const md5 = crypto.md5('hello', 'hex');
+
+// WebCrypto subset
+const uuid = crypto.randomUUID();
+const entropy = crypto.getRandomValues(new Uint8Array(16));
+const subtle = crypto.subtle; // digest, importKey, encrypt, decrypt
 ```
 
 ## Encoding (`lyocell/encoding`)
 ```javascript
 import encoding from 'lyocell/encoding';
 
-const b64 = encoding.b64encode('hello');
-const plain = encoding.b64decode(b64);
+// Supports variants: std, rawstd, url, rawurl
+const b64 = encoding.b64encode('hello', 'rawstd');
+const plain = encoding.b64decode(b64, 'rawstd');
 ```
 

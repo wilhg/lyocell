@@ -41,31 +41,32 @@ We adopted an **MVP-first approach**, focusing on getting a "walking skeleton" r
 
 ## Roadmap (Future)
 
-### ✅ Phase 6: The Observatory (Observability)
-**Goal:** Real-time visualization via Grafana and standard metrics exports.
-*   **Architecture:** Adopted **Micrometer** as the polymorphic metrics engine.
-*   **Outputs:** Supports **HTML Reports** out of the box.
-*   **Configuration:** Configurable via CLI flags (`--out`) and JS `options` (`options.lyocell.outputs`).
+### ✅ Phase 9: Protocols & Advanced Modules
+**Goal:** Expand beyond HTTP to support modern protocols and experimental k6 features.
+*   **HTTP Parity:** Implemented `http.batch()`, advanced options (`auth`, `tags`, `cookies`), and HTML parsing (Jsoup).
+*   **Protocols:** Implemented `lyocell/ws` (WebSocket) and `lyocell/net/grpc` (gRPC).
+*   **WebCrypto:** Implemented `crypto.subtle` subset (AES-GCM, AES-CBC).
+*   **Timers:** Added `setTimeout`, `setInterval` with safe JS event loop.
+*   **Experimental:** Implemented `lyocell/experimental/fs` and `lyocell/experimental/csv`.
+*   **MCP:** Implemented `lyocell/mcp` for Model Context Protocol load testing.
 
-### ✅ Phase 7: Standard Library Expansion
-**Goal:** Implement the full suite of standard k6 utility modules.
-*   **`lyocell/execution`:** Expose `vu.idInTest`, `vu.iterationInInstance` for unique data handling.
-*   **`lyocell/data`:** Implement `SharedArray` for memory-efficient data loading.
-*   **`lyocell/crypto` & `lyocell/encoding`:** Add SHA-256, HMAC, and Base64 support.
-*   **`k6` Core:** Add `fail()`, `randomSeed()`.
+### ✅ Phase 10: Stability & Lifecycle
+**Goal:** Ensure robustness and proper resource cleanup.
+*   **Event Loop:** Refactored `JsEngine` to use a `LinkedBlockingQueue` event loop for thread-safe asynchronous operations.
+*   **Cleanup:** Implemented `LyocellModule.close()` for resource disposal (connections, timers).
 
-### ✅ Phase 8: The Choreographer (Advanced Scenarios)
-**Goal:** Implement the `scenarios` configuration object for complex workload modeling.
-*   **Architecture:** Refactor `TestEngine` to support multiple parallel executors.
-*   **Executors:** Implemented `ramping-vus`, `constant-arrival-rate`, `shared-iterations`, `constant-vus`, and `per-vu-iterations`.
-*   **Config:** Fully parse the `options.scenarios` object.
+## Roadmap (TBD)
+
+### ⏳ Phase 11: Distribution & UI
+**Goal:** Improve developer experience and multi-platform support.
+*   **TUI:** Real-time dashboard (Curses-like UI).
+*   **Distributions:** Linux/Windows builds in CI.
+*   **Advanced gRPC:** Proto-file loading and reflection-based invocation.
 
 ## Current Status
-The project is functionally complete as an MVP (Minimum Viable Product). It supports the core k6 API, runs concurrently on Virtual Threads, compiles to a Native Image, and includes comprehensive documentation and examples.
+The project is now a feature-rich k6 clone. It supports HTTP, gRPC, WebSocket, and MCP protocols, along with advanced standard library features like SharedArray, WebCrypto, and Timers. It uses a high-performance Java 25 Virtual Thread architecture with a robust JS event loop.
 
-## Future Enhancements
-*   **HTTP Parallelism:** Implement `http.batch()` for parallel requests within a VU.
-*   **Granular Timings:** Add `blocked`, `connecting`, `tls_handshaking`, etc., to `http_req_duration`.
-*   **TUI:** Real-time dashboard (Curses-like UI).
-*   **Protocols:** WebSocket, gRPC support.
-*   **Distributions:** Linux/Windows builds in CI.
+## Completed Enhancements
+*   **HTTP Parallelism:** `http.batch()` is implemented using Structured Concurrency.
+*   **Granular Timings:** SURFACED in the response object.
+*   **Protocols:** WebSocket, gRPC, and MCP are fully supported.

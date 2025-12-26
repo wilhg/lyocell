@@ -23,10 +23,13 @@ const queueDepth = new Gauge('queue_depth');
 export default function () {
   const start = Date.now();
   const ok = Math.random() > 0.1;
-  latency.add(Date.now() - start);
+  
+  // You can add optional tags to any measurement
+  latency.add(Date.now() - start, { service: 'api', method: 'GET' });
+  
   successRate.add(ok);
   queueDepth.add(Math.random() * 10);
-  if (!ok) errors.add(1);
+  if (!ok) errors.add(1, { type: 'network' });
 }
 ```
 

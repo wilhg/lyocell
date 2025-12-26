@@ -12,13 +12,16 @@ We use a **Thread-per-VU** model powered by Java 25 Virtual Threads. The lifecyc
     *   Parses CLI arguments (`-u`, `-i`) and environment variables.
     *   Instantiates `VuWorker` runnables.
 
-2.  **`VuWorker`**: A `Runnable` representing one Virtual User.
-    *   **State**: Holds its own `Context` (GraalJS) and execution loop.
+2.  **`VuWorker` & `JsEngine`**: A `Runnable` representing one Virtual User.
+    *   **State**: Holds its own `JsEngine` instance.
+    *   **Event Loop**: `JsEngine` implements an **Event Loop** using a `LinkedBlockingQueue`. This allows background events (SSE messages, timers, network callbacks) to be queued and processed by the main VU thread.
+    *   **Context Isolation**: Every VU gets a fresh GraalJS `Context`. Access is strictly controlled via a `lock`.
+    *   **Pause/Resume**: When the VU blocks on a network call or a future, it "pauses" the engine (releasing the context lock) and processes queued events to avoid deadlocks.
     *   **Execution Flow**:
-        1.  **`init` Stage**: Creates Context, loads the user script (cached `Source`), executes global scope.
-        2.  **`setup` Stage**: (Only VU #0 does this). Executes `setup()`, serializes result to JSON.
-        3.  **Data Broadcast**: The JSON result from `setup` is shared with all other VUs.
-        4.  **`vu` Stage**: Executes `default()` function repeatedly until the iteration/duration limit is reached.
+        1.  **`init` Stage**: Creates Context, loads the user script, executes global scope.
+        2.  **`setup` Stage**: (Only VU #0 does this). Executes `setup()`, serializes result.
+        3.  **`vu` Stage**: Executes `default()` repeatedly.
+        4.  **`teardown` Stage**: Cleanup.
         5.  **`teardown` Stage**: (Only VU #0). Executes `teardown()`.
 
 ### B. GraalJS Context Management
@@ -35,7 +38,13 @@ Implements `org.graalvm.polyglot.io.FileSystem`.
 *   **Strategy**: Intercepts `parsePath` and `newByteChannel`.
 *   **Detection**: Checks if paths start with or contain `lyocell/` (e.g., `lyocell/http`, `lyocell/metrics`).
 *   **Virtual Files**:
-    *   `lyocell/http`: Returns a synthetic source code that exports Java bindings (proxies to `LyocellHttp`).
+    *   `lyocell/http`: Returns a synthetic source code that exports Java bindings (proxies to `LyocellHttp`). Supports `batch()`.
+    *   `lyocell/net/grpc`: Bridge to gRPC Java client for unary calls.
+    *   `lyocell/ws`: WebSocket client bridge.
+    *   `lyocell/mcp`: Model Context Protocol client with SSE transport.
+    *   `lyocell/timers`: Standard `setTimeout` and `setInterval` implementations.
+    *   `lyocell/experimental/fs`: Basic file system access.
+    *   `lyocell/experimental/csv`: CSV parsing utilities.
     *   `lyocell/metrics`: Exports `Counter` and `Trend` classes that bridge to `LyocellMetrics`.
     *   `k6`: Exports core functions like `check`, `group`, `sleep`.
 

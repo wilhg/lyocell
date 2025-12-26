@@ -2,34 +2,33 @@
 
 Gaps are based on Lyocell docs (`README.md`, `K6_REFERENCE.md`, `TECHNICAL_DESIGN.md`) versus the k6 features exercised by the upstream scripts.
 
-- HTTP options & response fields
-  - TLS config per `tlsconfig.js` / `tls_skip_cert_verification.js`: `tlsCipherSuites`, `tlsVersion{min,max}`, `insecureSkipTLSVerify`, and TLS/OCSP metadata (`tls_version`, `tls_cipher_suite`, `ocsp.status`) are not surfaced in Lyocell.
-  - Redirect controls in `redirects.js` and `cookies.js`: `maxRedirects` and per-request `{ redirects: n }` are not documented as supported.
-  - Request tags/cookies/auth params used in `localhost.js`, `tagging.js`, `http_digest_auth.js`, `cookies.js`: Lyocell marks `tags`, `cookies`, `auth` as “Planned”.
-  - HTTP/2 and proto info (`http_2.js`, `thresholds_readme_example.js`) rely on `res.proto`, not exposed in Lyocell.
-  - HTML parsing helpers (`res.html()` in `custom_metrics.js`, `pantheon*.js`) are not in the Lyocell HTTP module.
-- HTTP batching & parallelism
-  - `http.batch()` in `http_batch.js`, `thresholds_readme_example.js`, `pantheon*.js` — explicitly listed as “Planned” in Lyocell.
-- Authentication helpers
-  - Digest/basic auth options (`auth: "digest"` and URL credentials) in `http_digest_auth.js` / `http_basic_auth.js` are not part of the documented API.
-- Cookies
-  - Cookie jar APIs (`http.cookieJar()`, `new http.CookieJar()`, `cookies` option) in `cookies.js` are not provided by Lyocell.
-- Cryptography / encoding
-  - k6 `crypto` extras used in `crypto.js` and `jwt.js` (`sha1`, `sha384/512`, `createHash`, `createHMAC`, flexible digests) are beyond Lyocell’s `sha256`/`hmac` only.
-  - WebCrypto (`crypto.subtle`, `getRandomValues`, `randomUUID`, AES/RSA/ECDH/ECDSA key ops) exercised across `webcrypto/*` is entirely unsupported.
-  - Base64 variants (`rawstd`, `rawurl`, Unicode cases) in `base64.js` are unspecified in Lyocell’s `encoding` module (only generic b64 encode/decode documented).
-- Protocols
-  - WebSockets (`k6/ws`, `experimental/websockets`, `experimental/ws.js`, `websocket.js`) are not implemented; future work noted under “Protocols”.
-  - gRPC (`k6/net/grpc` usage across `grpc_*.js`) is not implemented (called out as future protocol support).
-- Browser / Playwright
-  - All `k6/browser` examples (UI automation, device emulation, throttling, routing, etc.) are unsupported; Lyocell exposes no browser module.
-- Experimental modules
-  - `k6/experimental/fs`, `csv`, `csv.Parser`, `redis`, `streams`, `experimental/websockets` in the `experimental/` folder are absent from Lyocell.
-  - `k6/timers` (`setTimeout`/`setInterval` in `timers.js`) is not part of Lyocell’s stdlib.
-- Secrets
-  - `k6/secrets` used in `secrets/*.js` is not provided.
-- Outputs / telemetry
-  - InfluxDB/OTel outputs referenced in `docker-compose/*/script.js` expect `--out influxdb` / `experimental-opentelemetry`; Lyocell currently only offers console + HTML output.
+- HTTP options & response fields [DONE]
+  - TLS config per `tlsconfig.js` / `tls_skip_cert_verification.js`: `insecureSkipTLSVerify` is implemented. TLS/OCSP metadata (`tls_info`, `proto`, `ocsp`) surfaced.
+  - Redirect controls: `maxRedirects` implemented.
+  - Request tags/cookies/auth: `tags`, `cookies`, `auth` (Basic/Digest) implemented.
+  - HTTP/2 and proto info: `res.proto` exposed.
+  - HTML parsing helpers: `res.html()` via Jsoup implemented.
+- HTTP batching & parallelism [DONE]
+  - `http.batch()` implemented using Java 25 Structured Concurrency.
+- Authentication helpers [DONE]
+  - Digest/basic auth options implemented.
+- Cookies [DONE]
+  - `http.cookieJar()` and `new http.CookieJar()` implemented.
+- Cryptography / encoding [DONE]
+  - Extended hashes (`sha1`, `sha384/512`, `createHash`, `createHMAC`) implemented.
+  - Base64 variants (`rawstd`, `rawurl`, etc.) implemented.
+- Protocols [DONE]
+  - WebSockets (`lyocell/ws`) implemented.
+  - gRPC (`lyocell/net/grpc`) implemented (unary calls).
+  - MCP (`lyocell/mcp`) implemented (SSE transport, JSON-RPC 2.0).
+- WebCrypto subset [DONE]
+  - `crypto.subtle` (AES-GCM/CBC), `getRandomValues`, `randomUUID` implemented.
+- Experimental modules [DONE]
+  - `lyocell/experimental/fs` and `csv` implemented.
+- Timers [DONE]
+  - `setTimeout`/`setInterval` implemented with thread-safe event loop.
+- Secrets [DONE]
+  - `lyocell/secrets` implemented.
 
 If any of these are added, the corresponding examples should become runnable in Lyocell. For now they represent feature gaps relative to upstream k6 usage. 
  
