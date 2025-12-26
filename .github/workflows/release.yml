@@ -49,10 +49,10 @@ jobs:
               run: chmod +x gradlew
 
             - name: Build with Gradle (skip all tests)
-              run: ./gradlew build -x test -DskipDockerTests=true --debug --stacktrace
+              run: ./gradlew build -x test -DskipDockerTests=true --info --stacktrace
 
             - name: Build Native Image (skip tests)
-              run: ./gradlew nativeCompile -x test --debug --stacktrace
+              run: ./gradlew nativeCompile -x test --info --stacktrace
 
             - name: Strip symbols (Linux/macOS)
               if: runner.os != 'Windows'
