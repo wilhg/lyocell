@@ -128,7 +128,10 @@ graalvmNative {
             '-Xmx8g',
             '--enable-preview',
             ]
-            useArgFile = false
+            useArgFile = true
+        }
+        test {
+            useArgFile = true
         }
     }
     testSupport = true
