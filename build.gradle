@@ -6,7 +6,7 @@ plugins {
 }
 
 group = 'com.wilhg'
-version = '0.3.3'
+version = '0.4.7'
 
 application {
     mainClass = 'com.wilhg.lyocell.Main'
@@ -138,10 +138,10 @@ graalvmNative {
             '-Xmx8g',
             '--enable-preview',
             ]
-            useArgFile = true
+            useFatJar = true
         }
         test {
-            useArgFile = true
+            useFatJar = true
         }
     }
     testSupport = true
