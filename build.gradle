@@ -138,10 +138,10 @@ graalvmNative {
             '-Xmx8g',
             '--enable-preview',
             ]
-            useArgFile = true
+            useArgFile = !System.getProperty('os.name').toLowerCase().contains('windows')
         }
         test {
-            useArgFile = true
+            useArgFile = !System.getProperty('os.name').toLowerCase().contains('windows')
         }
     }
     testSupport = true
