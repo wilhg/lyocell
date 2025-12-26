@@ -116,7 +116,11 @@ graalvmNative {
             '-Xmx8g',
             '--enable-preview',
             ]
-            useArgFile = false
+            useFatJar = true
+
+            // On Windows the native-image command line exceeds the 32k limit; the arg file keeps it short.
+            // We leave macOS/Linux unchanged to avoid the Windows drive-letter bug noted in the plugin.
+            useArgFile = org.gradle.internal.os.OperatingSystem.current().isWindows()
         }
     }
     testSupport = true
