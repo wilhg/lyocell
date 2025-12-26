@@ -23,4 +23,9 @@ public interface LyocellModule {
      * @param moduleContext The context providing dependencies.
      */
     void install(Context context, ModuleContext moduleContext);
+
+    /**
+     * Optional cleanup when the module is no longer needed (e.g., when the VU finishes).
+     */
+    default void close() {}
 }

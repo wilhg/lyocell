@@ -39,5 +39,6 @@
 
 ## Development Conventions
 *   **Strict Java 25:** Must use `--enable-preview`.
+*   **Best Practice:** Must follow Java 25 best practices.
 *   **TDD:** Every new feature or fix must include unit or integration tests.
 *   **GraalJS:** Enable experimental options (`engine.WarnVirtualThreadSupport=false`) to suppress warnings on Native Image.

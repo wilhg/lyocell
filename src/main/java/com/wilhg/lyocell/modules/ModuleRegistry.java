@@ -103,7 +103,14 @@ public class ModuleRegistry {
             new ConsoleModule(),
             new EncodingModule(),
             new CryptoModule(),
+            new SubtleCryptoModule(),
             new ExecutionModule(),
+            new TimersModule(),
+            new WebSocketModule(),
+            new GrpcModule(),
+            new FsModule(),
+            new CsvModule(),
+            new SecretsModule(),
             new DataModule()
         );
     }

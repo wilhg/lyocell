@@ -19,6 +19,7 @@ import java.util.Map;
 public class JsEngine implements AutoCloseable {
     private final Context context;
     private final TestEngine testEngine;
+    private final List<LyocellModule> installedModules;
 
     public JsEngine(MetricsCollector metricsCollector, TestEngine testEngine) {
         this(java.util.Collections.emptyMap(), metricsCollector, testEngine);
@@ -30,6 +31,7 @@ public class JsEngine implements AutoCloseable {
 
     public JsEngine(Map<String, Object> extraBindings, MetricsCollector metricsCollector, List<LyocellModule> modules, TestEngine testEngine) {
         this.testEngine = testEngine;
+        this.installedModules = modules;
         this.context = Context.newBuilder("js")
                 .allowHostAccess(HostAccess.ALL)
                 .allowHostClassLookup(s -> true)
@@ -37,6 +39,7 @@ public class JsEngine implements AutoCloseable {
                         .fileSystem(new LyocellFileSystem(metricsCollector))
                         .build())
                 .allowExperimentalOptions(true)
+                .allowCreateThread(true)
                 .option("js.esm-eval-returns-exports", "true")
                 .option("engine.WarnVirtualThreadSupport", "false")
                 .build();
@@ -137,7 +140,18 @@ public class JsEngine implements AutoCloseable {
         return context.eval("js", js);
     }
 
+    public Value eval(Source source) {
+        return context.eval(source);
+    }
+
     public void close() {
+        for (LyocellModule module : installedModules) {
+            try {
+                module.close();
+            } catch (Exception e) {
+                // Ignore cleanup errors
+            }
+        }
         context.close();
     }
 }

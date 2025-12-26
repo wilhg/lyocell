@@ -49,7 +49,16 @@ public class MetricsCollector {
     /// @param name The metric name (e.g., "http_reqs")
     /// @param value The value to add
     public void addCounter(String name, long value) {
-        registry.counter(name).increment(value);
+        addCounter(name, value, null);
+    }
+
+    /// Adds a value to a cumulative counter with tags.
+    public void addCounter(String name, long value, Map<String, String> tags) {
+        Counter.Builder builder = Counter.builder(name);
+        if (tags != null) {
+            tags.forEach(builder::tag);
+        }
+        builder.register(registry).increment(value);
     }
 
     /// Adds a sample to a trend metric.
@@ -57,10 +66,17 @@ public class MetricsCollector {
     /// @param name The metric name (e.g., "http_req_duration")
     /// @param value The sample value
     public void addTrend(String name, double value) {
-        DistributionSummary.builder(name)
-                .publishPercentiles(0.95, 0.99)
-                .register(registry)
-                .record(value);
+        addTrend(name, value, null);
+    }
+
+    /// Adds a sample to a trend metric with tags.
+    public void addTrend(String name, double value, Map<String, String> tags) {
+        DistributionSummary.Builder builder = DistributionSummary.builder(name)
+                .publishPercentiles(0.95, 0.99);
+        if (tags != null) {
+            tags.forEach(builder::tag);
+        }
+        builder.register(registry).record(value);
     }
 
     /// Sets a gauge to a specific value.
@@ -68,9 +84,18 @@ public class MetricsCollector {
     /// @param name The metric name
     /// @param value The current value
     public void setGauge(String name, double value) {
-        gaugeValues.computeIfAbsent(name, k -> {
+        setGauge(name, value, null);
+    }
+
+    /// Sets a gauge to a specific value with tags.
+    public void setGauge(String name, double value, Map<String, String> tags) {
+        gaugeValues.computeIfAbsent(name + (tags == null ? "" : tags.toString()), k -> {
             AtomicReference<Double> ref = new AtomicReference<>(value);
-            Gauge.builder(name, ref, AtomicReference::get).register(registry);
+            Gauge.Builder<AtomicReference<Double>> builder = Gauge.builder(name, ref, AtomicReference::get);
+            if (tags != null) {
+                tags.forEach(builder::tag);
+            }
+            builder.register(registry);
             return ref;
         }).set(value);
     }
@@ -80,9 +105,14 @@ public class MetricsCollector {
     /// @param name The metric name
     /// @param value The sample value (true/false)
     public void addRate(String name, boolean value) {
-        registry.counter(name + ".total").increment();
+        addRate(name, value, null);
+    }
+
+    /// Adds a boolean sample to a rate metric with tags.
+    public void addRate(String name, boolean value, Map<String, String> tags) {
+        addCounter(name + ".total", 1, tags);
         if (value) {
-            registry.counter(name + ".true").increment();
+            addCounter(name + ".true", 1, tags);
         }
     }
 
