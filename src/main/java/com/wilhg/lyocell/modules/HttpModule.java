@@ -161,7 +161,7 @@ public class HttpModule implements LyocellModule {
             List<java.util.concurrent.StructuredTaskScope.Subtask<HttpResponseWrapper>> subtasks = new ArrayList<>();
 
             for (BatchRequest br : batchRequests) {
-                subtasks.add(scope.fork(() -> request(br.method, br.url, br.body, null))); // Note: simplified params for now
+                subtasks.add(scope.fork(() -> request(br.method, br.url, br.body, br.params)));
             }
 
             scope.join();
@@ -184,6 +184,7 @@ public class HttpModule implements LyocellModule {
         String method;
         String url;
         Object body;
+        Map<String, Object> params; // Use Map instead of Value to be thread-safe
     }
 
     private BatchRequest extractBatchRequest(Value req) {
@@ -195,41 +196,81 @@ public class HttpModule implements LyocellModule {
             long reqSize = req.getArraySize();
             br.method = reqSize > 0 ? req.getArrayElement(0).asString() : "GET";
             br.url = reqSize > 1 ? req.getArrayElement(1).asString() : "";
-            br.body = reqSize > 2 ? req.getArrayElement(2).asHostObject() : null;
+            br.body = reqSize > 2 ? deepExtract(req.getArrayElement(2)) : null;
+            if (reqSize > 3) {
+                br.params = extractParams(req.getArrayElement(3));
+            }
         } else if (req.hasMembers()) {
             br.method = req.hasMember("method") ? req.getMember("method").asString() : "GET";
             br.url = req.hasMember("url") ? req.getMember("url").asString() : "";
-            br.body = req.hasMember("body") ? req.getMember("body").asHostObject() : null;
+            br.body = req.hasMember("body") ? deepExtract(req.getMember("body")) : null;
+            if (req.hasMember("params")) {
+                br.params = extractParams(req.getMember("params"));
+            }
         }
         return br;
     }
 
+    private Map<String, Object> extractParams(Value paramsVal) {
+        if (paramsVal == null || paramsVal.isNull()) return null;
+        return (Map<String, Object>) deepExtract(paramsVal);
+    }
+
+    private Object deepExtract(Value val) {
+        if (val == null || val.isNull()) return null;
+        if (val.isString()) return val.asString();
+        if (val.isBoolean()) return val.asBoolean();
+        if (val.isNumber()) {
+            if (val.fitsInInt()) return val.asInt();
+            if (val.fitsInLong()) return val.asLong();
+            return val.asDouble();
+        }
+        if (val.hasArrayElements()) {
+            List<Object> list = new ArrayList<>();
+            for (int i = 0; i < val.getArraySize(); i++) {
+                list.add(deepExtract(val.getArrayElement(i)));
+            }
+            return list;
+        }
+        if (val.hasMembers()) {
+            Map<String, Object> map = new HashMap<>();
+            for (String key : val.getMemberKeys()) {
+                map.put(key, deepExtract(val.getMember(key)));
+            }
+            return map;
+        }
+        if (val.isHostObject()) {
+            return val.asHostObject();
+        }
+        return val.toString();
+    }
+
     @HostAccess.Export
     public HttpResponseWrapper get(String url, Value params) {
-        return request("GET", url, null, params);
+        return request("GET", url, null, params != null ? extractParams(params) : null);
     }
 
     @HostAccess.Export
     public HttpResponseWrapper post(String url, Object body, Value params) {
-        return request("POST", url, body, params);
+        return request("POST", url, body, params != null ? extractParams(params) : null);
     }
 
     @HostAccess.Export
     public HttpResponseWrapper put(String url, Object body, Value params) {
-        return request("PUT", url, body, params);
+        return request("PUT", url, body, params != null ? extractParams(params) : null);
     }
 
     @HostAccess.Export
     public HttpResponseWrapper patch(String url, Object body, Value params) {
-        return request("PATCH", url, body, params);
+        return request("PATCH", url, body, params != null ? extractParams(params) : null);
     }
 
     @HostAccess.Export
     public HttpResponseWrapper del(String url, Object body, Value params) {
-        return request("DELETE", url, body, params);
+        return request("DELETE", url, body, params != null ? extractParams(params) : null);
     }
 
-    private HttpResponseWrapper request(String method, String url, Object body, Value params) {
+    private HttpResponseWrapper request(String method, String url, Object body, Map<String, Object> params) {
         Instant start = Instant.now();
         try {
             HttpRequest.Builder builder = HttpRequest.newBuilder()
@@ -240,8 +281,8 @@ public class HttpModule implements LyocellModule {
 
             if (params != null) {
                 // Set timeout
-                if (params.hasMember("timeout")) {
-                    Value timeoutVal = params.getMember("timeout");
+                if (params.containsKey("timeout")) {
+                    Object timeoutVal = params.get("timeout");
                     Duration timeout = parseDuration(timeoutVal);
                     if (!timeout.isZero()) {
                         builder.timeout(timeout);
@@ -249,32 +290,33 @@ public class HttpModule implements LyocellModule {
                 }
 
                 // Set headers
-                if (params.hasMember("headers")) {
-                    Value headers = params.getMember("headers");
-                    for (String key : headers.getMemberKeys()) {
-                        builder.header(key, headers.getMember(key).asString());
-                    }
+                if (params.get("headers") instanceof Map<?, ?> headers) {
+                    headers.forEach((k, v) -> builder.header(k.toString(), v.toString()));
                 }
 
                 // Insecure TLS
-                if (params.hasMember("insecureSkipTLSVerify")) {
-                    insecure = params.getMember("insecureSkipTLSVerify").asBoolean();
+                if (params.get("insecureSkipTLSVerify") instanceof Boolean b) {
+                    insecure = b;
                 }
 
                 // Redirects
-                if (params.hasMember("redirects")) {
-                    followRedirects = params.getMember("redirects").asInt() > 0;
+                if (params.get("redirects") instanceof Number n) {
+                    followRedirects = n.intValue() > 0;
                 }
 
                 // Auth
-                if (params.hasMember("auth")) {
-                    Value auth = params.getMember("auth");
+                if (params.get("auth") != null) {
+                    Object auth = params.get("auth");
                     String authHeader = null;
-                    if (auth.isString()) {
-                        authHeader = "Basic " + Base64.getEncoder().encodeToString(auth.asString().getBytes());
-                    } else if (auth.hasMember("username") && auth.hasMember("password")) {
-                        String userPass = auth.getMember("username").asString() + ":" + auth.getMember("password").asString();
-                        authHeader = "Basic " + Base64.getEncoder().encodeToString(userPass.getBytes());
+                    if (auth instanceof String s) {
+                        authHeader = "Basic " + Base64.getEncoder().encodeToString(s.getBytes());
+                    } else if (auth instanceof Map<?, ?> m) {
+                        Object user = m.get("username");
+                        Object pass = m.get("password");
+                        if (user != null && pass != null) {
+                            String userPass = user.toString() + ":" + pass.toString();
+                            authHeader = "Basic " + Base64.getEncoder().encodeToString(userPass.getBytes());
+                        }
                     }
                     if (authHeader != null) {
                         builder.header("Authorization", authHeader);
@@ -284,11 +326,8 @@ public class HttpModule implements LyocellModule {
 
             // Extract tags
             Map<String, String> tags = new HashMap<>();
-            if (params != null && params.hasMember("tags")) {
-                Value tagsVal = params.getMember("tags");
-                for (String key : tagsVal.getMemberKeys()) {
-                    tags.put(key, tagsVal.getMember(key).asString());
-                }
+            if (params != null && params.get("tags") instanceof Map<?, ?> tagsMap) {
+                tagsMap.forEach((k, v) -> tags.put(k.toString(), v.toString()));
             }
 
             // Set method and body
@@ -317,12 +356,11 @@ public class HttpModule implements LyocellModule {
         }
     }
 
-    private Duration parseDuration(Value value) {
-        if (value.isNumber()) {
-            return Duration.ofMillis(value.asLong());
+    private Duration parseDuration(Object value) {
+        if (value instanceof Number n) {
+            return Duration.ofMillis(n.longValue());
         }
-        if (value.isString()) {
-            String s = value.asString();
+        if (value instanceof String s) {
             if (s.endsWith("ms")) return Duration.ofMillis(Long.parseLong(s.substring(0, s.length() - 2)));
             if (s.endsWith("s")) return Duration.ofSeconds(Long.parseLong(s.substring(0, s.length() - 1)));
             if (s.endsWith("m")) return Duration.ofMinutes(Long.parseLong(s.substring(0, s.length() - 1)));

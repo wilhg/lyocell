@@ -36,9 +36,10 @@ public class NewFeaturesTest {
                 const responses = http.batch([
                     'https://httpbun.com/get',
                     ['GET', 'https://httpbun.com/get'],
-                    { method: 'GET', url: 'https://httpbun.com/get' }
+                    { method: 'GET', url: 'https://httpbun.com/get', params: { tags: { batch: 'true' } } }
                 ]);
                 check(responses, { 'batch works': (r) => r.length === 3 });
+                check(responses[2], { 'batch params work': (r) => r.status === 200 });
                 
                 // Timers
                 let timerCalled = false;
