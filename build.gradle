@@ -90,7 +90,18 @@ jacocoTestCoverageVerification {
 }
 
 graalvmNative {
+    def isWindows = System.getProperty('os.name').toLowerCase().contains('windows')
+    def nativeTmpDir = layout.buildDirectory.dir("native/tmp").get().asFile
+    nativeTmpDir.mkdirs()
+    if (isWindows) {
+        System.setProperty('java.io.tmpdir', nativeTmpDir.absolutePath)
+    }
+
     binaries {
+        all {
+            buildArgs.add("-J-Djava.io.tmpdir=${nativeTmpDir.absolutePath}")
+            useArgFile = true
+        }
         main {
             imageName = 'lyocell'
             mainClass = 'com.wilhg.lyocell.Main'
@@ -138,11 +149,8 @@ graalvmNative {
             '-Xmx8g',
             '--enable-preview',
             ]
-            useArgFile = !System.getProperty('os.name').toLowerCase().contains('windows')
         }
-        test {
-            useArgFile = !System.getProperty('os.name').toLowerCase().contains('windows')
-        }
+        test {}
     }
     testSupport = true
 }
