@@ -108,6 +108,7 @@ public class ModuleRegistry {
             new TimersModule(),
             new WebSocketModule(),
             new GrpcModule(),
+            new McpModule(),
             new FsModule(),
             new CsvModule(),
             new SecretsModule(),

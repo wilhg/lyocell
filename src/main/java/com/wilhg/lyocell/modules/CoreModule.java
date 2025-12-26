@@ -5,10 +5,12 @@ import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Value;
 
 import com.wilhg.lyocell.engine.ExecutionContext;
+import com.wilhg.lyocell.engine.JsEngine;
 import com.wilhg.lyocell.metrics.MetricsCollector;
 
 public class CoreModule implements LyocellModule {
     private MetricsCollector collector;
+    private JsEngine jsEngine;
 
     public CoreModule() {
     }
@@ -38,15 +40,20 @@ public class CoreModule implements LyocellModule {
     @Override
     public void install(Context context, ModuleContext moduleContext) {
         this.collector = moduleContext.metricsCollector();
+        this.jsEngine = moduleContext.jsEngine();
         context.getBindings("js").putMember("LyocellCore", this);
     }
 
     @HostAccess.Export
     public void sleep(double seconds) {
-        try {
-            Thread.sleep((long) (seconds * 1000));
-        } catch (InterruptedException e) {
-            Thread.currentThread().interrupt();
+        if (jsEngine != null) {
+            jsEngine.sleep(seconds);
+        } else {
+            try {
+                Thread.sleep((long) (seconds * 1000));
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+            }
         }
     }
 

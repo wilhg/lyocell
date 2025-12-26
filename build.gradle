@@ -48,6 +48,9 @@ dependencies {
     // HTML Parsing
     implementation 'org.jsoup:jsoup:1.18.3'
 
+    // JSON
+    implementation 'com.fasterxml.jackson.core:jackson-databind:2.18.2'
+
     // gRPC
     implementation 'io.grpc:grpc-netty-shaded:1.69.0'
     implementation 'io.grpc:grpc-protobuf:1.69.0'

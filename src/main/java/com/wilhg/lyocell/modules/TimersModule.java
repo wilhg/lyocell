@@ -1,5 +1,6 @@
 package com.wilhg.lyocell.modules;
 
+import com.wilhg.lyocell.engine.JsEngine;
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Value;
@@ -10,6 +11,7 @@ import java.util.concurrent.atomic.AtomicLong;
 public class TimersModule implements LyocellModule {
     private final AtomicLong timerIdCounter = new AtomicLong();
     private final ConcurrentHashMap<Long, Thread> activeTimers = new ConcurrentHashMap<>();
+    private JsEngine jsEngine;
 
     @Override
     public String getName() {
@@ -30,11 +32,9 @@ public class TimersModule implements LyocellModule {
 
     @Override
     public void install(Context context, ModuleContext moduleContext) {
-        this.context = context;
+        this.jsEngine = moduleContext.jsEngine();
         context.getBindings("js").putMember("LyocellTimers", this);
     }
-
-    private Context context;
 
     @Override
     public void close() {
@@ -51,17 +51,14 @@ public class TimersModule implements LyocellModule {
             try {
                 Thread.sleep(delay);
                 if (activeTimers.containsKey(id)) {
-                    context.enter();
-                    try {
-                        callback.execute(args);
-                    } finally {
-                        context.leave();
-                    }
+                    jsEngine.executeAsync(() -> {
+                        if (activeTimers.containsKey(id)) {
+                            callback.execute(args);
+                        }
+                    });
                 }
             } catch (InterruptedException e) {
                 // Timer cancelled
-            } catch (Exception e) {
-                // Potential concurrent access if VU is running, but let's try
             } finally {
                 activeTimers.remove(id);
             }
@@ -86,20 +83,17 @@ public class TimersModule implements LyocellModule {
                 while (!Thread.currentThread().isInterrupted()) {
                     Thread.sleep(delay);
                     if (activeTimers.containsKey(id)) {
-                        context.enter();
-                        try {
-                            callback.execute(args);
-                        } finally {
-                            context.leave();
-                        }
+                        jsEngine.executeAsync(() -> {
+                            if (activeTimers.containsKey(id)) {
+                                callback.execute(args);
+                            }
+                        });
                     } else {
                         break;
                     }
                 }
             } catch (InterruptedException e) {
                 // Timer cancelled
-            } catch (Exception e) {
-                // Potential concurrent access
             } finally {
                 activeTimers.remove(id);
             }

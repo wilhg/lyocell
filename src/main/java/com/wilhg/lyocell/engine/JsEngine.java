@@ -1,25 +1,32 @@
 package com.wilhg.lyocell.engine;
 
-import com.wilhg.lyocell.js.LyocellFileSystem;
-import com.wilhg.lyocell.metrics.MetricsCollector;
-import com.wilhg.lyocell.modules.LyocellModule;
-import com.wilhg.lyocell.modules.ModuleContext;
-import com.wilhg.lyocell.modules.ModuleRegistry;
+import java.io.IOException;
+import java.nio.file.Path;
+import java.util.List;
+import java.util.Map;
+import java.util.concurrent.BlockingQueue;
+import java.util.concurrent.LinkedBlockingQueue;
+import java.util.concurrent.locks.ReentrantLock;
+
 import org.graalvm.polyglot.Context;
 import org.graalvm.polyglot.HostAccess;
 import org.graalvm.polyglot.Source;
 import org.graalvm.polyglot.Value;
 import org.graalvm.polyglot.io.IOAccess;
 
-import java.io.IOException;
-import java.nio.file.Path;
-import java.util.List;
-import java.util.Map;
+import com.wilhg.lyocell.js.LyocellFileSystem;
+import com.wilhg.lyocell.metrics.MetricsCollector;
+import com.wilhg.lyocell.modules.LyocellModule;
+import com.wilhg.lyocell.modules.ModuleContext;
+import com.wilhg.lyocell.modules.ModuleRegistry;
 
 public class JsEngine implements AutoCloseable {
     private final Context context;
     private final TestEngine testEngine;
     private final List<LyocellModule> installedModules;
+    private final ReentrantLock lock = new ReentrantLock();
+    private final BlockingQueue<Runnable> eventQueue = new LinkedBlockingQueue<>();
+    private final ThreadLocal<Integer> enterDepth = ThreadLocal.withInitial(() -> 0);
 
     public JsEngine(MetricsCollector metricsCollector, TestEngine testEngine) {
         this(java.util.Collections.emptyMap(), metricsCollector, testEngine);
@@ -45,7 +52,7 @@ public class JsEngine implements AutoCloseable {
                 .build();
 
         // Install modules
-        ModuleContext moduleContext = new ModuleContext(metricsCollector, testEngine);
+        ModuleContext moduleContext = new ModuleContext(metricsCollector, testEngine, this);
         for (LyocellModule module : modules) {
             module.install(this.context, moduleContext);
         }
@@ -58,14 +65,102 @@ public class JsEngine implements AutoCloseable {
             env.putAll(extras);
         }
         
-        context.getBindings("js").putMember("__ENV", env);
+        enter();
+        try {
+            context.getBindings("js").putMember("__ENV", env);
+            
+            // Inject extra bindings
+            extraBindings.forEach((k, v) -> {
+                if (!k.equals("__ENV")) {
+                    context.getBindings("js").putMember(k, v);
+                }
+            });
+        } finally {
+            leave();
+        }
+    }
+
+    public void enter() {
+        lock.lock();
+        try {
+            context.enter();
+            enterDepth.set(enterDepth.get() + 1);
+        } catch (Throwable t) {
+            lock.unlock();
+            throw t;
+        }
+    }
+
+    public void leave() {
+        int depth = enterDepth.get();
+        if (depth > 0) {
+            context.leave();
+            enterDepth.set(depth - 1);
+        }
+        if (lock.isHeldByCurrentThread()) {
+            lock.unlock();
+        }
+    }
+
+    public int pause() {
+        int depth = enterDepth.get();
+        for (int i = 0; i < depth; i++) {
+            context.leave();
+        }
+        enterDepth.set(0);
         
-        // Inject extra bindings (e.g., for testing)
-        extraBindings.forEach((k, v) -> {
-            if (!k.equals("__ENV")) {
-                context.getBindings("js").putMember(k, v);
+        int holdCount = lock.getHoldCount();
+        for (int i = 0; i < holdCount; i++) {
+            lock.unlock();
+        }
+        return depth * 1000 + holdCount;
+    }
+
+    public void resume(int state) {
+        int depth = state / 1000;
+        int holdCount = state % 1000;
+        for (int i = 0; i < holdCount; i++) {
+            lock.lock();
+        }
+        for (int i = 0; i < depth; i++) {
+            context.enter();
+        }
+        enterDepth.set(depth);
+    }
+
+    public void executeAsync(Runnable runnable) {
+        eventQueue.add(runnable);
+    }
+
+    public void processEvents() {
+        Runnable runnable;
+        while ((runnable = eventQueue.poll()) != null) {
+            enter();
+            try {
+                runnable.run();
+            } catch (Exception e) {
+                System.err.println("Async Task Error: " + e.getMessage());
+                e.printStackTrace();
+            } finally {
+                leave();
             }
-        });
+        }
+    }
+
+    public void sleep(double seconds) {
+        long end = System.currentTimeMillis() + (long)(seconds * 1000);
+        while (System.currentTimeMillis() < end) {
+            int state = pause();
+            try {
+                processEvents();
+                Thread.sleep(10);
+            } catch (InterruptedException e) {
+                Thread.currentThread().interrupt();
+                break;
+            } finally {
+                resume(state);
+            }
+        }
     }
 
     private Value moduleExports;
@@ -74,27 +169,45 @@ public class JsEngine implements AutoCloseable {
         Source source = Source.newBuilder("js", scriptPath.toFile())
                 .mimeType("application/javascript+module")
                 .build();
-
-        // Evaluate the module and keep the exports
-        this.moduleExports = context.eval(source);
+        enter();
+        try {
+            this.moduleExports = context.eval(source);
+        } finally {
+            leave();
+        }
     }
 
     public Value getOptions() {
-        if (hasExport("options")) {
-            return moduleExports.getMember("options");
+        enter();
+        try {
+            if (moduleExports != null && moduleExports.hasMember("options")) {
+                return moduleExports.getMember("options");
+            }
+            return null;
+        } finally {
+            leave();
         }
-        return null;
     }
 
     public boolean hasExport(String name) {
-        return moduleExports != null && moduleExports.hasMember(name);
+        enter();
+        try {
+            return moduleExports != null && moduleExports.hasMember(name);
+        } finally {
+            leave();
+        }
     }
 
     public Value executeSetup() {
-        if (hasExport("setup")) {
-            return moduleExports.getMember("setup").execute();
+        enter();
+        try {
+            if (moduleExports != null && moduleExports.hasMember("setup")) {
+                return moduleExports.getMember("setup").execute();
+            }
+            return null;
+        } finally {
+            leave();
         }
-        return null;
     }
 
     public void executeDefault(Object data) {
@@ -102,46 +215,77 @@ public class JsEngine implements AutoCloseable {
     }
 
     public void executeFunction(String name, Object data) {
-        if (hasExport(name)) {
-            Value fn = moduleExports.getMember(name);
-            if (data != null) {
-                fn.execute(data);
-            } else {
-                fn.execute();
+        enter();
+        try {
+            if (moduleExports != null && moduleExports.hasMember(name)) {
+                Value fn = moduleExports.getMember(name);
+                if (data != null) {
+                    fn.execute(data);
+                } else {
+                    fn.execute();
+                }
+                processEvents(); 
             }
+        } finally {
+            leave();
         }
     }
 
     public void executeTeardown(Object data) {
-        if (hasExport("teardown")) {
-            Value teardownFn = moduleExports.getMember("teardown");
-            if (data != null) {
-                teardownFn.execute(data);
-            } else {
-                teardownFn.execute();
+        enter();
+        try {
+            if (moduleExports != null && moduleExports.hasMember("teardown")) {
+                Value teardownFn = moduleExports.getMember("teardown");
+                if (data != null) {
+                    teardownFn.execute(data);
+                } else {
+                    teardownFn.execute();
+                }
+                processEvents();
             }
+        } finally {
+            leave();
         }
     }
 
-    // Helper to "clone" data via JSON to ensure isolation between VUs
     public Object parseJsonData(String json) {
         if (json == null) return null;
-        Value jsonParse = context.eval("js", "JSON.parse");
-        return jsonParse.execute(json);
+        enter();
+        try {
+            Value jsonParse = context.eval("js", "JSON.parse");
+            return jsonParse.execute(json);
+        } finally {
+            leave();
+        }
     }
 
     public String toJson(Value value) {
         if (value == null || value.isNull()) return null;
-        Value jsonStringify = context.eval("js", "JSON.stringify");
-        return jsonStringify.execute(value).asString();
+        enter();
+        try {
+            Value jsonStringify = context.eval("js", "JSON.stringify");
+            return jsonStringify.execute(value).asString();
+        } finally {
+            leave();
+        }
     }
 
     public Value eval(String js) {
-        return context.eval("js", js);
+        enter();
+        try {
+            return context.eval("js", js);
+        } finally {
+            leave();
+        }
     }
 
     public Value eval(Source source) {
-        return context.eval(source);
+        enter();
+        try {
+            return context.eval(source);
+        } finally {
+            leave();
+        }
     }
 
     public void close() {
