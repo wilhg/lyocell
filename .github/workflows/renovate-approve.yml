@@ -1,22 +1,27 @@
 name: Renovate Auto Approve
 
 on:
-  pull_request_target:
-    types:
-      - opened
-      - reopened
-      - synchronized
+    pull_request_target:
+        types:
+            - opened
+            - reopened
+            - synchronized
 
 permissions:
-  pull-requests: write
+    pull-requests: write
+    contents: write
 
 jobs:
-  approve:
-    runs-on: ubuntu-latest
-    if: github.actor == 'renovate[bot]'
-    steps:
-      - name: Approve Renovate PR
-        uses: hmarr/auto-approve-action@v4
-        with:
-          github-token: ${{ secrets.GITHUB_TOKEN }}
+    approve:
+        runs-on: ubuntu-latest
+        if: github.actor == 'renovate[bot]'
+        steps:
+            - name: Approve Renovate PR
+              uses: hmarr/auto-approve-action@v4
+              with:
+                  github-token: ${{ secrets.GITHUB_TOKEN }}
 
+            - name: Enable auto-merge for Renovate PRs
+              run: gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}"
+              env:
+                  GITHUB_TOKEN: ${{ secrets.GITHUB_TOKEN }}
