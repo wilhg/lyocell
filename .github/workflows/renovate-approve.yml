@@ -15,13 +15,14 @@ jobs:
     approve:
         runs-on: ubuntu-latest
         if: github.actor == 'renovate[bot]'
-    steps:
-      - name: Approve Renovate PR
-        uses: hmarr/auto-approve-action@v4
-        with:
-          github-token: ${{ secrets.JRELEASER_GITHUB_TOKEN }}
+        steps:
+            - name: Approve Renovate PR
+              uses: hmarr/auto-approve-action@v4
+              with:
+                  # Use the built-in token so the review user is github-actions[bot]
+                  github-token: ${{ github.token }}
 
-      - name: Enable auto-merge for Renovate PRs
-        run: gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}"
-        env:
-          GITHUB_TOKEN: ${{ secrets.JRELEASER_GITHUB_TOKEN }}
+            - name: Enable auto-merge for Renovate PRs
+              run: gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}"
+              env:
+                  GH_TOKEN: ${{ github.token }}
