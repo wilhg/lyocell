@@ -19,10 +19,10 @@ jobs:
             - name: Approve Renovate PR
               uses: hmarr/auto-approve-action@v4
               with:
-                  # Use the built-in token so the review user is github-actions[bot]
-                  github-token: ${{ github.token }}
+                  # Use a dedicated bot PAT so the approver differs from the PR author
+                  github-token: ${{ secrets.RENOVATE_GITHUB_TOKEN }}
 
             - name: Enable auto-merge for Renovate PRs
               run: gh pr merge --auto --squash "${{ github.event.pull_request.html_url }}"
               env:
-                  GH_TOKEN: ${{ github.token }}
+                  GH_TOKEN: ${{ secrets.RENOVATE_GITHUB_TOKEN }}
