@@ -56,7 +56,7 @@ dependencies {
     implementation 'io.grpc:grpc-protobuf:1.78.0'
     implementation 'io.grpc:grpc-stub:1.78.0'
     implementation 'io.grpc:grpc-services:1.78.0' // For reflection
-    implementation 'com.google.protobuf:protobuf-java-util:3.25.8'
+    implementation 'com.google.protobuf:protobuf-java-util:4.33.2'
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
 
     testImplementation 'io.grpc:grpc-testing:1.78.0'
