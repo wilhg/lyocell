@@ -105,7 +105,7 @@ jobs:
                   copy build\native\nativeCompile\${{ matrix.binary_name }} ${{ matrix.artifact_name }}
 
             - name: Upload artifact
-              uses: actions/upload-artifact@v6
+              uses: actions/upload-artifact@v7
               with:
                   name: ${{ matrix.artifact_name }}
                   path: ${{ matrix.artifact_name }}
@@ -180,7 +180,7 @@ jobs:
 
         steps:
             - name: Download artifact
-              uses: actions/download-artifact@v7
+              uses: actions/download-artifact@v8
               with:
                   name: ${{ matrix.artifact }}
 
@@ -207,13 +207,13 @@ jobs:
                   path: tap-repo
 
             - name: Download macOS binary
-              uses: actions/download-artifact@v7
+              uses: actions/download-artifact@v8
               with:
                   name: lyocell-macos-aarch64
                   path: artifacts
 
             - name: Download Linux binary
-              uses: actions/download-artifact@v7
+              uses: actions/download-artifact@v8
               with:
                   name: lyocell-linux-amd64
                   path: artifacts
@@ -287,7 +287,7 @@ jobs:
                   path: scoop-repo
 
             - name: Download Windows binary
-              uses: actions/download-artifact@v7
+              uses: actions/download-artifact@v8
               with:
                   name: lyocell-windows-amd64.exe
                   path: artifacts
