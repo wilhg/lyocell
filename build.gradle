@@ -40,7 +40,7 @@ repositories {
 dependencies {
     // GraalVM Polyglot & JS
     implementation 'org.graalvm.polyglot:polyglot:25.0.2'
-    implementation 'org.graalvm.polyglot:js:25.0.2'
+    implementation 'org.graalvm.polyglot:js:25.0.3'
 
     // Metrics
     implementation 'io.micrometer:micrometer-core:1.16.5'
