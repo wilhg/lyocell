@@ -52,14 +52,14 @@ dependencies {
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.21.3'
 
     // gRPC
-    implementation 'io.grpc:grpc-netty-shaded:1.80.0'
-    implementation 'io.grpc:grpc-protobuf:1.80.0'
-    implementation 'io.grpc:grpc-stub:1.80.0'
-    implementation 'io.grpc:grpc-services:1.80.0' // For reflection
+    implementation 'io.grpc:grpc-netty-shaded:1.81.0'
+    implementation 'io.grpc:grpc-protobuf:1.81.0'
+    implementation 'io.grpc:grpc-stub:1.81.0'
+    implementation 'io.grpc:grpc-services:1.81.0' // For reflection
     implementation 'com.google.protobuf:protobuf-java-util:4.34.1'
     implementation 'javax.annotation:javax.annotation-api:1.3.2'
 
-    testImplementation 'io.grpc:grpc-testing:1.80.0'
+    testImplementation 'io.grpc:grpc-testing:1.81.0'
     testImplementation platform('org.junit:junit-bom:6.0.3')
     testImplementation 'org.junit.jupiter:junit-jupiter'
     testRuntimeOnly 'org.junit.platform:junit-platform-launcher'
