@@ -43,7 +43,7 @@ dependencies {
     implementation 'org.graalvm.polyglot:js:25.0.3'
 
     // Metrics
-    implementation 'io.micrometer:micrometer-core:1.16.5'
+    implementation 'io.micrometer:micrometer-core:1.17.0'
 
     // HTML Parsing
     implementation 'org.jsoup:jsoup:1.22.2'
