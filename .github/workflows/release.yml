@@ -29,7 +29,7 @@ jobs:
         runs-on: ${{ matrix.os }}
 
         steps:
-            - uses: actions/checkout@v6
+            - uses: actions/checkout@v7
 
             - name: Setup Oracle GraalVM
               uses: graalvm/setup-graalvm@v1
@@ -118,7 +118,7 @@ jobs:
             version: ${{ steps.get_version.outputs.version }}
 
         steps:
-            - uses: actions/checkout@v6
+            - uses: actions/checkout@v7
               with:
                   fetch-depth: 0 # Required for changelog generation
 
@@ -200,7 +200,7 @@ jobs:
 
         steps:
             - name: Checkout lyocell repo
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
               with:
                   repository: wilhg/homebrew-lyocell
                   token: ${{ secrets.JRELEASER_GITHUB_TOKEN }}
@@ -280,7 +280,7 @@ jobs:
 
         steps:
             - name: Checkout lyocell-scoop repo
-              uses: actions/checkout@v6
+              uses: actions/checkout@v7
               with:
                   repository: wilhg/lyocell-scoop
                   token: ${{ secrets.JRELEASER_GITHUB_TOKEN }}
