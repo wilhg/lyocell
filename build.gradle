@@ -39,7 +39,7 @@ repositories {
 
 dependencies {
     // GraalVM Polyglot & JS
-    implementation 'org.graalvm.polyglot:polyglot:25.3.4.1'
+    implementation 'org.graalvm.polyglot:polyglot:25.4.4.1.1'
     implementation 'org.graalvm.polyglot:js:25.4.4.1.1'
 
     // Metrics
