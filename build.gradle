@@ -46,7 +46,7 @@ dependencies {
     implementation 'io.micrometer:micrometer-core:1.17.2'
 
     // HTML Parsing
-    implementation 'org.jsoup:jsoup:1.23.2'
+    implementation 'org.jsoup:jsoup:1.24.1'
 
     // JSON
     implementation 'com.fasterxml.jackson.core:jackson-databind:2.23.0'
